@@ -36,8 +36,14 @@ export interface ScrapingProps {
 
 export function ScrapingPart(props: ScrapingProps) {
   const { report } = useReportProviders();
-  const { startScraping, resumeScraping, sourceOrder, sources, currentSource } =
-    useScrape();
+  const {
+    startScraping,
+    resumeScraping,
+    skipCurrentSource,
+    sourceOrder,
+    sources,
+    currentSource,
+  } = useScrape();
   const isMounted = useMountedState();
   const { t } = useTranslation();
 
@@ -134,6 +140,9 @@ export function ScrapingPart(props: ScrapingProps) {
                 status={source.status}
                 hasChildren={order.children.length > 0}
                 percentage={source.percentage}
+                onSkip={
+                  source.status === "pending" ? skipCurrentSource : undefined
+                }
               >
                 <div
                   className={classNames({

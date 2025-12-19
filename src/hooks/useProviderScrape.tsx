@@ -154,6 +154,8 @@ export function useScrape() {
     startScrape,
   } = useBaseScrape();
 
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   const preferredSourceOrder = usePreferencesStore((s) => s.sourceOrder);
   const enableSourceOrder = usePreferencesStore((s) => s.enableSourceOrder);
   const lastSuccessfulSource = usePreferencesStore(
@@ -257,22 +259,63 @@ export function useScrape() {
         return getResult(sseOutput === "" ? null : sseOutput);
       }
 
+      // Use individual source loops for local scraping
       startScrape();
       const providers = getProviders();
-      const output = await providers.runAll({
-        media,
-        sourceOrder: filteredSourceOrder,
-        embedOrder: filteredEmbedOrder,
-        events: {
-          init: initEvent,
-          start: startEvent,
-          update: updateEvent,
-          discoverEmbeds: discoverEmbedsEvent,
-        },
+
+      // Initialize with all sources
+      initEvent({
+        sourceIds: filteredSourceOrder,
       });
-      if (output && isExtensionActiveCached())
-        await prepareStream(output.stream);
-      return getResult(output);
+
+      for (const sourceId of filteredSourceOrder) {
+        // Create new abort controller for each source
+        abortControllerRef.current = new AbortController();
+
+        try {
+          const output = await providers.runSourceWithEmbeds({
+            sourceId,
+            media,
+            embedOrder: filteredEmbedOrder,
+            abortSignal: abortControllerRef.current.signal,
+            skipInit: true,
+            events: {
+              init: initEvent,
+              start: startEvent,
+              update: updateEvent,
+              discoverEmbeds: discoverEmbedsEvent,
+              abort: (abortedId: string) => {
+                // Mark as cancelled/failed when aborted
+                updateEvent({
+                  id: abortedId,
+                  percentage: 100,
+                  status: "notfound",
+                  reason: "Skipped by user",
+                });
+              },
+            },
+          });
+
+          // Clear abort controller after completion
+          abortControllerRef.current = null;
+
+          if (output) {
+            if (isExtensionActiveCached()) {
+              await prepareStream(output.stream);
+            }
+            return getResult(output);
+          }
+        } catch (error) {
+          // Clear abort controller on error
+          abortControllerRef.current = null;
+
+          // Continue to next source on error
+          continue;
+        }
+      }
+
+      // No sources found streams
+      return getResult(null);
     },
     [
       initEvent,
@@ -292,6 +335,13 @@ export function useScrape() {
     ],
   );
 
+  const skipCurrentSource = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  }, []);
+
   const resumeScraping = useCallback(
     async (media: ScrapeMedia, startFromSourceId: string) => {
       return startScraping(media, startFromSourceId);
@@ -302,6 +352,7 @@ export function useScrape() {
   return {
     startScraping,
     resumeScraping,
+    skipCurrentSource,
     sourceOrder,
     sources,
     currentSource,
