@@ -18,6 +18,7 @@ interface Props {
   disabled?: boolean;
   download?: string;
   loading?: boolean;
+  // focusable?: boolean; // For TV Screens/Spatial Navigation
 }
 
 export function Button(props: Props) {
