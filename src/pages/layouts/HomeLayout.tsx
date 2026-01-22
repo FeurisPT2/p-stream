@@ -27,6 +27,7 @@ export function HomeLayout(props: {
   return (
     <FooterView>
       <Navigation
+        focusKey="main-nav"
         bg={enableFeatured ? true : props.showBg}
         clearBackground={clearBackground}
         noLightbar={enableFeatured}
