@@ -81,7 +81,7 @@ export function SearchListPart({
   }, [searchQuery, exec]);
 
   useEffect(() => {
-    setFocus("search-media-show-2190");
+    setFocus("search-bar-input");
   }, []);
 
   if (state.loading) return <SearchLoadingPart />;
