@@ -46,22 +46,24 @@ function MoreCard({ link }: { link: string }) {
   return (
     <div className="relative mt-4 group cursor-pointer user-select-none rounded-xl p-2 bg-transparent transition-colors duration-300 w-[10rem] md:w-[11.5rem] h-auto">
       <Link to={link} className="block">
-        <Flare.Base className="group -m-[0.705em] h-[20rem] hover:scale-95 transition-all rounded-xl bg-background-main duration-300 hover:bg-mediaCard-hoverBackground tabbable">
+        <Flare.Base className="group -m-[0.705em] hover:scale-95 transition-all rounded-xl bg-background-main duration-300 hover:bg-mediaCard-hoverBackground tabbable">
           <Flare.Light
             flareSize={300}
             cssColorVar="--colors-mediaCard-hoverAccent"
             backgroundClass="bg-mediaCard-hoverBackground duration-100"
             className="rounded-xl bg-background-main group-hover:opacity-100"
           />
-          <Flare.Child className="pointer-events-auto h-[20rem] relative mb-2 p-[0.4em] transition-transform duration-300">
-            <div className="flex absolute inset-0 flex-col items-center justify-center">
-              <Icon
-                icon={Icons.ARROW_RIGHT}
-                className="text-4xl mb-2 transition-transform duration-300"
-              />
-              <span className="text-sm text-center px-2">
-                {t("discover.carousel.more")}
-              </span>
+          <Flare.Child className="pointer-events-auto relative mb-2 p-[0.4em] transition-transform duration-300">
+            <div className="relative pb-[150%] w-full overflow-hidden rounded-xl bg-mediaCard-hoverBackground flex items-center justify-center">
+              <div className="flex absolute inset-0 flex-col items-center justify-center">
+                <Icon
+                  icon={Icons.ARROW_RIGHT}
+                  className="text-4xl mb-2 transition-transform duration-300"
+                />
+                <span className="text-sm text-center px-2">
+                  {t("discover.carousel.more")}
+                </span>
+              </div>
             </div>
           </Flare.Child>
         </Flare.Base>

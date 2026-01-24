@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Icon, Icons } from "@/components/Icon";
@@ -8,6 +9,29 @@ import { useOverlayStack } from "@/stores/interface/overlayStack";
 export function TIDBSubmissionSuccessPopout() {
   const { t } = useTranslation();
   const currentOverlay = useOverlayStack((s) => s.currentOverlay);
+  const setCurrentOverlay = useOverlayStack((s) => s.setCurrentOverlay);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>();
+
+  useEffect(() => {
+    if (currentOverlay === "tidb-submission-success") {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Auto-dismiss after 3 seconds (same as volume popout)
+      timeoutRef.current = setTimeout(() => {
+        setCurrentOverlay(null);
+      }, 3e3);
+    }
+
+    // Cleanup timeout on unmount or when overlay changes
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [currentOverlay, setCurrentOverlay]);
 
   return (
     <Transition

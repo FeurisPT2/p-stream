@@ -188,172 +188,176 @@ export function TIDBSubmissionForm({
 
   return (
     <Modal id={submissionModal.id}>
-      <ModalCard className="!max-w-4xl max-h-[80vh] overflow-y-auto">
-        <Heading3 className="!mt-0 !mb-4">
-          {t("player.skipTime.feedback.modal.title")}
-        </Heading3>
-        <Paragraph className="!mt-1 !mb-6">
-          {t("player.skipTime.feedback.modal.description")}
-        </Paragraph>
+      <div className="w-full max-w-[30rem] m-4 px-4">
+        <div className="w-full bg-modal-background rounded-xl p-8 pointer-events-auto max-h-[90vh] md:max-h-[80vh] overflow-y-auto">
+          <Heading3 className="!mt-0 !mb-4">
+            {t("player.skipTime.feedback.modal.title")}
+          </Heading3>
+          <Paragraph className="!mt-1 !mb-6">
+            {t("player.skipTime.feedback.modal.description")}
+          </Paragraph>
 
-        <div className="space-y-4 mt-4">
-          {/* Section: Segment timestamps */}
-          <div>
-            <label
-              htmlFor="segment"
-              className="block text-sm font-medium text-white mb-1"
-            >
-              {t("player.skipTime.feedback.modal.segmentType")}
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <Dropdown
-              options={[
-                {
-                  id: "intro",
-                  name: t("player.skipTime.feedback.modal.types.intro"),
-                },
-                {
-                  id: "recap",
-                  name: t("player.skipTime.feedback.modal.types.recap"),
-                },
-                {
-                  id: "credits",
-                  name: t("player.skipTime.feedback.modal.types.credits"),
-                },
-              ]}
-              selectedItem={{
-                id: formData.segment,
-                name:
-                  formData.segment === "intro"
-                    ? t("player.skipTime.feedback.modal.types.intro")
-                    : formData.segment === "recap"
-                      ? t("player.skipTime.feedback.modal.types.recap")
-                      : t("player.skipTime.feedback.modal.types.credits"),
-              }}
-              setSelectedItem={(item) =>
-                setFormData({ ...formData, segment: item.id as SegmentType })
-              }
-            />
+          <div className="space-y-4 mt-4 pb-4">
+            {/* Section: Segment timestamps */}
+            <div>
+              <label
+                htmlFor="segment"
+                className="block text-sm font-medium text-white mb-1"
+              >
+                {t("player.skipTime.feedback.modal.segmentType")}
+                <span className="text-red-500 ml-1">*</span>
+              </label>
+              <Dropdown
+                options={[
+                  {
+                    id: "intro",
+                    name: t("player.skipTime.feedback.modal.types.intro"),
+                  },
+                  {
+                    id: "recap",
+                    name: t("player.skipTime.feedback.modal.types.recap"),
+                  },
+                  {
+                    id: "credits",
+                    name: t("player.skipTime.feedback.modal.types.credits"),
+                  },
+                ]}
+                selectedItem={{
+                  id: formData.segment,
+                  name:
+                    formData.segment === "intro"
+                      ? t("player.skipTime.feedback.modal.types.intro")
+                      : formData.segment === "recap"
+                        ? t("player.skipTime.feedback.modal.types.recap")
+                        : t("player.skipTime.feedback.modal.types.credits"),
+                }}
+                setSelectedItem={(item) =>
+                  setFormData({ ...formData, segment: item.id as SegmentType })
+                }
+              />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="start"
+                    className="block text-sm font-medium text-white mb-1"
+                  >
+                    {t("player.skipTime.feedback.modal.startTimeLabel")}
+                    {formData.segment === "credits" ? (
+                      <span className="text-red-500 ml-1">*</span>
+                    ) : null}
+                  </label>
+                  <AuthInputBox
+                    value={formData.start}
+                    onChange={(value) =>
+                      setFormData({ ...formData, start: value })
+                    }
+                    placeholder={t(
+                      `player.skipTime.feedback.modal.placeholders.start.${formData.segment}`,
+                    )}
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="end"
+                    className="block text-sm font-medium text-white mb-1"
+                  >
+                    {t("player.skipTime.feedback.modal.endTimeLabel")}
+                    {formData.segment === "intro" ||
+                    formData.segment === "recap" ? (
+                      <span className="text-red-500 ml-1">*</span>
+                    ) : null}
+                  </label>
+                  <AuthInputBox
+                    value={formData.end}
+                    onChange={(value) =>
+                      setFormData({ ...formData, end: value })
+                    }
+                    placeholder={t(
+                      `player.skipTime.feedback.modal.placeholders.end.${formData.segment}`,
+                    )}
+                  />
+                </div>
+              </div>
+
+              {/* Timing Guidance Section */}
+              <div className="mt-6 p-4 bg-pill-background rounded-lg">
+                <h3 className="font-semibold text-white mb-3">
+                  {t("player.skipTime.feedback.modal.whenToTitle")}
+                </h3>
+
+                <p className="text-sm text-gray-300">
+                  {t("player.skipTime.feedback.modal.whenToDesc")}
+                </p>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
+                  <div>
+                    <h4 className="font-medium mb-1">
+                      {t("player.skipTime.feedback.modal.guide.startLabel")}
+                    </h4>
+                    <p className="text-xs">
+                      {t("player.skipTime.feedback.modal.guide.startDesc")}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">
+                      {t("player.skipTime.feedback.modal.guide.endLabel")}
+                    </h4>
+                    <p className="text-xs">
+                      {t("player.skipTime.feedback.modal.guide.endDesc")}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">
+                      {t("player.skipTime.feedback.modal.guide.durationLabel")}
+                    </h4>
+                    <p className="text-xs">
+                      {t("player.skipTime.feedback.modal.guide.durationDesc")}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-1">
+                      {t("player.skipTime.feedback.modal.guide.excludeLabel")}
+                    </h4>
+                    <p className="text-xs">
+                      {t("player.skipTime.feedback.modal.guide.excludeDesc")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4 justify-between">
+                <Button
+                  theme="secondary"
+                  onClick={() => {
+                    submissionModal.hide();
+                    if (onCancel) onCancel();
+                  }}
+                  disabled={isSubmitting}
+                >
+                  {t("player.skipTime.feedback.modal.cancel")}
+                </Button>
+                <Button
+                  theme="purple"
+                  disabled={isSubmitting}
+                  loading={isSubmitting}
+                  onClick={() => {
+                    // Trigger form submission
+                    const form = document.querySelector("form");
+                    if (form) form.requestSubmit();
+                  }}
+                >
+                  {isSubmitting
+                    ? t("player.skipTime.feedback.modal.submitting")
+                    : t("player.skipTime.feedback.modal.submit")}
+                </Button>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label
-                  htmlFor="start"
-                  className="block text-sm font-medium text-white mb-1"
-                >
-                  {t("player.skipTime.feedback.modal.startTimeLabel")}
-                  {formData.segment === "credits" ? (
-                    <span className="text-red-500 ml-1">*</span>
-                  ) : null}
-                </label>
-                <AuthInputBox
-                  value={formData.start}
-                  onChange={(value) =>
-                    setFormData({ ...formData, start: value })
-                  }
-                  placeholder={t(
-                    `player.skipTime.feedback.modal.placeholders.start.${formData.segment}`,
-                  )}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="end"
-                  className="block text-sm font-medium text-white mb-1"
-                >
-                  {t("player.skipTime.feedback.modal.endTimeLabel")}
-                  {formData.segment === "intro" ||
-                  formData.segment === "recap" ? (
-                    <span className="text-red-500 ml-1">*</span>
-                  ) : null}
-                </label>
-                <AuthInputBox
-                  value={formData.end}
-                  onChange={(value) => setFormData({ ...formData, end: value })}
-                  placeholder={t(
-                    `player.skipTime.feedback.modal.placeholders.end.${formData.segment}`,
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Timing Guidance Section */}
-            <div className="mt-6 p-4 bg-pill-background rounded-lg">
-              <h3 className="font-semibold text-white mb-3">
-                {t("player.skipTime.feedback.modal.whenToTitle")}
-              </h3>
-
-              <p className="text-sm text-gray-300">
-                {t("player.skipTime.feedback.modal.whenToDesc")}
-              </p>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-4">
-                <div>
-                  <h4 className="font-medium mb-1">
-                    {t("player.skipTime.feedback.modal.guide.startLabel")}
-                  </h4>
-                  <p className="text-xs">
-                    {t("player.skipTime.feedback.modal.guide.startDesc")}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-1">
-                    {t("player.skipTime.feedback.modal.guide.endLabel")}
-                  </h4>
-                  <p className="text-xs">
-                    {t("player.skipTime.feedback.modal.guide.endDesc")}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-1">
-                    {t("player.skipTime.feedback.modal.guide.durationLabel")}
-                  </h4>
-                  <p className="text-xs">
-                    {t("player.skipTime.feedback.modal.guide.durationDesc")}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="font-medium mb-1">
-                    {t("player.skipTime.feedback.modal.guide.excludeLabel")}
-                  </h4>
-                  <p className="text-xs">
-                    {t("player.skipTime.feedback.modal.guide.excludeDesc")}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-4 justify-between">
-              <Button
-                theme="secondary"
-                onClick={() => {
-                  submissionModal.hide();
-                  if (onCancel) onCancel();
-                }}
-                disabled={isSubmitting}
-              >
-                {t("player.skipTime.feedback.modal.cancel")}
-              </Button>
-              <Button
-                theme="purple"
-                disabled={isSubmitting}
-                loading={isSubmitting}
-                onClick={() => {
-                  // Trigger form submission
-                  const form = document.querySelector("form");
-                  if (form) form.requestSubmit();
-                }}
-              >
-                {isSubmitting
-                  ? t("player.skipTime.feedback.modal.submitting")
-                  : t("player.skipTime.feedback.modal.submit")}
-              </Button>
-            </div>
-          </form>
         </div>
-      </ModalCard>
+      </div>
     </Modal>
   );
 }
