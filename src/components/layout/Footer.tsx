@@ -1,3 +1,4 @@
+import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +17,7 @@ type FooterLinkProps = RequireExactlyOne<
     icon: Icons;
     to: string;
     href: string;
+    focusKey: string;
   },
   "to" | "href"
 >;
@@ -29,13 +31,42 @@ function FooterLink(props: FooterLinkProps) {
     navigate(props.to);
   }, [navigate, props.to]);
 
+  const { ref, focused } = useFocusable({
+    focusKey: props.focusKey,
+    onEnterPress: () => {
+      if (props.to) {
+        navigateTo();
+      } else if (props.href) {
+        window.open(props.href, "_blank");
+      }
+    },
+    onFocus: () => {
+      setTimeout(() => {
+        const element = document.querySelector(
+          `[data-focuskey="${props.focusKey}"]`,
+        );
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "nearest",
+          });
+        }
+      }, 0);
+    },
+  });
+
   return (
     <a
+      ref={ref}
       href={props.href}
       target={props.href ? "_blank" : undefined}
       rel="noreferrer"
-      className="tabbable rounded py-2 px-3 inline-flex cursor-pointer items-center space-x-3 transition-colors duration-200 hover:text-type-emphasis"
+      className={`tabbable rounded py-2 px-3 inline-flex cursor-pointer items-center space-x-3 transition-colors duration-200 hover:text-type-emphasis border-2 ${
+        focused ? "border-type-link" : "border-transparent"
+      }`}
       onClick={props.to ? navigateTo : undefined}
+      data-focuskey={props.focusKey}
     >
       <Icon icon={props.icon} className="text-2xl" />
       <span className="font-medium">{props.children}</span>
@@ -50,7 +81,7 @@ function Legal() {
   if (window.location.hash === "#/legal") return null;
 
   return (
-    <FooterLink to="/legal" icon={Icons.DRAGON}>
+    <FooterLink to="/legal" icon={Icons.DRAGON} focusKey="footer-legal">
       {t("footer.links.legal")}
     </FooterLink>
   );
@@ -76,14 +107,26 @@ export function Footer() {
         </div>
         <div className="flex flex-wrap gap-[0.5rem] -ml-3">
           {conf().GITHUB_LINK && (
-            <FooterLink icon={Icons.GITHUB} href={conf().GITHUB_LINK}>
+            <FooterLink
+              icon={Icons.GITHUB}
+              href={conf().GITHUB_LINK}
+              focusKey="footer-github"
+            >
               {t("footer.links.github")}
             </FooterLink>
           )}
-          <FooterLink icon={Icons.DISCORD} href={conf().DISCORD_LINK}>
+          <FooterLink
+            icon={Icons.DISCORD}
+            href={conf().DISCORD_LINK}
+            focusKey="footer-discord"
+          >
             {t("footer.links.discord")}
           </FooterLink>
-          <FooterLink href="https://rentry.co/nnqtas3e" icon={Icons.TIP_JAR}>
+          <FooterLink
+            href="https://rentry.co/nnqtas3e"
+            icon={Icons.TIP_JAR}
+            focusKey="footer-funding"
+          >
             {t("footer.links.funding")}
           </FooterLink>
           <div className="inline md:hidden">

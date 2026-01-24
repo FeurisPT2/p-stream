@@ -355,7 +355,7 @@ export function Navigation(props: NavigationProps) {
                   : "none",
               }}
             >
-              <LinksDropdown>
+              <LinksDropdown focusKey={`${baseFocusKey}-profile-dropdown`}>
                 {loggedIn ? <UserAvatar withName /> : <NoUserAvatar />}
               </LinksDropdown>
             </div>

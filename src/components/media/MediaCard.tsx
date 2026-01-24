@@ -420,7 +420,22 @@ export const MediaCard = forwardRef<HTMLElement, MediaCardProps>(
     const { ref: focusRef, focused } = useFocusable({
       focusKey,
       onEnterPress: handleSelect,
-      onFocus,
+      onFocus: () => {
+        onFocus?.();
+        // Scroll controlling, in case the focused card is out of view
+        setTimeout(() => {
+          const element = document.querySelector(
+            `[data-focuskey="${focusKey}"]`,
+          );
+          if (element) {
+            element.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+              inline: "nearest",
+            });
+          }
+        }, 0);
+      },
       onBlur,
     }) as {
       ref: ((node: HTMLElement | null) => void) | React.RefObject<HTMLElement>;
@@ -461,6 +476,7 @@ export const MediaCard = forwardRef<HTMLElement, MediaCardProps>(
           onContextMenu={handleCardContextMenu}
           style={focusStyle}
           role="button"
+          data-focuskey={focusKey}
         >
           {content}
         </span>
@@ -479,6 +495,7 @@ export const MediaCard = forwardRef<HTMLElement, MediaCardProps>(
         onClick={handleCardClick}
         onContextMenu={handleCardContextMenu}
         style={focusStyle}
+        data-focuskey={focusKey}
       >
         {content}
       </Link>

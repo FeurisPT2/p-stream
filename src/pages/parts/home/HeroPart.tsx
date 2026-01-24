@@ -104,6 +104,7 @@ export function HeroPart({
               placeholder={placeholder ?? ""}
               isSticky={showBg}
               isInFeatured={isInFeatured}
+              autoFocus
             />
           </Sticky>
         </div>

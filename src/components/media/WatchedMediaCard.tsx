@@ -27,6 +27,7 @@ export interface WatchedMediaCardProps {
   editable?: boolean;
   onEdit?: () => void;
   focusKey: string;
+  onFocus?: () => void;
 }
 
 export function WatchedMediaCard(props: WatchedMediaCardProps) {
@@ -57,6 +58,7 @@ export function WatchedMediaCard(props: WatchedMediaCardProps) {
       editable={props.editable}
       onEdit={props.onEdit}
       focusKey={props.focusKey}
+      onFocus={props.onFocus}
     />
   );
 }

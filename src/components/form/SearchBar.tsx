@@ -1,4 +1,7 @@
-import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
+import {
+  setFocus,
+  useFocusable,
+} from "@noriginmedia/norigin-spatial-navigation";
 import c from "classnames";
 import { forwardRef, useEffect, useRef, useState } from "react";
 
@@ -15,6 +18,7 @@ export interface SearchBarProps {
   isSticky?: boolean;
   isInFeatured?: boolean;
   hideTooltip?: boolean;
+  autoFocus?: boolean;
 }
 
 export const SearchBarInput = forwardRef<HTMLInputElement, SearchBarProps>(
@@ -44,12 +48,44 @@ export const SearchBarInput = forwardRef<HTMLInputElement, SearchBarProps>(
       onFocus: () => {
         inputRef.current?.focus();
       },
+      onArrowPress: (direction) => {
+        if (direction === "down") {
+          const firstWatching = document.querySelector(
+            '[data-focuskey^="watching-"]',
+          );
+          const firstBookmark = document.querySelector(
+            '[data-focuskey^="bookmark-"]',
+          );
+          const firstDiscover = document.querySelector(
+            '[data-focuskey^="discover-"]',
+          );
+
+          const firstAvailable =
+            firstWatching || firstBookmark || firstDiscover;
+          if (firstAvailable) {
+            const focusKey = firstAvailable.getAttribute("data-focuskey");
+            if (focusKey) {
+              setFocus(focusKey);
+              return false;
+            }
+          }
+        }
+        return true;
+      },
     }) as {
       ref:
         | ((node: HTMLInputElement | null) => void)
         | React.RefObject<HTMLInputElement>;
       focused: boolean;
     };
+
+    useEffect(() => {
+      if (props.autoFocus) {
+        setTimeout(() => {
+          setFocus("search-bar-input");
+        }, 300);
+      }
+    }, [props.autoFocus]);
 
     const mergedRef = (node: HTMLInputElement | null) => {
       (inputRef as any).current = node;
