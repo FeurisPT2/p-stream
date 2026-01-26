@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/buttons/Button";
 import { Dropdown } from "@/components/form/Dropdown";
-import { Modal, ModalCard, useModal } from "@/components/overlays/Modal";
+import { Modal, useModal } from "@/components/overlays/Modal";
 import { SegmentData } from "@/components/player/hooks/useSkipTime";
 import { AuthInputBox } from "@/components/text-inputs/AuthInputBox";
 import { Heading3, Paragraph } from "@/components/utils/Text";
