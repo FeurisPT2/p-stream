@@ -249,6 +249,27 @@ export function MediaCarousel({
   const categorySlug = `${sectionTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${isTVShow ? "tv" : "movie"}`;
   const isScrollingRef = useRef(false);
 
+  const handleCardFocus = React.useCallback(
+    (index: number) => {
+      const carousel = carouselRefs.current[categorySlug];
+      if (!carousel) return;
+
+      const cardWidth = isMobile ? 10 * 16 : 11.5 * 16;
+      const gap = 16;
+      const leftSpacing = 12 * 16;
+
+      const cardPosition = leftSpacing + index * (cardWidth + gap + 16);
+      const scrollPosition =
+        cardPosition - carousel.clientWidth / 2 + cardWidth / 2;
+
+      carousel.scrollTo({
+        left: Math.max(0, scrollPosition),
+        behavior: "smooth",
+      });
+    },
+    [categorySlug, carouselRefs, isMobile],
+  );
+
   const handleWheel = React.useCallback(
     (e: React.WheelEvent) => {
       if (isScrollingRef.current) return;
@@ -482,7 +503,7 @@ export function MediaCarousel({
           <div className="lg:w-12" />
 
           {media.length > 0
-            ? media.map((item) => (
+            ? media.map((item, index) => (
                 <div
                   onContextMenu={(e: React.MouseEvent<HTMLDivElement>) =>
                     e.preventDefault()
@@ -509,6 +530,8 @@ export function MediaCarousel({
                           : undefined,
                     }}
                     onShowDetails={onShowDetails}
+                    focusKey={`discover-${categorySlug}-${item.id}-${index}`}
+                    onFocus={() => handleCardFocus(index)}
                   />
                 </div>
               ))
@@ -527,6 +550,7 @@ export function MediaCarousel({
                         type: isTVShow ? "show" : "movie",
                       }}
                       forceSkeleton
+                      focusKey={`skeleton-${categorySlug}-${index}`}
                     />
                   </div>
                 ))}

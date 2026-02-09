@@ -1,9 +1,11 @@
 // I'm sorry this is so confusing 😭
 
+import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
 import classNames from "classnames";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useRef, useState } from "react";
+import type { Ref } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { mediaItemToId } from "@/backend/metadata/tmdb";
 import { DotList } from "@/components/text/DotList";
@@ -109,6 +111,12 @@ export interface MediaCardProps {
   forceSkeleton?: boolean;
   editable?: boolean;
   onEdit?: () => void;
+
+  // SPATIAL NAVIGATION.
+  focusKey: string; // Required: unique ID for this card
+  onFocus?: () => void; // Optional: called when focused
+  onBlur?: () => void; // Optional: called when blurred
+  focused?: boolean;
 }
 
 function checkReleased(media: MediaItem): boolean {
@@ -136,6 +144,7 @@ function MediaCardContent({
   forceSkeleton,
   editable,
   onEdit,
+  focused,
 }: MediaCardProps) {
   const { t } = useTranslation();
   const percentageString = `${Math.round(percentage ?? 0).toFixed(0)}%`;
@@ -176,9 +185,9 @@ function MediaCardContent({
   return (
     <div ref={targetRef as React.RefObject<HTMLDivElement>}>
       <Flare.Base
-        className={`group -m-[0.705em] rounded-xl bg-background-main transition-colors duration-300 focus:relative focus:z-10 ${
+        className={`group -m-[0.705em] rounded-xl bg-background-main transition-colors duration-300 focus:relative focus:z-10 border-themePreview-primary ${
           canLink ? "hover:bg-mediaCard-hoverBackground tabbable" : ""
-        } ${closable ? "jiggle" : ""}`}
+        } ${closable ? "jiggle" : ""} ${focused ? "bg-mediaCard-hoverBackground border-2" : ""}`}
         tabIndex={canLink ? 0 : -1}
         onKeyUp={(e) => e.key === "Enter" && e.currentTarget.click()}
       >
@@ -193,7 +202,7 @@ function MediaCardContent({
         <Flare.Child
           className={`pointer-events-auto relative mb-2 p-[0.4em] transition-transform duration-300 ${
             canLink ? "group-hover:scale-95" : "opacity-60"
-          }`}
+          } ${focused ? "scale-95" : ""}`}
         >
           <div
             className={classNames(
@@ -338,94 +347,160 @@ function MediaCardContent({
   );
 }
 
-export function MediaCard(props: MediaCardProps) {
-  const { media, onShowDetails, forceSkeleton } = props;
-  const { showModal } = useOverlayStack();
-  const enableDetailsModal = usePreferencesStore(
-    (state) => state.enableDetailsModal,
-  );
+export const MediaCard = forwardRef<HTMLElement, MediaCardProps>(
+  (props: MediaCardProps, ref: Ref<HTMLElement>) => {
+    const {
+      media,
+      onShowDetails,
+      forceSkeleton,
+      closable,
+      focusKey,
+      onFocus,
+      onBlur,
+    } = props;
 
-  const isReleased = useCallback(
-    () => checkReleased(props.media),
-    [props.media],
-  );
+    const { showModal } = useOverlayStack();
+    const enableDetailsModal = usePreferencesStore(
+      (state) => state.enableDetailsModal,
+    );
 
-  const canLink = props.linkable && !props.closable && isReleased();
+    const isReleased = useCallback(
+      () => checkReleased(props.media),
+      [props.media],
+    );
+    const navigate = useNavigate();
 
-  let link = canLink
-    ? `/media/${encodeURIComponent(mediaItemToId(props.media))}`
-    : "#";
-  if (canLink && props.series) {
-    if (props.series.season === 0 && !props.series.episodeId) {
-      link += `/${encodeURIComponent(props.series.seasonId)}`;
-    } else {
-      link += `/${encodeURIComponent(
-        props.series.seasonId,
-      )}/${encodeURIComponent(props.series.episodeId)}`;
+    const canLink = props.linkable && !props.closable && isReleased();
+
+    let link = canLink
+      ? `/media/${encodeURIComponent(mediaItemToId(props.media))}`
+      : "#";
+    if (canLink && props.series) {
+      if (props.series.season === 0 && !props.series.episodeId) {
+        link += `/${encodeURIComponent(props.series.seasonId)}`;
+      } else {
+        link += `/${encodeURIComponent(
+          props.series.seasonId,
+        )}/${encodeURIComponent(props.series.episodeId)}`;
+      }
     }
-  }
 
-  const handleShowDetails = useCallback(async () => {
-    if (onShowDetails) {
-      onShowDetails(media);
-      return;
-    }
+    const handleShowDetails = useCallback(async () => {
+      if (onShowDetails) {
+        onShowDetails(media);
+        return;
+      }
 
-    // Show modal with data through overlayStack
-    showModal("details", {
-      id: Number(media.id),
-      type: media.type === "movie" ? "movie" : "show",
-    });
-  }, [media, showModal, onShowDetails]);
+      showModal("details", {
+        id: Number(media.id),
+        type: media.type === "movie" ? "movie" : "show",
+      });
+    }, [media, showModal, onShowDetails]);
 
-  const handleCardClick = (e: React.MouseEvent) => {
-    if (enableDetailsModal && canLink) {
+    const handleSelect = useCallback(() => {
+      if (enableDetailsModal && canLink) {
+        handleShowDetails();
+      } else if (!enableDetailsModal && canLink) {
+        navigate(link);
+      }
+    }, [enableDetailsModal, handleShowDetails, link, canLink, navigate]);
+
+    const handleCardClick = (e: React.MouseEvent) => {
+      if (enableDetailsModal && canLink) {
+        e.preventDefault();
+        handleShowDetails();
+      }
+    };
+
+    const handleCardContextMenu = (e: React.MouseEvent) => {
       e.preventDefault();
       handleShowDetails();
-    }
-  };
+    };
 
-  const handleCardContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    handleShowDetails();
-  };
-
-  const content = (
-    <MediaCardContent
-      {...props}
-      onShowDetails={handleShowDetails}
-      forceSkeleton={forceSkeleton}
-    />
-  );
-
-  if (!canLink) {
-    return (
-      <span
-        className="relative"
-        onClick={(e) => {
-          if (e.defaultPrevented) {
-            e.preventDefault();
+    const { ref: focusRef, focused } = useFocusable({
+      focusKey,
+      onEnterPress: handleSelect,
+      onFocus: () => {
+        onFocus?.();
+        // Scroll controlling, in case the focused card is out of view
+        setTimeout(() => {
+          const element = document.querySelector(
+            `[data-focuskey="${focusKey}"]`,
+          );
+          if (element) {
+            element.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+              inline: "nearest",
+            });
           }
-        }}
+        }, 0);
+      },
+      onBlur,
+    }) as {
+      ref: ((node: HTMLElement | null) => void) | React.RefObject<HTMLElement>;
+      focused: boolean;
+    };
+
+    const mergedRef = (node: HTMLElement | null) => {
+      if (typeof ref === "function") ref(node);
+      else if (ref && "current" in ref) (ref as any).current = node;
+      if (typeof focusRef === "function") {
+        focusRef(node);
+      } else if (focusRef && "current" in focusRef) {
+        (focusRef as any).current = node;
+      }
+    };
+
+    const focusStyle = focused ? {} : {};
+
+    const content = (
+      <MediaCardContent
+        {...props}
+        onShowDetails={handleShowDetails}
+        forceSkeleton={forceSkeleton}
+        focused={focused}
+      />
+    );
+
+    if (!canLink) {
+      return (
+        <span
+          ref={mergedRef}
+          className="relative"
+          onClick={(e) => {
+            if (e.defaultPrevented) {
+              e.preventDefault();
+            }
+          }}
+          onContextMenu={handleCardContextMenu}
+          style={focusStyle}
+          role="button"
+          data-focuskey={focusKey}
+        >
+          {content}
+        </span>
+      );
+    }
+
+    return (
+      <Link
+        ref={mergedRef as any}
+        to={link}
+        tabIndex={-1}
+        className={classNames(
+          "tabbable",
+          closable ? "hover:cursor-default" : "",
+        )}
+        onClick={handleCardClick}
         onContextMenu={handleCardContextMenu}
+        style={focusStyle}
+        data-focuskey={focusKey}
       >
         {content}
-      </span>
+      </Link>
     );
-  }
+  },
+);
 
-  return (
-    <Link
-      to={link}
-      tabIndex={-1}
-      className={classNames(
-        "tabbable",
-        props.closable ? "hover:cursor-default" : "",
-      )}
-      onClick={handleCardClick}
-      onContextMenu={handleCardContextMenu}
-    >
-      {content}
-    </Link>
-  );
-}
+MediaCard.displayName = "MediaCard";

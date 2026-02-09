@@ -42,6 +42,9 @@ importers:
       '@noble/hashes':
         specifier: ^1.8.0
         version: 1.8.0
+      '@noriginmedia/norigin-spatial-navigation':
+        specifier: ^2.3.0
+        version: 2.3.0(react@18.3.1)
       '@p-stream/providers':
         specifier: github:p-stream/providers#production
         version: https://codeload.github.com/p-stream/providers/tar.gz/fc5a98210c5e14588c8c2daa4f3cba3970d84103
@@ -1206,6 +1209,11 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
+
+  '@noriginmedia/norigin-spatial-navigation@2.3.0':
+    resolution: {integrity: sha512-gR//N45NnKz1h0/AVknkfg7QnNATETdgXUUD3EKPxuQPyhk7NhsphODzRamyvjYaxsU6VbY/szcUlzBWWBkNMw==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   '@p-stream/providers@https://codeload.github.com/p-stream/providers/tar.gz/fc5a98210c5e14588c8c2daa4f3cba3970d84103':
     resolution: {tarball: https://codeload.github.com/p-stream/providers/tar.gz/fc5a98210c5e14588c8c2daa4f3cba3970d84103}
@@ -5522,6 +5530,11 @@ snapshots:
       fastq: 1.19.1
 
   '@nolyfill/is-core-module@1.0.39': {}
+
+  '@noriginmedia/norigin-spatial-navigation@2.3.0(react@18.3.1)':
+    dependencies:
+      lodash: 4.17.21
+      react: 18.3.1
 
   '@p-stream/providers@https://codeload.github.com/p-stream/providers/tar.gz/fc5a98210c5e14588c8c2daa4f3cba3970d84103':
     dependencies:

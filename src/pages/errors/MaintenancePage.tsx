@@ -19,7 +19,7 @@ function MaintenancePage({ onHomeButtonClick }: MaintenancePageProps) {
 
   return (
     <div className="relative flex flex-1 flex-col">
-      <Navigation />
+      <Navigation focusKey="main-nav" />
       <Helmet>
         <title>{t("downtimeNotice.title")}</title>
       </Helmet>

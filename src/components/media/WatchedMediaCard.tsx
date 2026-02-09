@@ -26,6 +26,8 @@ export interface WatchedMediaCardProps {
   onShowDetails?: (media: MediaItem) => void;
   editable?: boolean;
   onEdit?: () => void;
+  focusKey: string;
+  onFocus?: () => void;
 }
 
 export function WatchedMediaCard(props: WatchedMediaCardProps) {
@@ -55,6 +57,8 @@ export function WatchedMediaCard(props: WatchedMediaCardProps) {
       onShowDetails={props.onShowDetails}
       editable={props.editable}
       onEdit={props.onEdit}
+      focusKey={props.focusKey}
+      onFocus={props.onFocus}
     />
   );
 }

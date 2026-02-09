@@ -1,3 +1,4 @@
+import { useFocusable } from "@noriginmedia/norigin-spatial-navigation";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -78,18 +79,40 @@ export function RandomMovieButton() {
     }
   };
 
+  const { ref, focused } = useFocusable({
+    focusKey: "random-movie-button",
+    onEnterPress: handleRandomMovieClick,
+    onFocus: () => {
+      setTimeout(() => {
+        const element = document.querySelector(
+          '[data-focuskey="random-movie-button"]',
+        );
+        if (element) {
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+            inline: "nearest",
+          });
+        }
+      }, 0);
+    },
+  });
+
   return (
     <div className="flex justify-center items-center">
       <button
+        ref={ref}
         type="button"
         className={`
           relative flex items-center overflow-hidden
           rounded-full text-white h-10
           bg-pill-background bg-opacity-50 hover:bg-pill-backgroundHover
-          transition-all duration-300 ease-in-out
+          transition-all duration-300 ease-in-out border-2
           ${countdown !== null && countdown > 0 ? "min-w-[10px] pl-3" : "w-10"}
+          ${focused ? "border-type-link" : "border-transparent"}
         `}
         onClick={handleRandomMovieClick}
+        data-focuskey="random-movie-button"
       >
         {/* Title container that slides in */}
         <div

@@ -298,6 +298,27 @@ export function BookmarksCarousel({
   const categorySlug = "bookmarks";
   const SKELETON_COUNT = 10;
 
+  const handleCardFocus = React.useCallback(
+    (sectionKey: string, index: number) => {
+      const carousel = carouselRefs.current[sectionKey];
+      if (!carousel) return;
+
+      const cardWidth = isMobile ? 10 * 16 : 11.5 * 16;
+      const gap = 16;
+      const leftSpacing = 12 * 16;
+
+      const cardPosition = leftSpacing + index * (cardWidth + gap + 16);
+      const scrollPosition =
+        cardPosition - carousel.clientWidth / 2 + cardWidth / 2;
+
+      carousel.scrollTo({
+        left: Math.max(0, scrollPosition),
+        behavior: "smooth",
+      });
+    },
+    [carouselRefs, isMobile],
+  );
+
   if (bookmarksLength === 0) return null;
 
   return (
@@ -408,7 +429,7 @@ export function BookmarksCarousel({
 
                   {section.items
                     .slice(0, MAX_ITEMS_PER_SECTION)
-                    .map((media) => (
+                    .map((media, index) => (
                       <div
                         key={media.id}
                         onContextMenu={(e: React.MouseEvent<HTMLDivElement>) =>
@@ -424,6 +445,10 @@ export function BookmarksCarousel({
                           onClose={() => removeBookmark(media.id)}
                           editable={editing}
                           onEdit={() => handleEditBookmark(media.id)}
+                          focusKey={`bookmark-${section.group || "regular"}-${media.id}-${index}`}
+                          onFocus={() =>
+                            handleCardFocus(section.group || "bookmarks", index)
+                          }
                         />
                       </div>
                     ))}
@@ -529,7 +554,7 @@ export function BookmarksCarousel({
                 {section.items.length > 0
                   ? section.items
                       .slice(0, MAX_ITEMS_PER_SECTION)
-                      .map((media) => (
+                      .map((media, index) => (
                         <div
                           key={media.id}
                           onContextMenu={(
@@ -545,6 +570,8 @@ export function BookmarksCarousel({
                             onClose={() => removeBookmark(media.id)}
                             editable={editing}
                             onEdit={() => handleEditBookmark(media.id)}
+                            focusKey={`bookmark-regular-${media.id}-${index}`}
+                            onFocus={() => handleCardFocus("bookmarks", index)}
                           />
                         </div>
                       ))

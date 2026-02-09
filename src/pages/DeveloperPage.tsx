@@ -6,7 +6,7 @@ import { Title } from "@/components/text/Title";
 export default function DeveloperPage() {
   return (
     <div className="py-48">
-      <Navigation />
+      <Navigation focusKey="main-nav" />
       <ThinContainer classNames="flex flex-col space-y-4">
         <Title>Developer tools</Title>
         <ArrowLink to="/dev/video" direction="right" linkText="Video tester" />

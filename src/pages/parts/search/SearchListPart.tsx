@@ -1,3 +1,4 @@
+import { setFocus } from "@noriginmedia/norigin-spatial-navigation";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -79,6 +80,10 @@ export function SearchListPart({
     if (searchQuery !== "") runSearch({ searchQuery });
   }, [searchQuery, exec]);
 
+  useEffect(() => {
+    setFocus("search-bar-input");
+  }, []);
+
   if (state.loading) return <SearchLoadingPart />;
   if (state.error) return <SearchSuffix failed />;
   if (!results) return null;
@@ -95,6 +100,7 @@ export function SearchListPart({
             {results.map((v) => (
               <WatchedMediaCard
                 key={v.id.toString()}
+                focusKey={`search-media-${v.type}-${v.id}`}
                 media={v}
                 onShowDetails={onShowDetails}
               />

@@ -4,6 +4,7 @@ import "./stores/__old/imports";
 import "@/setup/ga";
 import "@/assets/css/index.css";
 
+import { init } from "@noriginmedia/norigin-spatial-navigation";
 import { StrictMode, Suspense, useCallback, useState } from "react";
 import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
@@ -237,6 +238,12 @@ function ExtensionStatus() {
   }
   return null;
 }
+
+init({
+  debug: true,
+  distanceCalculationMethod: "edges",
+});
+
 const container = document.getElementById("root");
 const root = createRoot(container!);
 
