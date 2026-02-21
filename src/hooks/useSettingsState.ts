@@ -2,7 +2,6 @@ import {
   Dispatch,
   SetStateAction,
   useCallback,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -14,9 +13,6 @@ export function useDerived<T>(
   initial: T,
 ): [T, Dispatch<SetStateAction<T>>, () => void, boolean] {
   const [overwrite, setOverwrite] = useState<T | undefined>(undefined);
-  useEffect(() => {
-    setOverwrite(undefined);
-  }, [initial]);
   const changed = useMemo(
     () =>
       JSON.stringify(overwrite) !== JSON.stringify(initial) &&

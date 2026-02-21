@@ -667,6 +667,7 @@ export function SettingsPage() {
         } else {
           setCustomThemeBaseline(useThemeStore.getState().customTheme);
         }
+        state.reset();
       }
     };
     loadSettings();
