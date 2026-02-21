@@ -120,10 +120,12 @@ export function NextEpisodeButton(props: {
   const updateItem = useProgressStore((s) => s.updateItem);
   const sourceId = usePlayerStore((s) => s.sourceId);
 
+  const currentEpIndex =
+    meta?.episodes?.findIndex((v) => v.tmdbId === meta.episode?.tmdbId) ?? -1;
   const isLastEpisode =
-    !meta?.episode?.number || !meta?.episodes?.at(-1)?.number
+    currentEpIndex === -1
       ? false
-      : meta.episode.number === meta.episodes.at(-1)!.number;
+      : currentEpIndex === (meta?.episodes?.length ?? 0) - 1;
 
   const seasons = useSeasons(meta?.tmdbId, isLastEpisode);
 
@@ -148,12 +150,19 @@ export function NextEpisodeButton(props: {
 
   const nextEp = isLastEpisode
     ? nextSeasonEpisode.value
-    : meta?.episodes?.find(
-        (v) => v.number === (meta?.episode?.number ?? 0) + 1,
-      );
+    : meta?.episodes?.[currentEpIndex + 1];
 
   const loadNextEpisode = useCallback(() => {
     if (!meta || !nextEp) return;
+
+    console.log("loadNextEpisode called");
+    console.log("meta.shuffled:", meta.shuffled);
+    console.log(
+      "Current episodes order:",
+      meta.episodes?.map((e) => `${e.number}: ${e.title}`),
+    );
+    console.log("Current episode:", meta.episode?.number, meta.episode?.title);
+    console.log("Next episode:", nextEp?.number, nextEp?.title);
 
     // Store the current source as the last successful source
     if (sourceId) {

@@ -92,15 +92,28 @@ export function KeyboardEvents() {
   const navigateToNextEpisode = useCallback(async () => {
     if (!meta || meta.type !== "show" || !meta.episode) return;
 
+    console.log("navigateToNextEpisode called");
+    console.log("meta.shuffled:", meta.shuffled);
+    console.log(
+      "Current episodes order:",
+      meta.episodes?.map((e) => `${e.number}: ${e.title}`),
+    );
+
     // Check if we're at the last episode of the current season
-    const isLastEpisode =
-      meta.episode.number === meta.episodes?.[meta.episodes.length - 1]?.number;
+    const currentEpIndex =
+      meta.episodes?.findIndex((v) => v.tmdbId === meta.episode?.tmdbId) ?? -1;
+    const isLastEpisode = currentEpIndex === (meta.episodes?.length ?? 0) - 1;
+
+    console.log("Current episode:", meta.episode?.number, meta.episode?.title);
+    console.log("Current ep index:", currentEpIndex);
+    console.log("Is last episode:", isLastEpisode);
 
     if (!isLastEpisode) {
       // Navigate to next episode in current season
-      const nextEp = meta.episodes?.find(
-        (v) => v.number === meta.episode!.number + 1,
-      );
+      const nextEp = meta.episodes?.[currentEpIndex + 1];
+
+      console.log("Next episode:", nextEp?.number, nextEp?.title);
+
       if (nextEp) {
         if (sourceId) {
           setLastSuccessfulSource(sourceId);

@@ -106,41 +106,17 @@ export function BookmarkSyncer() {
       syncTimeout = setTimeout(syncImmediately, 100);
     };
 
-    // Override the addBookmark function to trigger immediate sync
-    const originalAddBookmark = useBookmarkStore.getState().addBookmark;
-    useBookmarkStore.setState({
-      addBookmark: (...args) => {
-        originalAddBookmark(...args);
-        // Trigger debounced sync after adding bookmark
+    const unsub = useBookmarkStore.subscribe((state, prevState) => {
+      if (state.updateQueue.length > prevState.updateQueue.length) {
         debouncedSync();
-      },
-    });
-
-    // Override removeBookmark to trigger immediate sync
-    const originalRemoveBookmark = useBookmarkStore.getState().removeBookmark;
-    useBookmarkStore.setState({
-      removeBookmark: (...args) => {
-        originalRemoveBookmark(...args);
-        // Trigger debounced sync after removing bookmark
-        debouncedSync();
-      },
-    });
-
-    // Override toggleFavoriteEpisode to trigger immediate sync
-    const originalToggleFavoriteEpisode =
-      useBookmarkStore.getState().toggleFavoriteEpisode;
-    useBookmarkStore.setState({
-      toggleFavoriteEpisode: (...args) => {
-        originalToggleFavoriteEpisode(...args);
-        // Trigger debounced sync after toggling favorite episode
-        debouncedSync();
-      },
+      }
     });
 
     return () => {
       if (syncTimeout) {
         clearTimeout(syncTimeout);
       }
+      unsub();
     };
   }, [removeUpdateItem, url]);
 

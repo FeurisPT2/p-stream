@@ -47,6 +47,7 @@ export interface PlayerMeta {
     tmdbId: string;
     title: string;
   };
+  shuffled?: boolean;
 }
 
 export interface Caption {

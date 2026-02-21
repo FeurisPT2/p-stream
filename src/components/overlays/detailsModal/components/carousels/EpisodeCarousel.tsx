@@ -3,10 +3,12 @@ import { t } from "i18next";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
+import { MWMediaType } from "@/backend/metadata/types/mw";
 import { Button } from "@/components/buttons/Button";
 import { Dropdown } from "@/components/form/Dropdown";
 import { Icon, Icons } from "@/components/Icon";
 import { Modal, ModalCard, useModal } from "@/components/overlays/Modal";
+import { usePlayerMeta } from "@/components/player/hooks/usePlayerMeta";
 import { hasAired } from "@/components/player/utils/aired";
 import { useBookmarkStore } from "@/stores/bookmarks";
 import { getProgressPercentage, useProgressStore } from "@/stores/progress";
@@ -47,6 +49,7 @@ export function EpisodeCarousel({
   }>({});
   const updateItem = useProgressStore((s) => s.updateItem);
   const confirmModal = useModal("season-watch-confirm");
+  const { setPlayerMeta, setDirectMeta } = usePlayerMeta();
 
   const handleScroll = (direction: "left" | "right") => {
     if (!carouselRef.current) return;
@@ -237,6 +240,102 @@ export function EpisodeCarousel({
     event.stopPropagation();
 
     confirmModal.show();
+  };
+
+  const handleShuffle = () => {
+    console.log("handleShuffle called", {
+      mediaId,
+      selectedSeason,
+      showFavorites,
+    });
+
+    if (!mediaId) {
+      console.log("No mediaId, returning early");
+      return;
+    }
+
+    const episodesToShuffle = showFavorites
+      ? favoriteEpisodes
+      : episodes.filter((ep) => ep.season_number === selectedSeason);
+
+    console.log("Episodes to shuffle:", episodesToShuffle.length);
+
+    if (episodesToShuffle.length === 0) {
+      console.log("No episodes to shuffle, returning early");
+      return;
+    }
+
+    // Fisher-Yates shuffle
+    const shuffled = [...episodesToShuffle];
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    const firstEp = shuffled[0];
+    console.log("First shuffled episode:", firstEp);
+
+    // Find the season for the first episode
+    const seasonData = seasons.find(
+      (s) => s.season_number === firstEp.season_number,
+    );
+    if (!seasonData) {
+      console.log("No seasonData found, returning early");
+      return;
+    }
+    console.log("Season data:", seasonData);
+
+    // Create meta with shuffled episodes
+    const meta = setPlayerMeta(
+      {
+        meta: {
+          id: mediaId.toString(),
+          type: MWMediaType.SERIES,
+          title: mediaTitle || "",
+          poster: mediaPosterUrl,
+          year: new Date().getFullYear().toString(),
+          seasons: seasons.map((s) => ({
+            id: s.id.toString(),
+            number: s.season_number,
+            title: s.name,
+          })),
+          seasonData: {
+            id: seasonData.id.toString(),
+            number: firstEp.season_number,
+            title: "",
+            episodes: shuffled.map((ep) => ({
+              id: ep.id.toString(),
+              number: ep.episode_number,
+              title: ep.name,
+              air_date: ep.air_date,
+              still_path: ep.still_path,
+              overview: ep.overview,
+            })),
+          },
+        },
+        tmdbId: mediaId.toString(),
+      },
+      firstEp.id.toString(),
+    );
+
+    console.log("Meta created:", meta);
+    console.log(
+      "Episodes in meta:",
+      meta?.episodes?.map((e) => `${e.number}: ${e.title}`),
+    );
+
+    if (meta) {
+      // Create a copy of meta with shuffled property
+      const metaWithShuffled = { ...meta, shuffled: true };
+      setDirectMeta(metaWithShuffled);
+
+      // Navigate to the first shuffled episode
+      const url = `/media/tmdb-tv-${mediaId}-${(mediaTitle || "").toLowerCase().replace(/[^a-z0-9]+/g, "-")}/${seasonData.id}/${firstEp.id}`;
+      console.log("Navigating to:", url);
+      window.location.href = url;
+    } else {
+      console.log("Meta creation failed");
+    }
   };
 
   const handleCancel = () => {
@@ -505,6 +604,14 @@ export function EpisodeCarousel({
 
         {/* Season Watched Confirmation */}
         <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={handleShuffle}
+            className="p-1.5 bg-dropdown-background hover:bg-dropdown-hoverBackground transition-colors rounded-full"
+            title={t("player.menus.episodes.shuffle")}
+          >
+            <Icon icon={Icons.SHUFFLE} className="h-5 w-5 text-white" />
+          </button>
           <Modal id={confirmModal.id}>
             <ModalCard>
               <h3 className="text-lg font-semibold text-white mb-4">

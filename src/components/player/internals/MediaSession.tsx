@@ -20,9 +20,10 @@ export function MediaSession() {
 
   const changeEpisode = useCallback(
     (change: number) => {
-      const nextEp = meta?.episodes?.find(
-        (v) => v.number === (meta?.episode?.number ?? 0) + change,
-      );
+      const currentEpIndex =
+        meta?.episodes?.findIndex((v) => v.tmdbId === meta.episode?.tmdbId) ??
+        -1;
+      const nextEp = meta?.episodes?.[currentEpIndex + change];
 
       if (!meta || !nextEp) return;
       const metaCopy = { ...meta };
@@ -178,7 +179,11 @@ export function MediaSession() {
       updatePositionState(e.seekTime);
     });
 
-    if ((meta?.episode?.number ?? 1) > 1) {
+    const currentEpIndex =
+      meta?.episodes?.findIndex((v) => v.tmdbId === meta.episode?.tmdbId) ?? -1;
+    const totalEpisodes = meta?.episodes?.length ?? 0;
+
+    if (currentEpIndex > 0) {
       navigator.mediaSession.setActionHandler("previoustrack", () =>
         changeEpisode(-1),
       );
@@ -186,9 +191,7 @@ export function MediaSession() {
       navigator.mediaSession.setActionHandler("previoustrack", null);
     }
 
-    const totalEpisodes = meta?.episodes?.length ?? 0;
-    const currentEpisodeNumber = meta?.episode?.number ?? 0;
-    if (currentEpisodeNumber > 0 && currentEpisodeNumber < totalEpisodes) {
+    if (currentEpIndex >= 0 && currentEpIndex < totalEpisodes - 1) {
       navigator.mediaSession.setActionHandler("nexttrack", () =>
         changeEpisode(1),
       );
@@ -210,6 +213,8 @@ export function MediaSession() {
     meta?.type,
     meta?.poster,
     meta?.season?.number,
+    meta?.episode?.tmdbId,
+    meta?.episodes,
   ]);
 
   return null;
