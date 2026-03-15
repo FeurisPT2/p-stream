@@ -7,7 +7,7 @@ import { Modal, ModalCard, useModal } from "@/components/overlays/Modal";
 import { Heading2 } from "@/components/utils/Text";
 import {
   GamepadMapping,
-  DEFAULT_PLAYER_GAMEPAD_MAPPING,
+  DEFAULT_GAMEPAD_MAPPING,
   GAMEPAD_ACTION_LABELS,
   GAMEPAD_BUTTON_LABELS,
   ALL_GAMEPAD_ACTIONS,
@@ -46,7 +46,7 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
   const gamepadMapping = usePreferencesStore((s) => s.gamepadMapping);
   const setGamepadMapping = usePreferencesStore((s) => s.setGamepadMapping);
 
-  const defaultMapping = DEFAULT_PLAYER_GAMEPAD_MAPPING;
+  const defaultMapping = DEFAULT_GAMEPAD_MAPPING;
   const currentMapping: GamepadMapping = {
     ...defaultMapping,
     ...gamepadMapping,
@@ -72,7 +72,7 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
   }, [currentMapping, modal]);
 
   const handleResetAll = useCallback(() => {
-    setEditingMapping(DEFAULT_PLAYER_GAMEPAD_MAPPING);
+    setEditingMapping(DEFAULT_GAMEPAD_MAPPING);
   }, []);
 
   const buttonGroups = [
@@ -165,6 +165,7 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
                                 ? label.xbox
                                 : label.ps
                             }
+                            hasConflict={hasDuplicate}
                           />
                         </div>
                         <div className="flex-1 ml-4">
