@@ -1,13 +1,10 @@
 import { useCallback } from "react";
 
-import { useVolume } from "@/components/player/hooks/useVolume";
 import { useCaptions } from "@/components/player/hooks/useCaptions";
+import { useVolume } from "@/components/player/hooks/useVolume";
+import { useGamepadPolling } from "@/hooks/useGamepad";
 import { usePlayerStore } from "@/stores/player/store";
 import { usePreferencesStore } from "@/stores/preferences";
-import {
-  useGamepadPolling,
-  DEFAULT_PLAYER_GAMEPAD_MAPPING,
-} from "@/hooks/useGamepad";
 
 export function GamepadEvents() {
   const display = usePlayerStore((s) => s.display);
@@ -23,7 +20,6 @@ export function GamepadEvents() {
   const handleAction = useCallback(
     (action: string) => {
       if (!display) return;
-
       switch (action) {
         case "play-pause":
           if (mediaPlaying.isPaused) display.play();
@@ -57,14 +53,21 @@ export function GamepadEvents() {
           toggleLastUsed();
           break;
         case "back":
-          // Navigate back
           window.history.back();
           break;
         default:
           break;
       }
     },
-    [display, mediaPlaying, time, duration, setVolume, toggleMute, toggleLastUsed],
+    [
+      display,
+      mediaPlaying,
+      time,
+      duration,
+      setVolume,
+      toggleMute,
+      toggleLastUsed,
+    ],
   );
 
   useGamepadPolling({
