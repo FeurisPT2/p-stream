@@ -139,16 +139,15 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
               theme={controllerType === "xbox" ? "purple" : "secondary"}
               onClick={() => setControllerType("xbox")}
               className="px-4 py-2"
-
             >
-              {" Xbox"}
+              {"Xbox"}
             </Button>
             <Button
               theme={controllerType === "ps" ? "purple" : "secondary"}
               onClick={() => setControllerType("ps")}
               className="px-4 py-2"
             >
-              {" PlayStation"}
+              {"PlayStation"}
             </Button>
           </div>
 
