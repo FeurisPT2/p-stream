@@ -1,19 +1,19 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/buttons/Button";
+import { Dropdown } from "@/components/form/Dropdown";
 import { Icon, Icons } from "@/components/Icon";
 import { Modal, ModalCard, useModal } from "@/components/overlays/Modal";
 import { Heading2 } from "@/components/utils/Text";
 import {
-  GamepadMapping,
+  ALL_GAMEPAD_ACTIONS,
   DEFAULT_GAMEPAD_MAPPING,
   GAMEPAD_ACTION_LABELS,
   GAMEPAD_BUTTON_LABELS,
-  ALL_GAMEPAD_ACTIONS,
+  GamepadMapping,
 } from "@/hooks/useGamepad";
 import { usePreferencesStore } from "@/stores/preferences";
-import { Dropdown } from "@/components/form/Dropdown";
 
 interface GamepadControlsModalProps {
   id: string;
@@ -46,11 +46,13 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
   const gamepadMapping = usePreferencesStore((s) => s.gamepadMapping);
   const setGamepadMapping = usePreferencesStore((s) => s.setGamepadMapping);
 
-  const defaultMapping = DEFAULT_GAMEPAD_MAPPING;
-  const currentMapping: GamepadMapping = {
-    ...defaultMapping,
-    ...gamepadMapping,
-  };
+  const currentMapping: GamepadMapping = useMemo(
+    () => ({
+      ...DEFAULT_GAMEPAD_MAPPING,
+      ...gamepadMapping,
+    }),
+    [gamepadMapping],
+  );
 
   const [editingMapping, setEditingMapping] =
     useState<GamepadMapping>(currentMapping);
@@ -78,15 +80,30 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
   const buttonGroups = [
     {
       title: "D-Pad",
-      buttons: ["dpadUp", "dpadDown", "dpadLeft", "dpadRight"] as (keyof GamepadMapping)[],
+      buttons: [
+        "dpadUp",
+        "dpadDown",
+        "dpadLeft",
+        "dpadRight",
+      ] as (keyof GamepadMapping)[],
     },
     {
       title: "Face Buttons",
-      buttons: ["actionSouth", "actionEast", "actionWest", "actionNorth"] as (keyof GamepadMapping)[],
+      buttons: [
+        "actionSouth",
+        "actionEast",
+        "actionWest",
+        "actionNorth",
+      ] as (keyof GamepadMapping)[],
     },
     {
       title: "Bumpers & Triggers",
-      buttons: ["leftBumper", "rightBumper", "leftTrigger", "rightTrigger"] as (keyof GamepadMapping)[],
+      buttons: [
+        "leftBumper",
+        "rightBumper",
+        "leftTrigger",
+        "rightTrigger",
+      ] as (keyof GamepadMapping)[],
     },
     {
       title: "System",
@@ -137,7 +154,10 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
           <div className="flex justify-end">
             <Button theme="secondary" onClick={handleResetAll}>
               <Icon icon={Icons.RELOAD} className="mr-2" />
-              {t("global.keyboardShortcuts.resetAllToDefault", "Reset All to Default")}
+              {t(
+                "global.keyboardShortcuts.resetAllToDefault",
+                "Reset All to Default",
+              )}
             </Button>
           </div>
 
@@ -161,9 +181,7 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
                         <div className="flex items-center gap-3">
                           <ButtonBadge
                             label={
-                              controllerType === "xbox"
-                                ? label.xbox
-                                : label.ps
+                              controllerType === "xbox" ? label.xbox : label.ps
                             }
                             hasConflict={hasDuplicate}
                           />
