@@ -108,12 +108,12 @@ export function PauseOverlay() {
           // Get runtime
           let runtime: number | null = null;
           if (isShowWithEpisode) {
-             const epData = await getEpisodeDetails(
+            const epData = await getEpisodeDetails(
               meta.tmdbId,
               meta.season?.number ?? 0,
               meta.episode?.number ?? 0,
             );
-             runtime = (epData as any)?.runtime ?? null;
+            runtime = (epData as any)?.runtime ?? null;
           } else {
             runtime = (data as any)?.runtime ?? null;
           }
