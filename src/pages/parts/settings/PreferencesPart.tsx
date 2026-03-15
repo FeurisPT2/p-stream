@@ -298,7 +298,7 @@ export function PreferencesPart(props: {
               onClick={() => showModal("gamepad-controls-edit")}
               className="flex-1"
             >
-              🎮 {t("settings.preferences.gamepadControlsLabel", "Controller")}
+               {t("settings.preferences.gamepadControlsLabel", "Customizze Controller Keybinds")}
             </Button>
           </div>
 
