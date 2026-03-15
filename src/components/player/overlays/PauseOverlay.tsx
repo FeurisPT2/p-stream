@@ -36,18 +36,37 @@ export function PauseOverlay() {
     runtime: null,
   });
 
-  // Show overlay after 2s of being paused; only hide when playback resumes
+  // Track whether playback has actually started at least once
+  // so the overlay never appears during source scraping / initial load
+  const hasPlayedRef = useRef(false);
   const [overlayVisible, setOverlayVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Mark that real playback has started the moment isPaused flips to false
+  // while the player is in a playing state (not scraping/loading)
   useEffect(() => {
-    if (isPaused) {
-      // Start 2s timer when paused
+    if (
+      !isPaused &&
+      status !== playerStatus.SCRAPING &&
+      status !== playerStatus.LOADING
+    ) {
+      hasPlayedRef.current = true;
+    }
+  }, [isPaused, status]);
+
+  useEffect(() => {
+    if (
+      isPaused &&
+      hasPlayedRef.current &&
+      status !== playerStatus.SCRAPING &&
+      status !== playerStatus.LOADING
+    ) {
+      // Show after 2 seconds of being paused
       timerRef.current = setTimeout(() => {
         setOverlayVisible(true);
       }, 2000);
     } else {
-      // Clear timer and hide immediately when unpaused
+      // Hide immediately when unpaused or not yet played
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -61,7 +80,7 @@ export function PauseOverlay() {
         timerRef.current = null;
       }
     };
-  }, [isPaused]);
+  }, [isPaused, status]);
 
   let shouldShow = overlayVisible && enablePauseOverlay;
   if (isMobile && status === playerStatus.SCRAPING) shouldShow = false;
@@ -167,15 +186,15 @@ export function PauseOverlay() {
 
   return (
     <div
-      className={`absolute inset-0 z-[60] flex flex-col justify-between bg-black/[0.12] transition-opacity duration-700 pointer-events-none ${
+      className={`absolute inset-0 z-[60] flex flex-col justify-between bg-black/50 transition-opacity duration-700 pointer-events-none ${
         shouldShow ? "opacity-100" : "opacity-0"
       }`}
     >
-      {/* Main content - left aligned, vertically centered */}
-      <div className="flex-1 flex items-end pb-32 md:pb-40">
-        <div className="ml-8 md:ml-16 max-w-md lg:max-w-2xl">
+      {/* Main content - left-center aligned, vertically anchored near bottom */}
+      <div className="flex-1 flex items-end pb-36 md:pb-44">
+        <div className="ml-24 md:ml-48 lg:ml-64 max-w-lg lg:max-w-2xl">
           {/* "You are watching" label */}
-          <p className="text-sm text-white/70 mb-3 tracking-wide">
+          <p className="text-sm text-white/70 mb-3 tracking-wide uppercase">
             {t("player.pauseOverlay.youAreWatching", "You are watching")}
           </p>
 
@@ -184,37 +203,37 @@ export function PauseOverlay() {
             <img
               src={logoUrl}
               alt={meta.title}
-              className="mb-4 max-h-28 object-contain drop-shadow-lg"
+              className="mb-4 max-h-36 object-contain drop-shadow-lg"
             />
           ) : (
-            <h1 className="mb-3 text-4xl lg:text-5xl font-bold text-white drop-shadow-lg">
+            <h1 className="mb-3 text-5xl lg:text-6xl font-bold text-white drop-shadow-lg">
               {meta.title}
             </h1>
           )}
 
           {/* Season / Episode info */}
           {meta.type === "show" && meta.season && meta.episode && (
-            <p className="text-base text-white/70 mb-1">
+            <p className="text-lg text-white/70 mb-1">
               Season {meta.season.number} · Episode {meta.episode.number}
             </p>
           )}
 
           {/* Episode title */}
           {meta.type === "show" && meta.episode?.title && (
-            <h2 className="mb-3 text-xl font-semibold text-white drop-shadow-md">
+            <h2 className="mb-3 text-2xl font-semibold text-white drop-shadow-md">
               {meta.episode.title}
             </h2>
           )}
 
           {/* Description */}
           {overview && (
-            <p className="text-sm lg:text-base text-white/70 drop-shadow-md line-clamp-4 mb-4 max-w-lg">
+            <p className="text-base lg:text-lg text-white/70 drop-shadow-md line-clamp-3 mb-4 max-w-xl">
               {overview}
             </p>
           )}
 
           {/* Rating + Runtime */}
-          <div className="flex items-center gap-2 text-sm text-white/80">
+          <div className="flex items-center gap-2 text-base text-white/80">
             {details.voteAverage !== null && details.voteAverage > 0 && (
               <>
                 <span className="text-yellow-400">⭐</span>
@@ -241,8 +260,8 @@ export function PauseOverlay() {
         </div>
       </div>
 
-      {/* "Paused" indicator - bottom right */}
-      <div className="absolute bottom-6 right-8 md:right-12">
+      {/* "Paused" indicator - bottom right, raised up to avoid controls overlap */}
+      <div className="absolute bottom-20 right-8 md:right-12">
         <span className="text-base text-white/60 tracking-wider">
           {t("player.pauseOverlay.paused", "Paused")}
         </span>
