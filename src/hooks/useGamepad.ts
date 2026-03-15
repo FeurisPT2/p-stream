@@ -188,7 +188,10 @@ export const GAMEPAD_ACTION_LABELS: Record<string, string> = {
   "previous-episode": "Previous Episode",
 };
 
-export const GAMEPAD_BUTTON_LABELS: Record<keyof GamepadMapping, { xbox: string; ps: string }> = {
+export const GAMEPAD_BUTTON_LABELS: Record<
+  keyof GamepadMapping,
+  { xbox: string; ps: string }
+> = {
   dpadUp: { xbox: "D-Pad ↑", ps: "D-Pad ↑" },
   dpadDown: { xbox: "D-Pad ↓", ps: "D-Pad ↓" },
   dpadLeft: { xbox: "D-Pad ←", ps: "D-Pad ←" },
