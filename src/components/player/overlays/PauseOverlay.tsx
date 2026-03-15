@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useIdle } from "react-use";
 
 import {
   getEpisodeDetails,
@@ -21,7 +20,6 @@ interface PauseDetails {
 }
 
 export function PauseOverlay() {
-  const isIdle = useIdle(10e3); // 10 seconds
   const isPaused = usePlayerStore((s) => s.mediaPlaying.isPaused);
   const status = usePlayerStore((s) => s.status);
   const meta = usePlayerStore((s) => s.meta);
@@ -38,7 +36,34 @@ export function PauseOverlay() {
     runtime: null,
   });
 
-  let shouldShow = isPaused && isIdle && enablePauseOverlay;
+  // Show overlay after 2s of being paused; only hide when playback resumes
+  const [overlayVisible, setOverlayVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (isPaused) {
+      // Start 2s timer when paused
+      timerRef.current = setTimeout(() => {
+        setOverlayVisible(true);
+      }, 2000);
+    } else {
+      // Clear timer and hide immediately when unpaused
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setOverlayVisible(false);
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [isPaused]);
+
+  let shouldShow = overlayVisible && enablePauseOverlay;
   if (isMobile && status === playerStatus.SCRAPING) shouldShow = false;
   if (isMobile && showTargets) shouldShow = false;
 
@@ -142,7 +167,7 @@ export function PauseOverlay() {
 
   return (
     <div
-      className={`absolute inset-0 z-[60] flex flex-col justify-between bg-black/60 transition-opacity duration-700 pointer-events-none ${
+      className={`absolute inset-0 z-[60] flex flex-col justify-between bg-black/[0.12] transition-opacity duration-700 pointer-events-none ${
         shouldShow ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -175,7 +200,7 @@ export function PauseOverlay() {
           )}
 
           {/* Episode title */}
-          {meta.type === "show" && meta.episode && (
+          {meta.type === "show" && meta.episode?.title && (
             <h2 className="mb-3 text-xl font-semibold text-white drop-shadow-md">
               {meta.episode.title}
             </h2>
