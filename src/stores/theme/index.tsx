@@ -10,6 +10,8 @@ import {
   tertiaryOptions,
 } from "@themes/custom";
 
+import { colorToRgbString } from "@/utils/color";
+
 export interface SavedCustomTheme {
   id: string;
   name: string;
@@ -139,15 +141,34 @@ export function ThemeProvider(props: {
   const themeToDisplay = previewTheme ?? theme;
   const themeSelector = themeToDisplay ? `theme-${themeToDisplay}` : undefined;
 
+  const parseCustomColor = (
+    colorStr: string,
+    keys: string[],
+  ): Record<string, string> => {
+    if (!colorStr.startsWith("custom:")) return {};
+    const values = colorStr.replace("custom:", "").split(",");
+    const vars: Record<string, string> = {};
+    keys.forEach((key, i) => {
+      if (values[i]) {
+        vars[key] = colorToRgbString(values[i]);
+      }
+    });
+    return vars;
+  };
+
   let styleContent = "";
   if (themeToDisplay === "custom" && customTheme) {
-    const primary =
-      primaryOptions.find((o) => o.id === customTheme.primary)?.colors || {};
-    const secondary =
-      secondaryOptions.find((o) => o.id === customTheme.secondary)?.colors ||
-      {};
-    const tertiary =
-      tertiaryOptions.find((o) => o.id === customTheme.tertiary)?.colors || {};
+    const primary = customTheme.primary.startsWith("custom:")
+      ? parseCustomColor(customTheme.primary, ["--colors-buttons-primary", "--colors-type-logo", "--colors-themePreview-primary"])
+      : primaryOptions.find((o) => o.id === customTheme.primary)?.colors || {};
+    
+    const secondary = customTheme.secondary.startsWith("custom:")
+      ? parseCustomColor(customTheme.secondary, ["--colors-type-text", "--colors-buttons-secondary"])
+      : secondaryOptions.find((o) => o.id === customTheme.secondary)?.colors || {};
+      
+    const tertiary = customTheme.tertiary.startsWith("custom:")
+      ? parseCustomColor(customTheme.tertiary, ["--colors-background-main", "--colors-themePreview-secondary"])
+      : tertiaryOptions.find((o) => o.id === customTheme.tertiary)?.colors || {};
 
     const vars = { ...primary, ...secondary, ...tertiary };
     const cssVars = Object.entries(vars)
@@ -159,12 +180,17 @@ export function ThemeProvider(props: {
 
   // Inject CSS rules for all saved custom themes so their previews render correctly
   savedCustomThemes.forEach((savedTheme) => {
-    const primary =
-      primaryOptions.find((o) => o.id === savedTheme.primary)?.colors || {};
-    const secondary =
-      secondaryOptions.find((o) => o.id === savedTheme.secondary)?.colors || {};
-    const tertiary =
-      tertiaryOptions.find((o) => o.id === savedTheme.tertiary)?.colors || {};
+    const primary = savedTheme.primary.startsWith("custom:")
+      ? parseCustomColor(savedTheme.primary, ["--colors-buttons-primary", "--colors-type-logo", "--colors-themePreview-primary"])
+      : primaryOptions.find((o) => o.id === savedTheme.primary)?.colors || {};
+      
+    const secondary = savedTheme.secondary.startsWith("custom:")
+      ? parseCustomColor(savedTheme.secondary, ["--colors-type-text", "--colors-buttons-secondary"])
+      : secondaryOptions.find((o) => o.id === savedTheme.secondary)?.colors || {};
+      
+    const tertiary = savedTheme.tertiary.startsWith("custom:")
+      ? parseCustomColor(savedTheme.tertiary, ["--colors-background-main", "--colors-themePreview-secondary"])
+      : tertiaryOptions.find((o) => o.id === savedTheme.tertiary)?.colors || {};
 
     const vars = { ...primary, ...secondary, ...tertiary };
     const cssVars = Object.entries(vars)

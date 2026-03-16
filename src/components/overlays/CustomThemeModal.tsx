@@ -19,7 +19,67 @@ const MOCK_STARS = Array.from({ length: 20 }, (_, i) => `star-${i}`);
 const MOCK_CARDS = Array.from({ length: 4 }, (_, i) => `card-${i}`);
 
 /**
- * High-fidelity Detailed Preview Component
+ * Symbolic "Card" Preview Component (Lovable style)
+ */
+function CardPreview({
+  vars,
+  scale = 1,
+}: {
+  vars: Record<string, string>;
+  scale?: number;
+}) {
+  return (
+    <div
+      className="relative w-full aspect-video rounded-2xl overflow-hidden border border-white/5 bg-background-main shadow-2xl transition-all duration-500 flex flex-col items-center justify-center p-8 space-y-6"
+      style={
+        {
+          ...vars,
+          transform: `scale(${scale})`,
+          transformOrigin: "center center",
+        } as any
+      }
+    >
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full bg-themePreview-primary shadow-[0_0_20px_rgba(var(--colors-themePreview-primary),0.4)]" />
+          <span className="text-white font-black uppercase tracking-widest text-sm">
+            Primary Color
+          </span>
+        </div>
+        <span className="text-white/30 text-[9px] font-mono uppercase tracking-[0.2em]">
+          Branding & Interaction
+        </span>
+      </div>
+
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full bg-type-text shadow-[0_0_20px_rgba(var(--colors-type-text),0.4)]" />
+          <span className="text-white font-black uppercase tracking-widest text-sm">
+            Secondary Color
+          </span>
+        </div>
+        <span className="text-white/30 text-[9px] font-mono uppercase tracking-[0.2em]">
+          Typography & Elements
+        </span>
+      </div>
+
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 rounded-full bg-themePreview-secondary shadow-[0_0_20px_rgba(var(--colors-themePreview-secondary),0.4)]" />
+          <span className="text-white font-black uppercase tracking-widest text-sm">
+            Tertiary Color
+          </span>
+        </div>
+        <span className="text-white/30 text-[9px] font-mono uppercase tracking-[0.2em]">
+          Surfaces & Accents
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * High-fidelity Detailed Preview Component (P-Stream Home)
  */
 function DetailedPreview({
   vars,
@@ -61,43 +121,56 @@ function DetailedPreview({
       </div>
 
       {/* Navbar Mock */}
-      <div className="relative z-10 p-4 flex justify-between items-center bg-gradient-to-b from-black/40 to-transparent">
-        <div className="flex items-center gap-4">
+      <div className="relative z-10 p-5 flex justify-between items-center">
+        <div className="flex items-center gap-5">
           {/* Logo Symbol */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5">
-            <div className="w-5 h-5 flex items-center justify-center text-themePreview-primary">
-              <Icon icon={Icons.LOGO} className="text-lg" />
+          <div className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-white/5 border border-white/5 backdrop-blur-md">
+            <div className="w-5 h-5 flex items-center justify-center text-themePreview-primary drop-shadow-[0_0_8px_rgba(var(--colors-themePreview-primary),0.5)]">
+              <Icon icon={Icons.LOGO} className="text-xl" />
             </div>
             <span className="font-black tracking-tighter text-sm text-type-text hidden sm:block">
               P-Stream
             </span>
           </div>
-          {/* Nav Icons */}
-          <div className="flex gap-3 text-type-text/60">
+          {/* Nav Icons mimicking Picture 4 */}
+          <div className="flex items-center gap-3.5 text-type-text/40">
+            <div className="p-1 px-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+              <Icon icon={Icons.DISCORD} className="text-base" />
+            </div>
             <Icon icon={Icons.RISING_STAR} className="text-sm" />
             <Icon icon={Icons.BELL} className="text-sm" />
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-type-text/10" />
-          <Icon icon={Icons.MENU} className="text-type-text/60" />
+        <div className="flex items-center gap-4">
+          <div className="w-9 h-9 rounded-full bg-type-text/10 border border-white/5 flex items-center justify-center">
+             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-themePreview-primary to-themePreview-primary/40 opacity-20" />
+          </div>
+          <div className="p-2 rounded-xl bg-white/5 border border-white/5 text-type-text/60">
+            <Icon icon={Icons.MENU} className="text-sm" />
+          </div>
         </div>
       </div>
 
       {/* Hero Section */}
-      <div className="relative z-10 mt-6 flex flex-col items-center px-12 text-center">
+      <div className="relative z-10 mt-2 flex flex-col items-center px-12 text-center">
         <div className="p-3 mb-6 relative">
           {/* Top floating icons mock (Discord etc) */}
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex gap-4 opacity-50">
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-4 opacity-50 scale-125">
+             <Icon
+              icon={Icons.DISCORD}
+              className="text-themePreview-primary drop-shadow-[0_0_15px_rgba(var(--colors-themePreview-primary),0.6)]"
+            />
             <Icon
               icon={Icons.RISING_STAR}
-              className="text-themePreview-primary animate-pulse"
+              className="text-white/40"
             />
-            <div className="w-1.5 h-1.5 rounded-full bg-white/40 mt-3" />
-            <div className="w-2 h-2 rounded-full bg-white/20 mt-1" />
+            <Icon
+              icon={Icons.BELL}
+              className="text-white/20"
+            />
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black text-type-text tracking-tight mb-2">
+          <h2 className="text-3xl sm:text-4xl font-black text-type-text tracking-tight mb-4 leading-tight">
             What would you like to
             <br />
             watch tonight?
@@ -105,28 +178,28 @@ function DetailedPreview({
         </div>
 
         {/* Search Bar Mock */}
-        <div className="w-full max-w-lg relative group/search">
-          <div className="absolute inset-y-0 left-4 flex items-center text-type-text/30">
+        <div className="w-full max-w-xl relative group/search">
+          <div className="absolute inset-y-0 left-5 flex items-center text-type-text/20">
             <Icon icon={Icons.SEARCH} />
           </div>
-          <div className="w-full h-11 bg-type-text/5 border border-white/5 rounded-full backdrop-blur-md flex items-center px-12 text-type-text/40 text-sm">
+          <div className="w-full h-14 bg-type-text/5 border border-white/5 rounded-2xl backdrop-blur-xl flex items-center px-14 text-type-text/20 text-md font-medium shadow-2xl">
             What do you want to watch?
           </div>
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-4 mt-10 border-b border-white/5 pb-2">
+        <div className="flex gap-8 mt-12 border-b border-white/5">
           {["Movies", "TV Shows", "Editor Picks"].map((tab, i) => (
             <div
               key={tab}
               className={classNames(
-                "text-xs font-bold transition-colors relative pb-2",
-                i === 0 ? "text-themePreview-primary" : "text-type-text/40",
+                "text-sm font-black transition-all relative pb-4 tracking-tight",
+                i === 0 ? "text-themePreview-primary scale-110" : "text-type-text/30",
               )}
             >
               {tab}
               {i === 0 && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-themePreview-primary rounded-full" />
+                <div className="absolute bottom-[-1px] left-[-20%] right-[-20%] h-[3px] bg-themePreview-primary rounded-full shadow-[0_0_15px_rgba(var(--colors-themePreview-primary),0.8)]" />
               )}
             </div>
           ))}
@@ -134,26 +207,32 @@ function DetailedPreview({
       </div>
 
       {/* Content Grid Mock */}
-      <div className="relative z-10 mt-8 px-6 pb-8">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-sm font-bold text-type-text tracking-tight flex items-center gap-2">
+      <div className="relative z-10 mt-10 px-8 pb-12">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-black text-type-text tracking-tighter flex items-center gap-3">
             Most Popular
-            <Icon icon={Icons.ARROW_RIGHT} className="text-[10px] opacity-40" />
+            <div className="flex items-center gap-1.5 opacity-30 text-[10px] uppercase tracking-widest">
+              View more
+              <Icon icon={Icons.ARROW_RIGHT} />
+            </div>
           </h3>
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-6">
           {MOCK_CARDS.map((id) => (
-            <div key={id} className="space-y-2 group/card">
-              <div className="aspect-[2/3] rounded-xl bg-type-text/5 border border-white/5 relative overflow-hidden transition-transform duration-300 group-hover/card:scale-[1.02] shadow-lg">
-                <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/80 to-transparent" />
+            <div key={id} className="space-y-3 group/card">
+              <div className="aspect-[2/3] rounded-2xl bg-type-text/5 border border-white/5 relative overflow-hidden transition-all duration-500 group-hover/card:scale-[1.05] shadow-2xl group-hover/card:border-themePreview-primary/30">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-60" />
                 {/* Micro menu icon mock */}
-                <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/40 backdrop-blur-md opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center justify-center">
-                  <Icon icon={Icons.MENU} className="text-[8px] text-white" />
+                <div className="absolute top-3 right-3 w-7 h-7 rounded-xl bg-black/60 backdrop-blur-md opacity-0 group-hover/card:opacity-100 transition-all flex items-center justify-center border border-white/10">
+                  <Icon icon={Icons.MENU} className="text-[10px] text-white" />
+                </div>
+                {/* Poster Mock Art */}
+                <div className="absolute inset-0 p-4 flex flex-col justify-end gap-2">
+                   <div className="h-3 w-3/4 bg-white/20 rounded-full" />
+                   <div className="h-2 w-1/2 bg-white/10 rounded-full" />
                 </div>
               </div>
-              <div className="h-2 w-[80%] bg-type-text/20 rounded-full" />
-              <div className="h-1.5 w-[50%] bg-type-text/10 rounded-full" />
             </div>
           ))}
         </div>
@@ -276,6 +355,7 @@ export function CustomThemeModal(props: {
   const [customTertiaryAccent, setCustomTertiaryAccent] = useState("#1A1A1E");
 
   const [wasShown, setWasShown] = useState(false);
+  const [previewMode, setPreviewMode] = useState<"detailed" | "card">("detailed");
 
   useEffect(() => {
     if (props.isShown && !wasShown) {
@@ -295,6 +375,7 @@ export function CustomThemeModal(props: {
       setUseCustomSecondary(false);
       setUseCustomTertiary(false);
       setIsFullPreview(false);
+      setPreviewMode("detailed");
       setScale(0.8);
     } else if (!props.isShown && wasShown) {
       setWasShown(false);
@@ -388,13 +469,17 @@ export function CustomThemeModal(props: {
       <div className="absolute inset-0 z-[1000] flex flex-col lg:flex-row bg-background-main/98 backdrop-blur-3xl text-white pointer-events-auto overflow-hidden animate-in fade-in duration-500">
         {/* Full Modal Live Preview Overlay */}
         {isFullPreview && (
-          <div className="absolute inset-0 z-[1100] bg-black/40 backdrop-blur-md flex items-center justify-center p-8 animate-in zoom-in-95 duration-300">
-            <div className="relative w-full h-full max-w-6xl max-h-[80vh]">
-              <DetailedPreview vars={previewVars} scale={1} />
+          <div className="absolute inset-0 z-[1100] bg-black/40 backdrop-blur-md flex items-center justify-center p-8 animate-in zoom-in-95 duration-300 pointer-events-auto">
+            <div className="relative w-full h-full max-w-6xl max-h-[85vh] flex items-center justify-center overflow-hidden">
+              {previewMode === "detailed" ? (
+                <DetailedPreview vars={previewVars} scale={1} />
+              ) : (
+                <CardPreview vars={previewVars} scale={1} />
+              )}
               <button
                 type="button"
                 onClick={() => setIsFullPreview(false)}
-                className="absolute -top-12 right-0 flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black font-bold hover:bg-gray-200 transition-colors shadow-2xl"
+                className="absolute -top-12 right-0 flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-black font-black hover:bg-gray-200 transition-all shadow-2xl active:scale-95 z-[1200]"
               >
                 <Icon icon={Icons.X} />
                 Exit Preview
@@ -414,10 +499,36 @@ export function CustomThemeModal(props: {
               Theme
             </h1>
             <div className="flex gap-2">
+              <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode("card")}
+                  className={classNames(
+                    "px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all",
+                    previewMode === "card"
+                      ? "bg-white text-black shadow-lg"
+                      : "text-white/40 hover:text-white/80",
+                  )}
+                >
+                  Card View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode("detailed")}
+                  className={classNames(
+                    "px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all",
+                    previewMode === "detailed"
+                      ? "bg-white text-black shadow-lg"
+                      : "text-white/40 hover:text-white/80",
+                  )}
+                >
+                  Detailed View
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={() => setIsFullPreview(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-all border border-white/5"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white text-[10px] font-black uppercase tracking-tighter transition-all border border-white/5"
               >
                 <Icon icon={Icons.EYE} />
                 Full Preview
@@ -462,8 +573,12 @@ export function CustomThemeModal(props: {
                 </div>
               </div>
 
-              <div className="relative rounded-2xl p-4 bg-black/20 border border-white/5 overflow-hidden">
-                <DetailedPreview vars={previewVars} scale={scale} />
+              <div className="relative rounded-2xl p-4 bg-black/20 border border-white/5 overflow-hidden flex items-center justify-center min-h-[360px]">
+                {previewMode === "detailed" ? (
+                  <DetailedPreview vars={previewVars} scale={scale} />
+                ) : (
+                  <CardPreview vars={previewVars} scale={scale} />
+                )}
               </div>
             </div>
           </div>
