@@ -28,10 +28,19 @@ export function PauseOverlay() {
   const isLoading = usePlayerStore((s: any) => s.mediaPlaying.isLoading);
   const status = usePlayerStore((s: any) => s.status);
   const meta = usePlayerStore((s: any) => s.meta);
-  const { time, duration, draggingTime } = usePlayerStore((s: any) => s.progress);
+  const {
+    time,
+    duration,
+    draggingTime,
+  } = usePlayerStore(
+    (s: any) => s.progress,
+  );
   const { isSeeking } = usePlayerStore((s: any) => s.interface);
   const playbackRate = usePlayerStore((s: any) => s.mediaPlaying.playbackRate);
-  const enablePauseOverlay = usePreferencesStore((s: any) => s.enablePauseOverlay);
+  const play = usePlayerStore((s: any) => s.play);
+  const enablePauseOverlay = usePreferencesStore(
+    (s: any) => s.enablePauseOverlay,
+  );
   const enableImageLogos = usePreferencesStore((s: any) => s.enableImageLogos);
   const { isMobile } = useIsMobile();
   const { showTargets } = useShouldShowControls();
@@ -212,7 +221,6 @@ export function PauseOverlay() {
     },
   }).split(/[•·]| \| /);
 
-  const play = usePlayerStore((s) => s.play);
 
   return (
     <div
@@ -269,9 +277,11 @@ export function PauseOverlay() {
             )}
 
             {duration > 0 &&
-              timeRemainingParts.map((part: string, i: number) => (
-                <React.Fragment key={i}>
-                  {(i > 0 || details.genres.length > 0 || details.voteAverage !== null) && (
+              timeRemainingParts.map((part: string) => (
+                <React.Fragment key={part}>
+                  {(part.trim() !== timeRemainingParts[0].trim() ||
+                    details.genres.length > 0 ||
+                    details.voteAverage !== null) && (
                     <span className="text-white/40">|</span>
                   )}
                   <span>{part.trim()}</span>
