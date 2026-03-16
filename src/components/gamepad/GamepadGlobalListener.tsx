@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 import { useGamepadPolling } from "@/hooks/useGamepad";
 import { useSpatialNavigation } from "@/hooks/useSpatialNavigation";
@@ -7,7 +7,6 @@ import { usePreferencesStore } from "@/stores/preferences";
 
 export function GamepadGlobalListener() {
   const { navigate: navigateSpatial } = useSpatialNavigation();
-  const navigate = useNavigate();
   const location = useLocation();
   const enableGamepadControls = usePreferencesStore(
     (s: any) => s.enableGamepadControls,

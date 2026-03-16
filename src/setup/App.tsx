@@ -52,9 +52,11 @@ import { LanguageProvider } from "@/stores/language";
 
 const DeveloperPage = lazy(() => import("@/pages/DeveloperPage"));
 const TestView = lazy(() => import("@/pages/developer/TestView"));
-const GamepadSetupPage = lazyWithPreload(() => import("@/pages/GamepadSetup"), {
-  factory: (m) => m.GamepadSetupPage,
-});
+const GamepadSetupPage = lazyWithPreload(() =>
+  import("@/pages/GamepadSetup").then((m: any) => ({
+    default: m.GamepadSetupPage,
+  })),
+);
 const PlayerView = lazyWithPreload(() => import("@/pages/PlayerView"));
 const SettingsPage = lazyWithPreload(() => import("@/pages/Settings"));
 
