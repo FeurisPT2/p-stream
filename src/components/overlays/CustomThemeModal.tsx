@@ -143,7 +143,7 @@ function DetailedPreview({
         </div>
         <div className="flex items-center gap-4">
           <div className="w-9 h-9 rounded-full bg-type-text/10 border border-white/5 flex items-center justify-center">
-             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-themePreview-primary to-themePreview-primary/40 opacity-20" />
+            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-themePreview-primary to-themePreview-primary/40 opacity-20" />
           </div>
           <div className="p-2 rounded-xl bg-white/5 border border-white/5 text-type-text/60">
             <Icon icon={Icons.MENU} className="text-sm" />
@@ -156,18 +156,12 @@ function DetailedPreview({
         <div className="p-3 mb-6 relative">
           {/* Top floating icons mock (Discord etc) */}
           <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex gap-4 opacity-50 scale-125">
-             <Icon
+            <Icon
               icon={Icons.DISCORD}
               className="text-themePreview-primary drop-shadow-[0_0_15px_rgba(var(--colors-themePreview-primary),0.6)]"
             />
-            <Icon
-              icon={Icons.RISING_STAR}
-              className="text-white/40"
-            />
-            <Icon
-              icon={Icons.BELL}
-              className="text-white/20"
-            />
+            <Icon icon={Icons.RISING_STAR} className="text-white/40" />
+            <Icon icon={Icons.BELL} className="text-white/20" />
           </div>
 
           <h2 className="text-3xl sm:text-4xl font-black text-type-text tracking-tight mb-4 leading-tight">
@@ -194,7 +188,9 @@ function DetailedPreview({
               key={tab}
               className={classNames(
                 "text-sm font-black transition-all relative pb-4 tracking-tight",
-                i === 0 ? "text-themePreview-primary scale-110" : "text-type-text/30",
+                i === 0
+                  ? "text-themePreview-primary scale-110"
+                  : "text-type-text/30",
               )}
             >
               {tab}
@@ -229,8 +225,8 @@ function DetailedPreview({
                 </div>
                 {/* Poster Mock Art */}
                 <div className="absolute inset-0 p-4 flex flex-col justify-end gap-2">
-                   <div className="h-3 w-3/4 bg-white/20 rounded-full" />
-                   <div className="h-2 w-1/2 bg-white/10 rounded-full" />
+                  <div className="h-3 w-3/4 bg-white/20 rounded-full" />
+                  <div className="h-2 w-1/2 bg-white/10 rounded-full" />
                 </div>
               </div>
             </div>
@@ -355,7 +351,9 @@ export function CustomThemeModal(props: {
   const [customTertiaryAccent, setCustomTertiaryAccent] = useState("#1A1A1E");
 
   const [wasShown, setWasShown] = useState(false);
-  const [previewMode, setPreviewMode] = useState<"detailed" | "card">("detailed");
+  const [previewMode, setPreviewMode] = useState<"detailed" | "card">(
+    "detailed",
+  );
 
   useEffect(() => {
     if (props.isShown && !wasShown) {
