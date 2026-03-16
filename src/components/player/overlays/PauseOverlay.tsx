@@ -28,11 +28,7 @@ export function PauseOverlay() {
   const isLoading = usePlayerStore((s: any) => s.mediaPlaying.isLoading);
   const status = usePlayerStore((s: any) => s.status);
   const meta = usePlayerStore((s: any) => s.meta);
-  const {
-    time,
-    duration,
-    draggingTime,
-  } = usePlayerStore(
+  const { time, duration, draggingTime } = usePlayerStore(
     (s: any) => s.progress,
   );
   const { isSeeking } = usePlayerStore((s: any) => s.interface);
@@ -220,7 +216,6 @@ export function PauseOverlay() {
       },
     },
   }).split(/[•·]| \| /);
-
 
   return (
     <div
