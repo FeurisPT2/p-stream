@@ -43,9 +43,7 @@ export function PauseOverlay() {
   const enablePauseOverlayHoverHide = usePreferencesStore(
     (s: any) => s.enablePauseOverlayHoverHide,
   );
-  const timeFormat12Hour = usePreferencesStore(
-    (s: any) => s.timeFormat12Hour,
-  );
+  const timeFormat12Hour = usePreferencesStore((s: any) => s.timeFormat12Hour);
   const enableImageLogos = usePreferencesStore((s: any) => s.enableImageLogos);
   const { isMobile } = useIsMobile();
   const { showTargets } = useShouldShowControls();
@@ -77,12 +75,12 @@ export function PauseOverlay() {
         // Reset the timer if they stop moving the mouse
         if (timerRef.current) clearTimeout(timerRef.current);
         if (pauseOverlayInactivityTime > 0) {
-           timerRef.current = setTimeout(() => {
-             // Only show if still paused
-             if (usePlayerStore.getState().mediaPlaying.isPaused) {
-               setOverlayVisible(true);
-             }
-           }, pauseOverlayInactivityTime * 1000);
+          timerRef.current = setTimeout(() => {
+            // Only show if still paused
+            if (usePlayerStore.getState().mediaPlaying.isPaused) {
+              setOverlayVisible(true);
+            }
+          }, pauseOverlayInactivityTime * 1000);
         }
       }
     };
@@ -90,11 +88,16 @@ export function PauseOverlay() {
     if (enablePauseOverlayHoverHide && overlayVisible) {
       window.addEventListener("mousemove", handleMouseMove);
     }
-    
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [enablePauseOverlayHoverHide, overlayVisible, isPaused, pauseOverlayInactivityTime]);
+  }, [
+    enablePauseOverlayHoverHide,
+    overlayVisible,
+    isPaused,
+    pauseOverlayInactivityTime,
+  ]);
 
   useEffect(() => {
     if (status === playerStatus.SCRAPING) {
@@ -111,7 +114,7 @@ export function PauseOverlay() {
 
     if (isPaused && hasPlayedRef.current && status === playerStatus.PLAYING) {
       if (pauseOverlayInactivityTime === 0) {
-         setOverlayVisible(true);
+        setOverlayVisible(true);
       } else {
         timerRef.current = setTimeout(() => {
           setOverlayVisible(true);

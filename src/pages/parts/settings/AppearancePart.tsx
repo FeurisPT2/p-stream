@@ -564,7 +564,10 @@ export function AppearancePart(props: {
             >
               <Toggle enabled={props.enablePauseOverlay} />
               <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.pauseOverlayLabel", "Enable Pause Overlay")}
+                {t(
+                  "settings.appearance.options.pauseOverlayLabel",
+                  "Enable Pause Overlay",
+                )}
               </p>
             </div>
 
@@ -572,10 +575,16 @@ export function AppearancePart(props: {
               <div className="pt-4 pl-4 border-l-8 border-dropdown-background max-w-[25rem] space-y-6">
                 <div>
                   <p className="text-white font-bold mb-2">
-                    {t("settings.appearance.options.pauseOverlayHoverHide", "Hide on Hover")}
+                    {t(
+                      "settings.appearance.options.pauseOverlayHoverHide",
+                      "Hide on Hover",
+                    )}
                   </p>
                   <p className="font-medium text-sm text-type-secondary">
-                    {t("settings.appearance.options.pauseOverlayHoverHideDescription", "Automatically hide the overlay when you move your mouse")}
+                    {t(
+                      "settings.appearance.options.pauseOverlayHoverHideDescription",
+                      "Automatically hide the overlay when you move your mouse",
+                    )}
                   </p>
                   <div
                     onClick={() =>
@@ -587,14 +596,20 @@ export function AppearancePart(props: {
                   >
                     <Toggle enabled={props.enablePauseOverlayHoverHide} />
                     <p className="flex-1 text-white font-bold">
-                      {t("settings.appearance.options.pauseOverlayHoverHideLabel", "Enable hover to hide")}
+                      {t(
+                        "settings.appearance.options.pauseOverlayHoverHideLabel",
+                        "Enable hover to hide",
+                      )}
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <CaptionSetting
-                    label={t("settings.appearance.options.pauseOverlayInactivityTime", "Inactivity Time to Show (seconds)")}
+                    label={t(
+                      "settings.appearance.options.pauseOverlayInactivityTime",
+                      "Inactivity Time to Show (seconds)",
+                    )}
                     max={60}
                     min={0}
                     onChange={(v) => {
@@ -604,10 +619,13 @@ export function AppearancePart(props: {
                     }}
                     value={props.pauseOverlayInactivityTime}
                     textTransformer={(s) => `${s}s`}
-                    controlButtons={true}
+                    controlButtons
                   />
                   <p className="font-medium text-sm mt-2 text-type-secondary">
-                    {t("settings.appearance.options.pauseOverlayInactivityTimeDescription", "Set to 0 to show immediately")}
+                    {t(
+                      "settings.appearance.options.pauseOverlayInactivityTimeDescription",
+                      "Set to 0 to show immediately",
+                    )}
                   </p>
                 </div>
               </div>
@@ -628,7 +646,10 @@ export function AppearancePart(props: {
             >
               <Toggle enabled={props.timeFormat12Hour} />
               <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.timeFormatLabel", "Use 12-hour clock (AM/PM)")}
+                {t(
+                  "settings.appearance.options.timeFormatLabel",
+                  "Use 12-hour clock (AM/PM)",
+                )}
               </p>
             </div>
           </div>
