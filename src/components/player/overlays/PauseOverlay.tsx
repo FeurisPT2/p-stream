@@ -15,7 +15,6 @@ import { playerStatus } from "@/stores/player/slices/source";
 import { usePlayerStore } from "@/stores/player/store";
 import { usePreferencesStore } from "@/stores/preferences";
 import { durationExceedsHour, formatSeconds } from "@/utils/formatSeconds";
-import { uses12HourClock } from "@/utils/uses12HourClock";
 
 interface PauseDetails {
   voteAverage: number | null;

@@ -550,9 +550,7 @@ export function SettingsPage() {
   const setEnablePauseOverlayHoverHide = usePreferencesStore(
     (s) => s.setEnablePauseOverlayHoverHide,
   );
-  const setTimeFormat12Hour = usePreferencesStore(
-    (s) => s.setTimeFormat12Hour,
-  );
+  const setTimeFormat12Hour = usePreferencesStore((s) => s.setTimeFormat12Hour);
   const setEnablePauseOverlay = usePreferencesStore(
     (s) => s.setEnablePauseOverlay,
   );
