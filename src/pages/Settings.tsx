@@ -1140,6 +1140,12 @@ export function SettingsPage() {
               enableLowPerformanceMode={state.enableLowPerformanceMode.state}
               enablePauseOverlay={state.enablePauseOverlay.state}
               setEnablePauseOverlay={state.enablePauseOverlay.set}
+              pauseOverlayInactivityTime={state.pauseOverlayInactivityTime.state}
+              setPauseOverlayInactivityTime={state.pauseOverlayInactivityTime.set}
+              enablePauseOverlayHoverHide={state.enablePauseOverlayHoverHide.state}
+              setEnablePauseOverlayHoverHide={state.enablePauseOverlayHoverHide.set}
+              timeFormat12Hour={state.timeFormat12Hour.state}
+              setTimeFormat12Hour={state.timeFormat12Hour.set}
               savedCustomThemes={state.savedCustomThemes.state}
               setSavedCustomThemes={state.savedCustomThemes.set}
               hiddenDefaultThemes={state.hiddenDefaultThemes.state}

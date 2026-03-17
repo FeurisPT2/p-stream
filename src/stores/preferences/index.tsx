@@ -40,6 +40,9 @@ export interface PreferencesStore {
   enableAutoResumeOnPlaybackError: boolean;
   enableNumberKeySeeking: boolean;
   enablePauseOverlay: boolean;
+  pauseOverlayInactivityTime: number;
+  enablePauseOverlayHoverHide: boolean;
+  timeFormat12Hour: boolean | null;
   enableGamepadControls: boolean;
   gamepadSetupComplete: boolean;
   gamepadInputMode: "controller" | "kbm" | "both";
@@ -78,6 +81,9 @@ export interface PreferencesStore {
   setEnableAutoResumeOnPlaybackError(v: boolean): void;
   setEnableNumberKeySeeking(v: boolean): void;
   setEnablePauseOverlay(v: boolean): void;
+  setPauseOverlayInactivityTime(v: number): void;
+  setEnablePauseOverlayHoverHide(v: boolean): void;
+  setTimeFormat12Hour(v: boolean | null): void;
   setEnableGamepadControls(v: boolean): void;
   setGamepadSetupComplete(v: boolean): void;
   setGamepadInputMode(v: "controller" | "kbm" | "both"): void;
@@ -120,6 +126,9 @@ export const usePreferencesStore = create(
       enableAutoResumeOnPlaybackError: true,
       enableNumberKeySeeking: true,
       enablePauseOverlay: false,
+      pauseOverlayInactivityTime: 2,
+      enablePauseOverlayHoverHide: false,
+      timeFormat12Hour: null,
       enableGamepadControls: false,
       gamepadSetupComplete: false,
       gamepadInputMode: "both",
@@ -288,6 +297,21 @@ export const usePreferencesStore = create(
       setEnablePauseOverlay(v) {
         set((s) => {
           s.enablePauseOverlay = v;
+        });
+      },
+      setPauseOverlayInactivityTime(v) {
+        set((s) => {
+          s.pauseOverlayInactivityTime = v;
+        });
+      },
+      setEnablePauseOverlayHoverHide(v) {
+        set((s) => {
+          s.enablePauseOverlayHoverHide = v;
+        });
+      },
+      setTimeFormat12Hour(v) {
+        set((s) => {
+          s.timeFormat12Hour = v;
         });
       },
       setEnableGamepadControls(v) {

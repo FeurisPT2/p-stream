@@ -9,6 +9,7 @@ import { Icon, Icons } from "@/components/Icon";
 import { CustomThemeModal } from "@/components/overlays/CustomThemeModal";
 import { EditGroupOrderModal } from "@/components/overlays/EditGroupOrderModal";
 import { useModal } from "@/components/overlays/Modal";
+import { CaptionSetting } from "@/components/player/atoms/settings/CaptionSettingsView";
 import { Heading1 } from "@/components/utils/Text";
 import { useBackendUrl } from "@/hooks/auth/useBackendUrl";
 import { useAuthStore } from "@/stores/auth";
@@ -277,6 +278,15 @@ export function AppearancePart(props: {
   enablePauseOverlay: boolean;
   setEnablePauseOverlay: (v: boolean) => void;
 
+  enablePauseOverlayHoverHide: boolean;
+  setEnablePauseOverlayHoverHide: (v: boolean) => void;
+
+  pauseOverlayInactivityTime: number;
+  setPauseOverlayInactivityTime: (v: number) => void;
+
+  timeFormat12Hour: boolean;
+  setTimeFormat12Hour: (v: boolean) => void;
+
   enableCarouselView: boolean;
   setEnableCarouselView: (v: boolean) => void;
 
@@ -538,7 +548,7 @@ export function AppearancePart(props: {
           {/* Pause Overlay */}
           <div>
             <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.pauseOverlay")}
+              {t("settings.appearance.options.pauseOverlay", "Pause Overlay")}
             </p>
             <div
               onClick={() =>
@@ -554,7 +564,71 @@ export function AppearancePart(props: {
             >
               <Toggle enabled={props.enablePauseOverlay} />
               <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.pauseOverlayLabel")}
+                {t("settings.appearance.options.pauseOverlayLabel", "Enable Pause Overlay")}
+              </p>
+            </div>
+
+            {props.enablePauseOverlay && !props.enableLowPerformanceMode && (
+              <div className="pt-4 pl-4 border-l-8 border-dropdown-background max-w-[25rem] space-y-6">
+                <div>
+                  <p className="text-white font-bold mb-2">
+                    {t("settings.appearance.options.pauseOverlayHoverHide", "Hide on Hover")}
+                  </p>
+                  <p className="font-medium text-sm text-type-secondary">
+                    {t("settings.appearance.options.pauseOverlayHoverHideDescription", "Automatically hide the overlay when you move your mouse")}
+                  </p>
+                  <div
+                    onClick={() =>
+                      props.setEnablePauseOverlayHoverHide(
+                        !props.enablePauseOverlayHoverHide,
+                      )
+                    }
+                    className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center py-3 px-4 rounded-lg"
+                  >
+                    <Toggle enabled={props.enablePauseOverlayHoverHide} />
+                    <p className="flex-1 text-white font-bold">
+                      {t("settings.appearance.options.pauseOverlayHoverHideLabel", "Enable hover to hide")}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <CaptionSetting
+                    label={t("settings.appearance.options.pauseOverlayInactivityTime", "Inactivity Time to Show (seconds)")}
+                    max={60}
+                    min={0}
+                    onChange={(v) => {
+                      // Adjust to nearest 5 second interval
+                      const interval = Math.round(v / 5) * 5;
+                      props.setPauseOverlayInactivityTime(interval);
+                    }}
+                    value={props.pauseOverlayInactivityTime}
+                    textTransformer={(s) => `${s}s`}
+                    controlButtons={true}
+                  />
+                  <p className="font-medium text-sm mt-2 text-type-secondary">
+                    {t("settings.appearance.options.pauseOverlayInactivityTimeDescription", "Set to 0 to show immediately")}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Time Format */}
+          <div>
+            <p className="text-white font-bold mb-3">
+              {t("settings.appearance.options.timeFormat", "Time Format")}
+            </p>
+            <div
+              onClick={() => props.setTimeFormat12Hour(!props.timeFormat12Hour)}
+              className={classNames(
+                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
+                "cursor-pointer opacity-100 pointer-events-auto",
+              )}
+            >
+              <Toggle enabled={props.timeFormat12Hour} />
+              <p className="flex-1 text-white font-bold">
+                {t("settings.appearance.options.timeFormatLabel", "Use 12-hour clock (AM/PM)")}
               </p>
             </div>
           </div>

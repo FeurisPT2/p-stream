@@ -339,7 +339,7 @@ export function CustomThemeModal(props: {
   const [customSecondaryButton, setCustomSecondaryButton] = useState("#1A1A1E");
   const [customTertiaryBg, setCustomTertiaryBg] = useState("#0C0C0F");
   const [customTertiaryAccent, setCustomTertiaryAccent] = useState("#1A1A1E");
-  
+
   const [unlockMainBg, setUnlockMainBg] = useState(false);
 
   const [wasShown, setWasShown] = useState(false);
@@ -612,7 +612,10 @@ export function CustomThemeModal(props: {
                     const opt = primaryOptions.find((o) => o.id === primary);
                     if (opt) {
                       setCustomPrimary(
-                        rgbStringToHex(opt.colors["--colors-themePreview-primary"] || "0 0 0"),
+                        rgbStringToHex(
+                          opt.colors["--colors-themePreview-primary"] ||
+                            "0 0 0",
+                        ),
                       );
                     }
                   }
@@ -669,13 +672,19 @@ export function CustomThemeModal(props: {
                 type="button"
                 onClick={() => {
                   if (!useCustomSecondary) {
-                    const opt = secondaryOptions.find((o) => o.id === secondary);
+                    const opt = secondaryOptions.find(
+                      (o) => o.id === secondary,
+                    );
                     if (opt) {
                       setCustomSecondaryText(
-                        rgbStringToHex(opt.colors["--colors-type-text"] || "0 0 0"),
+                        rgbStringToHex(
+                          opt.colors["--colors-type-text"] || "0 0 0",
+                        ),
                       );
                       setCustomSecondaryButton(
-                         rgbStringToHex(opt.colors["--colors-buttons-secondary"] || "0 0 0"),
+                        rgbStringToHex(
+                          opt.colors["--colors-buttons-secondary"] || "0 0 0",
+                        ),
                       );
                     }
                   }
@@ -742,10 +751,15 @@ export function CustomThemeModal(props: {
                     const opt = tertiaryOptions.find((o) => o.id === tertiary);
                     if (opt) {
                       setCustomTertiaryBg(
-                         rgbStringToHex(opt.colors["--colors-background-main"] || "0 0 0"),
+                        rgbStringToHex(
+                          opt.colors["--colors-background-main"] || "0 0 0",
+                        ),
                       );
                       setCustomTertiaryAccent(
-                        rgbStringToHex(opt.colors["--colors-themePreview-secondary"] || "0 0 0"),
+                        rgbStringToHex(
+                          opt.colors["--colors-themePreview-secondary"] ||
+                            "0 0 0",
+                        ),
                       );
                     }
                   }
@@ -766,11 +780,16 @@ export function CustomThemeModal(props: {
               <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex flex-col gap-6 animate-in slide-in-from-top-2">
                 {!unlockMainBg ? (
                   <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/10 rounded-2xl bg-black/20 gap-3">
-                    <Icon icon={Icons.LOCK} className="text-white/30 text-2xl" />
+                    <Icon
+                      icon={Icons.LOCK}
+                      className="text-white/30 text-2xl"
+                    />
                     <p className="text-[10px] text-white/50 uppercase tracking-widest text-center">
                       Main Background Locked
-                      <br/>
-                      <span className="text-white/30 lowercase tracking-normal">Prevents entire website color change</span>
+                      <br />
+                      <span className="text-white/30 lowercase tracking-normal">
+                        Prevents entire website color change
+                      </span>
                     </p>
                     <button
                       type="button"

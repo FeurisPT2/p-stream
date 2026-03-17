@@ -37,6 +37,15 @@ export function PauseOverlay() {
   const enablePauseOverlay = usePreferencesStore(
     (s: any) => s.enablePauseOverlay,
   );
+  const pauseOverlayInactivityTime = usePreferencesStore(
+    (s: any) => s.pauseOverlayInactivityTime,
+  );
+  const enablePauseOverlayHoverHide = usePreferencesStore(
+    (s: any) => s.enablePauseOverlayHoverHide,
+  );
+  const timeFormat12Hour = usePreferencesStore(
+    (s: any) => s.timeFormat12Hour,
+  );
   const enableImageLogos = usePreferencesStore((s: any) => s.enableImageLogos);
   const { isMobile } = useIsMobile();
   const { showTargets } = useShouldShowControls();
@@ -61,6 +70,33 @@ export function PauseOverlay() {
   }, [isPaused, status]);
 
   useEffect(() => {
+    const handleMouseMove = () => {
+      if (enablePauseOverlayHoverHide && overlayVisible && isPaused) {
+        setOverlayVisible(false);
+
+        // Reset the timer if they stop moving the mouse
+        if (timerRef.current) clearTimeout(timerRef.current);
+        if (pauseOverlayInactivityTime > 0) {
+           timerRef.current = setTimeout(() => {
+             // Only show if still paused
+             if (usePlayerStore.getState().mediaPlaying.isPaused) {
+               setOverlayVisible(true);
+             }
+           }, pauseOverlayInactivityTime * 1000);
+        }
+      }
+    };
+
+    if (enablePauseOverlayHoverHide && overlayVisible) {
+      window.addEventListener("mousemove", handleMouseMove);
+    }
+    
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
+  }, [enablePauseOverlayHoverHide, overlayVisible, isPaused, pauseOverlayInactivityTime]);
+
+  useEffect(() => {
     if (status === playerStatus.SCRAPING) {
       setOverlayVisible(false);
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -74,9 +110,13 @@ export function PauseOverlay() {
     }
 
     if (isPaused && hasPlayedRef.current && status === playerStatus.PLAYING) {
-      timerRef.current = setTimeout(() => {
-        setOverlayVisible(true);
-      }, 2000);
+      if (pauseOverlayInactivityTime === 0) {
+         setOverlayVisible(true);
+      } else {
+        timerRef.current = setTimeout(() => {
+          setOverlayVisible(true);
+        }, pauseOverlayInactivityTime * 1000);
+      }
     } else {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -88,7 +128,7 @@ export function PauseOverlay() {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isPaused, status, isLoading]);
+  }, [isPaused, status, isLoading, pauseOverlayInactivityTime]);
 
   let shouldShow = overlayVisible && enablePauseOverlay;
   if (status === playerStatus.SCRAPING) shouldShow = false;
@@ -212,7 +252,7 @@ export function PauseOverlay() {
       timeFinished: {
         hour: "numeric",
         minute: "numeric",
-        hour12: uses12HourClock(),
+        hour12: timeFormat12Hour,
       },
     },
   }).split(/[•·]| \| /);
@@ -226,9 +266,9 @@ export function PauseOverlay() {
       }`}
       onClick={() => play()}
     >
-      <div className="flex-1 flex items-end pb-36 md:pb-44">
-        <div className="ml-24 md:ml-48 lg:ml-64 max-w-lg lg:max-w-2xl">
-          <p className="text-sm text-white/70 mb-3 tracking-wide uppercase">
+      <div className="flex-1 flex items-end p-8 md:p-16 lg:p-24 pb-28 md:pb-36 lg:pb-44 w-full">
+        <div className="max-w-2xl lg:max-w-4xl text-left">
+          <p className="text-sm text-white/70 mb-3 tracking-wide">
             {t("player.pauseOverlay.youAreWatching", "You are watching")}
           </p>
 
@@ -286,18 +326,18 @@ export function PauseOverlay() {
 
           {overview && (
             <div
-              className="group/desc cursor-pointer flex items-start gap-2"
+              className="group/desc cursor-pointer mt-2"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 handleOpenDetails();
               }}
             >
-              <p className="text-base lg:text-lg text-white/70 drop-shadow-md line-clamp-3 max-w-xl transition-colors group-hover/desc:text-white">
+              <p className="text-base lg:text-lg text-white/70 drop-shadow-md line-clamp-3 max-w-2xl transition-colors group-hover/desc:text-white">
                 {overview}
+                <span className="inline-block ml-1 text-white/40 group-hover/desc:text-white transition-colors relative top-[2px]">
+                  <Icon icon={Icons.CHEVRON_RIGHT} className="text-lg" />
+                </span>
               </p>
-              <span className="mt-1 text-white/40 group-hover/desc:text-white transition-colors">
-                <Icon icon={Icons.CHEVRON_RIGHT} className="text-xl" />
-              </span>
             </div>
           )}
         </div>

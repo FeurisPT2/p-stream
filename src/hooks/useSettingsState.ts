@@ -82,6 +82,9 @@ export function useSettingsState(
   enableDoubleClickToSeek: boolean,
   enableAutoResumeOnPlaybackError: boolean,
   enablePauseOverlay: boolean,
+  pauseOverlayInactivityTime: number,
+  enablePauseOverlayHoverHide: boolean,
+  timeFormat12Hour: boolean | null,
   customTheme: {
     primary: string;
     secondary: string;
@@ -290,6 +293,24 @@ export function useSettingsState(
     enablePauseOverlayChanged,
   ] = useDerived(enablePauseOverlay);
   const [
+    pauseOverlayInactivityTimeState,
+    setPauseOverlayInactivityTimeState,
+    resetPauseOverlayInactivityTime,
+    pauseOverlayInactivityTimeChanged,
+  ] = useDerived(pauseOverlayInactivityTime);
+  const [
+    enablePauseOverlayHoverHideState,
+    setEnablePauseOverlayHoverHideState,
+    resetEnablePauseOverlayHoverHide,
+    enablePauseOverlayHoverHideChanged,
+  ] = useDerived(enablePauseOverlayHoverHide);
+  const [
+    timeFormat12HourState,
+    setTimeFormat12HourState,
+    resetTimeFormat12Hour,
+    timeFormat12HourChanged,
+  ] = useDerived(timeFormat12Hour);
+  const [
     customThemeState,
     setCustomThemeState,
     resetCustomTheme,
@@ -350,6 +371,9 @@ export function useSettingsState(
     resetEnableDoubleClickToSeek();
     resetEnableAutoResumeOnPlaybackError();
     resetEnablePauseOverlay();
+    resetPauseOverlayInactivityTime();
+    resetEnablePauseOverlayHoverHide();
+    resetTimeFormat12Hour();
     resetCustomTheme();
     resetSavedCustomThemes();
     resetHiddenDefaultThemes();
@@ -394,6 +418,9 @@ export function useSettingsState(
     enableDoubleClickToSeekChanged ||
     enableAutoResumeOnPlaybackErrorChanged ||
     enablePauseOverlayChanged ||
+    pauseOverlayInactivityTimeChanged ||
+    enablePauseOverlayHoverHideChanged ||
+    timeFormat12HourChanged ||
     customThemeChanged ||
     savedCustomThemesChanged ||
     hiddenDefaultThemesChanged;
@@ -590,6 +617,21 @@ export function useSettingsState(
       state: enablePauseOverlayState,
       set: setEnablePauseOverlayState,
       changed: enablePauseOverlayChanged,
+    },
+    pauseOverlayInactivityTime: {
+      state: pauseOverlayInactivityTimeState,
+      set: setPauseOverlayInactivityTimeState,
+      changed: pauseOverlayInactivityTimeChanged,
+    },
+    enablePauseOverlayHoverHide: {
+      state: enablePauseOverlayHoverHideState,
+      set: setEnablePauseOverlayHoverHideState,
+      changed: enablePauseOverlayHoverHideChanged,
+    },
+    timeFormat12Hour: {
+      state: timeFormat12HourState,
+      set: setTimeFormat12HourState,
+      changed: timeFormat12HourChanged,
     },
     customTheme: {
       state: customThemeState,
