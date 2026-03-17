@@ -544,21 +544,11 @@ export function SettingsPage() {
     (s) => s.enablePauseOverlayHoverHide,
   );
   const timeFormat12Hour = usePreferencesStore((s) => s.timeFormat12Hour);
-  const setPauseOverlayInactivityTime = usePreferencesStore(
-    (s) => s.setPauseOverlayInactivityTime,
-  );
-  const setEnablePauseOverlayHoverHide = usePreferencesStore(
-    (s) => s.setEnablePauseOverlayHoverHide,
-  );
-  const setTimeFormat12Hour = usePreferencesStore(
-    (s) => s.setTimeFormat12Hour,
-  );
-  const setEnablePauseOverlay = usePreferencesStore(
-    (s) => s.setEnablePauseOverlay,
-  );
-  const setEnableNumberKeySeeking = usePreferencesStore(
-    (s) => s.setEnableNumberKeySeeking,
-  );
+  const setPauseOverlayInactivityTime = usePreferencesStore((s) => s.setPauseOverlayInactivityTime);
+  const setEnablePauseOverlayHoverHide = usePreferencesStore((s) => s.setEnablePauseOverlayHoverHide);
+  const setTimeFormat12Hour = usePreferencesStore((s) => s.setTimeFormat12Hour);
+  const setEnablePauseOverlay = usePreferencesStore((s) => s.setEnablePauseOverlay);
+  const setEnableNumberKeySeeking = usePreferencesStore((s) => s.setEnableNumberKeySeeking);
 
   const account = useAuthStore((s) => s.account);
   const updateProfile = useAuthStore((s) => s.setAccountProfile);
@@ -1046,6 +1036,9 @@ export function SettingsPage() {
     setEnableDoubleClickToSeek,
     setEnableAutoResumeOnPlaybackError,
     setEnablePauseOverlay,
+    setEnablePauseOverlayHoverHide,
+    setPauseOverlayInactivityTime,
+    setTimeFormat12Hour,
     setCustomTheme,
   ]);
   return (
