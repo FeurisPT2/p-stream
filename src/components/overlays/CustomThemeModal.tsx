@@ -239,6 +239,7 @@ function ColorOption({
   onClick: () => void;
   colorKey1: string;
   colorKey2?: string;
+  key?: React.Key;
 }) {
   return (
     <button
