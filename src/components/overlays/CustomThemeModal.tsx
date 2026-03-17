@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/buttons/Button";
 import { Icon, Icons } from "@/components/Icon";
 import { SavedCustomTheme, useThemeStore } from "@/stores/theme";
-import { colorToRgbString } from "@/utils/color";
+import { colorToRgbString, rgbStringToHex } from "@/utils/color";
 import {
   primaryOptions,
   secondaryOptions,
@@ -339,6 +339,8 @@ export function CustomThemeModal(props: {
   const [customSecondaryButton, setCustomSecondaryButton] = useState("#1A1A1E");
   const [customTertiaryBg, setCustomTertiaryBg] = useState("#0C0C0F");
   const [customTertiaryAccent, setCustomTertiaryAccent] = useState("#1A1A1E");
+  
+  const [unlockMainBg, setUnlockMainBg] = useState(false);
 
   const [wasShown, setWasShown] = useState(false);
   const [previewMode, setPreviewMode] = useState<"detailed" | "card">(
@@ -362,6 +364,7 @@ export function CustomThemeModal(props: {
       setUseCustomPrimary(false);
       setUseCustomSecondary(false);
       setUseCustomTertiary(false);
+      setUnlockMainBg(false);
       setIsFullPreview(false);
       setPreviewMode("detailed");
       setScale(0.8);
@@ -604,7 +607,17 @@ export function CustomThemeModal(props: {
               </div>
               <button
                 type="button"
-                onClick={() => setUseCustomPrimary(!useCustomPrimary)}
+                onClick={() => {
+                  if (!useCustomPrimary) {
+                    const opt = primaryOptions.find((o) => o.id === primary);
+                    if (opt) {
+                      setCustomPrimary(
+                        rgbStringToHex(opt.colors["--colors-themePreview-primary"] || "0 0 0"),
+                      );
+                    }
+                  }
+                  setUseCustomPrimary(!useCustomPrimary);
+                }}
                 className={classNames(
                   "flex items-center gap-2 text-[10px] px-3 py-2 rounded-xl transition-all font-black uppercase tracking-tighter border",
                   useCustomPrimary
@@ -654,7 +667,20 @@ export function CustomThemeModal(props: {
               </div>
               <button
                 type="button"
-                onClick={() => setUseCustomSecondary(!useCustomSecondary)}
+                onClick={() => {
+                  if (!useCustomSecondary) {
+                    const opt = secondaryOptions.find((o) => o.id === secondary);
+                    if (opt) {
+                      setCustomSecondaryText(
+                        rgbStringToHex(opt.colors["--colors-type-text"] || "0 0 0"),
+                      );
+                      setCustomSecondaryButton(
+                         rgbStringToHex(opt.colors["--colors-buttons-secondary"] || "0 0 0"),
+                      );
+                    }
+                  }
+                  setUseCustomSecondary(!useCustomSecondary);
+                }}
                 className={classNames(
                   "flex items-center gap-2 text-[10px] px-3 py-2 rounded-xl transition-all font-black uppercase tracking-tighter border",
                   useCustomSecondary
@@ -711,7 +737,20 @@ export function CustomThemeModal(props: {
               </div>
               <button
                 type="button"
-                onClick={() => setUseCustomTertiary(!useCustomTertiary)}
+                onClick={() => {
+                  if (!useCustomTertiary) {
+                    const opt = tertiaryOptions.find((o) => o.id === tertiary);
+                    if (opt) {
+                      setCustomTertiaryBg(
+                         rgbStringToHex(opt.colors["--colors-background-main"] || "0 0 0"),
+                      );
+                      setCustomTertiaryAccent(
+                        rgbStringToHex(opt.colors["--colors-themePreview-secondary"] || "0 0 0"),
+                      );
+                    }
+                  }
+                  setUseCustomTertiary(!useCustomTertiary);
+                }}
                 className={classNames(
                   "flex items-center gap-2 text-[10px] px-3 py-2 rounded-xl transition-all font-black uppercase tracking-tighter border",
                   useCustomTertiary
@@ -725,11 +764,29 @@ export function CustomThemeModal(props: {
             </div>
             {useCustomTertiary ? (
               <div className="p-5 rounded-2xl bg-white/5 border border-white/5 flex flex-col gap-6 animate-in slide-in-from-top-2">
-                <CustomColorPicker
-                  label="Main background"
-                  value={customTertiaryBg}
-                  onChange={setCustomTertiaryBg}
-                />
+                {!unlockMainBg ? (
+                  <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-white/10 rounded-2xl bg-black/20 gap-3">
+                    <Icon icon={Icons.LOCK} className="text-white/30 text-2xl" />
+                    <p className="text-[10px] text-white/50 uppercase tracking-widest text-center">
+                      Main Background Locked
+                      <br/>
+                      <span className="text-white/30 lowercase tracking-normal">Prevents entire website color change</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setUnlockMainBg(true)}
+                      className="px-4 py-2 mt-2 bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-tighter rounded-xl transition-all"
+                    >
+                      Unlock to Edit
+                    </button>
+                  </div>
+                ) : (
+                  <CustomColorPicker
+                    label="Main background"
+                    value={customTertiaryBg}
+                    onChange={setCustomTertiaryBg}
+                  />
+                )}
                 <div className="h-px bg-white/5" />
                 <CustomColorPicker
                   label="Accent surfaces"

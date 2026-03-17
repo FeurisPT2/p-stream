@@ -65,3 +65,14 @@ export function colorToRgbString(color: string): string {
   // But returning original string allows basic non-opacity usage to potentially work or fail gracefully.
   return color;
 }
+
+export function rgbStringToHex(rgbStr: string): string {
+  const parts = rgbStr.trim().split(/\s+/);
+  if (parts.length >= 3) {
+    const r = parseInt(parts[0], 10).toString(16).padStart(2, "0");
+    const g = parseInt(parts[1], 10).toString(16).padStart(2, "0");
+    const b = parseInt(parts[2], 10).toString(16).padStart(2, "0");
+    return `#${r}${g}${b}`;
+  }
+  return "#000000"; // fallback
+}
