@@ -117,10 +117,17 @@ export function useGamepadPolling({ onAction, enabled }: GamepadCallbacks) {
       [BUTTON_MAP.DPAD_RIGHT]: "dpadRight",
     };
 
+    if (!navigator.getGamepads) {
+      console.warn(
+        "[useGamepadPolling] Gamepad API not available in this context",
+      );
+      return;
+    }
+
     const poll = () => {
       if (!enabledRef.current) return;
 
-      const gamepads = navigator.getGamepads?.();
+      const gamepads = navigator.getGamepads();
       if (!gamepads) {
         animFrameRef.current = requestAnimationFrame(poll);
         return;
@@ -141,7 +148,11 @@ export function useGamepadPolling({ onAction, enabled }: GamepadCallbacks) {
           if (isPressed && !wasPressed) {
             const action = mappingRef.current[mappingKey];
             if (action) {
-              onActionRef.current(action);
+              try {
+                onActionRef.current(action);
+              } catch (err) {
+                console.error("[useGamepadPolling] onAction threw", err);
+              }
             }
           }
 
@@ -209,3 +220,5 @@ export const GAMEPAD_BUTTON_LABELS: Record<
 };
 
 export const ALL_GAMEPAD_ACTIONS = Object.keys(GAMEPAD_ACTION_LABELS);
+
+export type GamepadAction = keyof typeof GAMEPAD_ACTION_LABELS;

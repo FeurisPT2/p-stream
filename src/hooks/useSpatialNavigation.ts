@@ -41,6 +41,7 @@ export function useSpatialNavigation() {
 
       for (const el of elements) {
         if (el === activeElement) continue;
+        if (!document.body.contains(el)) continue;
 
         const elRect = el.getBoundingClientRect();
         const elCenter = {
@@ -80,8 +81,12 @@ export function useSpatialNavigation() {
       }
 
       if (bestElement) {
-        bestElement.focus();
-        bestElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        try {
+          bestElement.focus();
+          bestElement.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        } catch (err) {
+          console.warn("[useSpatialNavigation] focus/scroll failed", err);
+        }
       }
     },
     [getFocusableElements],

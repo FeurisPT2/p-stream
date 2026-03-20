@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Icon, Icons } from "@/components/Icon";
@@ -25,6 +25,7 @@ export function GamepadSetupPage() {
   const [currentManualButton, setCurrentManualButton] = useState(0);
   const [detectedGamepad, setDetectedGamepad] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
+  const successTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const setGamepadSetupComplete = usePreferencesStore(
     (s: any) => s.setGamepadSetupComplete,
@@ -36,14 +37,22 @@ export function GamepadSetupPage() {
   useEffect(() => {
     if (!isListening) return;
 
+    if (!navigator.getGamepads) {
+      console.warn(
+        "[GamepadSetup] Gamepad API not available in this browser/context",
+      );
+      setIsListening(false);
+      return;
+    }
+
     const poll = () => {
-      const gamepads = navigator.getGamepads();
+      const gamepads = navigator.getGamepads?.() ?? [];
       for (const gp of gamepads) {
         if (!gp) continue;
 
         if (step === "auto") {
           setDetectedGamepad(gp.id);
-          setTimeout(() => {
+          successTimeoutRef.current = setTimeout(() => {
             setStep("success");
             setIsListening(false);
           }, 1500);
@@ -67,7 +76,13 @@ export function GamepadSetupPage() {
     };
 
     const handle = requestAnimationFrame(poll);
-    return () => cancelAnimationFrame(handle);
+    return () => {
+      cancelAnimationFrame(handle);
+      if (successTimeoutRef.current !== null) {
+        clearTimeout(successTimeoutRef.current);
+        successTimeoutRef.current = null;
+      }
+    };
   }, [step, currentManualButton, isListening]);
 
   const finishSetup = useCallback(() => {

@@ -64,7 +64,7 @@ export function GamepadControlsModal({ id }: GamepadControlsModalProps) {
   }));
 
   const handleSave = useCallback(() => {
-    setGamepadMapping(editingMapping as unknown as Record<string, string>);
+    setGamepadMapping(editingMapping);
     modal.hide();
   }, [editingMapping, setGamepadMapping, modal]);
 

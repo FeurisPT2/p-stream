@@ -15,8 +15,16 @@ import {
 import { OverlayPortal } from "./OverlayDisplay";
 
 // Stable identifiers for mock UI elements to satisfy linter key unique requirements
-const MOCK_STARS = Array.from({ length: 20 }, (_, i) => `star-${i}`);
 const MOCK_CARDS = Array.from({ length: 4 }, (_, i) => `card-${i}`);
+
+// Star positions are precomputed once at module load so they don't change on re-render
+const STAR_POSITIONS = Array.from({ length: 20 }, (_, i) => ({
+  id: `star-${i}`,
+  width: `${(Math.random() * 2 + 1).toFixed(2)}px`,
+  height: `${(Math.random() * 2 + 1).toFixed(2)}px`,
+  top: `${(Math.random() * 100).toFixed(2)}%`,
+  left: `${(Math.random() * 100).toFixed(2)}%`,
+}));
 
 /**
  * Symbolic "Card" Preview Component (Lovable style)
@@ -105,15 +113,15 @@ function DetailedPreview({
         <div className="absolute -top-1/4 left-1/2 -translate-x-1/2 w-[150%] h-1/2 bg-themePreview-primary/20 blur-[120px] rounded-[100%] opacity-60" />
         {/* Particles / Stars Mock */}
         <div className="absolute inset-0 opacity-20">
-          {MOCK_STARS.map((id) => (
+          {STAR_POSITIONS.map((star) => (
             <div
-              key={id}
+              key={star.id}
               className="absolute bg-white rounded-full"
               style={{
-                width: `${(Math.random() * 2 + 1).toFixed(2)}px`,
-                height: `${(Math.random() * 2 + 1).toFixed(2)}px`,
-                top: `${(Math.random() * 100).toFixed(2)}%`,
-                left: `${(Math.random() * 100).toFixed(2)}%`,
+                width: star.width,
+                height: star.height,
+                top: star.top,
+                left: star.left,
               }}
             />
           ))}

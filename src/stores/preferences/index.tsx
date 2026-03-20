@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
+import { GamepadMapping } from "@/hooks/useGamepad";
 import {
   DEFAULT_KEYBOARD_SHORTCUTS,
   KeyboardShortcuts,
@@ -46,7 +47,7 @@ export interface PreferencesStore {
   enableGamepadControls: boolean;
   gamepadSetupComplete: boolean;
   gamepadInputMode: "controller" | "kbm" | "both";
-  gamepadMapping: Record<string, string>;
+  gamepadMapping: Partial<GamepadMapping>;
   keyboardShortcuts: KeyboardShortcuts;
 
   setEnableThumbnails(v: boolean): void;
@@ -87,7 +88,7 @@ export interface PreferencesStore {
   setEnableGamepadControls(v: boolean): void;
   setGamepadSetupComplete(v: boolean): void;
   setGamepadInputMode(v: "controller" | "kbm" | "both"): void;
-  setGamepadMapping(v: Record<string, string>): void;
+  setGamepadMapping(v: Partial<GamepadMapping>): void;
   setKeyboardShortcuts(v: KeyboardShortcuts): void;
 }
 

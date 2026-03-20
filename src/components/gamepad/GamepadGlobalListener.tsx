@@ -9,10 +9,10 @@ export function GamepadGlobalListener() {
   const { navigate: navigateSpatial } = useSpatialNavigation();
   const location = useLocation();
   const enableGamepadControls = usePreferencesStore(
-    (s: any) => s.enableGamepadControls,
+    (s) => s.enableGamepadControls,
   );
 
-  const gamepadInputMode = usePreferencesStore((s: any) => s.gamepadInputMode);
+  const gamepadInputMode = usePreferencesStore((s) => s.gamepadInputMode);
 
   const handleAction = useCallback(
     (action: string) => {

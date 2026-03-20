@@ -69,10 +69,13 @@ export function colorToRgbString(color: string): string {
 export function rgbStringToHex(rgbStr: string): string {
   const parts = rgbStr.trim().split(/\s+/);
   if (parts.length >= 3) {
-    const r = parseInt(parts[0], 10).toString(16).padStart(2, "0");
-    const g = parseInt(parts[1], 10).toString(16).padStart(2, "0");
-    const b = parseInt(parts[2], 10).toString(16).padStart(2, "0");
-    return `#${r}${g}${b}`;
+    const r = parseInt(parts[0], 10);
+    const g = parseInt(parts[1], 10);
+    const b = parseInt(parts[2], 10);
+    if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) {
+      return "#000000";
+    }
+    return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
   }
   return "#000000"; // fallback
 }

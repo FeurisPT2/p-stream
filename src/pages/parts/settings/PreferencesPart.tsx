@@ -51,9 +51,14 @@ export function PreferencesPart(props: {
   const enableGamepadControls = usePreferencesStore(
     (s) => s.enableGamepadControls,
   );
+  const gamepadSetupComplete = usePreferencesStore(
+    (s) => s.gamepadSetupComplete,
+  );
+  const gamepadInputMode = usePreferencesStore((s) => s.gamepadInputMode);
   const setEnableGamepadControls = usePreferencesStore(
     (s) => s.setEnableGamepadControls,
   );
+  const setGamepadInputMode = usePreferencesStore((s) => s.setGamepadInputMode);
   const sorted = sortLangCodes(
     appLanguageOptions.map((item) => item.code),
     props.language,
@@ -289,8 +294,7 @@ export function PreferencesPart(props: {
             </p>
 
             <div className="flex flex-col gap-4 max-w-[25rem]">
-              {!enableGamepadControls ||
-              !usePreferencesStore.getState().gamepadSetupComplete ? (
+              {!enableGamepadControls || !gamepadSetupComplete ? (
                 <Button
                   theme="purple"
                   onClick={() => navigate("/gamepad-setup")}
@@ -351,24 +355,47 @@ export function PreferencesPart(props: {
                           { id: "both", name: "Both (Recommended)" },
                           { id: "controller", name: "Controller Only" },
                           { id: "kbm", name: "Keyboard & Mouse Only" },
-                        ].find(
-                          (i) =>
-                            i.id ===
-                            usePreferencesStore.getState().gamepadInputMode,
-                        ) || { id: "both", name: "Both (Recommended)" }
+                        ].find((i) => i.id === gamepadInputMode) || {
+                          id: "both",
+                          name: "Both (Recommended)",
+                        }
                       }
                       setSelectedItem={(opt) =>
-                        usePreferencesStore
-                          .getState()
-                          .setGamepadInputMode(
-                            opt.id as "controller" | "kbm" | "both",
-                          )
+                        setGamepadInputMode(
+                          opt.id as "controller" | "kbm" | "both",
+                        )
                       }
                     />
                   </div>
                 </>
               )}
             </div>
+          </div>
+
+          {/* Keyboard Shortcuts */}
+          <div>
+            <p className="text-white font-bold mb-3">
+              {t(
+                "settings.preferences.keyboardShortcutsTitle",
+                "Keyboard Shortcuts",
+              )}
+            </p>
+            <p className="max-w-[25rem] font-medium mb-4">
+              {t(
+                "settings.preferences.keyboardShortcutsDescription",
+                "Customize keyboard shortcuts for controlling playback.",
+              )}
+            </p>
+            <Button
+              theme="secondary"
+              onClick={() => showModal("keyboard-commands-edit")}
+              className="max-w-[25rem] w-full"
+            >
+              {t(
+                "settings.preferences.editKeyboardShortcuts",
+                "Edit Keyboard Shortcuts",
+              )}
+            </Button>
           </div>
         </div>
 
