@@ -18,12 +18,11 @@ jobs:
           script: |
             cd ~/p-stream
             git pull origin production
-            node -e "
-              const fs = require('fs');
-              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-              pkg.dependencies['@p-stream/providers'] = 'github:xp-technologies-dev/private-providers';
-              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-            "
+            if [ -d "private-providers/.git" ]; then
+              git -C private-providers pull origin main
+            else
+              git clone https://github.com/xp-technologies-dev/private-providers private-providers
+            fi
             pnpm i
             pnpm build
             pm2 restart pstream
