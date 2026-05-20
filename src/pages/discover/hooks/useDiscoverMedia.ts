@@ -598,7 +598,7 @@ export function useDiscoverMedia({
     try {
       const data = await attemptFetch(contentType);
       setMedia((prevMedia) => {
-        const valid = data.results.filter((item) => item.id != null);
+        const valid = data.results.filter((item: DiscoverMedia) => item.id != null);
         return page === 1 ? valid : [...prevMedia, ...valid];
       });
       setHasMore(data.hasMore);
@@ -613,7 +613,7 @@ export function useDiscoverMedia({
           const fallbackData = await attemptFetch(fallbackType);
           setActualContentType(fallbackType); // Set actual content type to fallback
           setMedia((prevMedia) => {
-            const valid = fallbackData.results.filter((item) => item.id != null);
+            const valid = fallbackData.results.filter((item: DiscoverMedia) => item.id != null);
             return page === 1 ? valid : [...prevMedia, ...valid];
           });
           setHasMore(fallbackData.hasMore);
