@@ -598,8 +598,8 @@ export function useDiscoverMedia({
     try {
       const data = await attemptFetch(contentType);
       setMedia((prevMedia) => {
-        // If page is 1, replace the media array, otherwise append
-        return page === 1 ? data.results : [...prevMedia, ...data.results];
+        const valid = data.results.filter((item) => item.id != null);
+        return page === 1 ? valid : [...prevMedia, ...valid];
       });
       setHasMore(data.hasMore);
     } catch (err) {
@@ -613,10 +613,8 @@ export function useDiscoverMedia({
           const fallbackData = await attemptFetch(fallbackType);
           setActualContentType(fallbackType); // Set actual content type to fallback
           setMedia((prevMedia) => {
-            // If page is 1, replace the media array, otherwise append
-            return page === 1
-              ? fallbackData.results
-              : [...prevMedia, ...fallbackData.results];
+            const valid = fallbackData.results.filter((item) => item.id != null);
+            return page === 1 ? valid : [...prevMedia, ...valid];
           });
           setHasMore(fallbackData.hasMore);
           setError(null); // Clear error if fallback succeeds
