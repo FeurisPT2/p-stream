@@ -25,6 +25,4 @@ jobs:
               pkg.dependencies['@p-stream/providers'] = 'github:xp-technologies-dev/private-providers';
               fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
             "
-            pnpm i
-            pnpm build
-            pm2 restart pstream
+            nohup bash -c 'pnpm i && pnpm build && pm2 restart pstream' > ~/deploy.log 2>&1 &
