@@ -26,6 +26,7 @@ export type MWSeasonWithEpisodeMeta = {
 
 type MWMediaMetaBase = {
   title: string;
+  originalTitle?: string;
   id: string;
   year?: string;
   poster?: string;

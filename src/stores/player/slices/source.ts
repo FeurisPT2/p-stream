@@ -35,6 +35,7 @@ export interface PlayerMetaEpisode {
 export interface PlayerMeta {
   type: "movie" | "show";
   title: string;
+  originalTitle?: string;
   tmdbId: string;
   imdbId?: string;
   releaseYear: number;
@@ -165,7 +166,7 @@ export function metaToScrapeMedia(meta: PlayerMeta): ScrapeMedia {
   if (meta.type === "show") {
     if (!meta.episode || !meta.season) throw new Error("missing show data");
     return {
-      title: meta.title,
+      title: meta.originalTitle || meta.title,
       releaseYear: meta.releaseYear,
       tmdbId: meta.tmdbId,
       type: "show",
@@ -176,7 +177,7 @@ export function metaToScrapeMedia(meta: PlayerMeta): ScrapeMedia {
   }
 
   return {
-    title: meta.title,
+    title: meta.originalTitle || meta.title,
     releaseYear: meta.releaseYear,
     tmdbId: meta.tmdbId,
     type: "movie",
