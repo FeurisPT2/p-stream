@@ -12,14 +12,14 @@
 
 ## Links And Resources
 
-| Service       | Link                                            | Source Code                                             |
-| ------------- | ----------------------------------------------- | ------------------------------------------------------- |
-| P-Stream Docs | [docs](https://p-stream.github.io/docs/)                | [source code](https://github.com/p-stream/docs)         |
-| Extension     | [extension](https://p-stream.github.io/docs/extension) | [source code](https://github.com/p-stream/browser-ext)  |
-| Proxy         | [simple-proxy](https://p-stream.github.io/docs/proxy)  | [source code](https://github.com/p-stream/simple-proxy) |
-| Backend       | [backend](https://github.com/p-stream/backend)          | [source code](https://github.com/p-stream/backend)      |
-| Frontend      | [P-Stream](https://p-stream.github.io/docs/instances)  | [source code](https://github.com/p-stream/p-stream)     |
-| Weblate       | [weblate](https://p-stream.github.io/docs/weblate)          |                                                         |
+| Service   | Link                                                    | Source Code                                                    |
+| --------- | ------------------------------------------------------- | -------------------------------------------------------------- |
+| P-Stream Docs | [docs](https://docs.pstream.net/)                   |                                                                |
+| Extension | [extension](https://docs.pstream.net/extension)         | [source code](https://github.com/xp-technologies-dev/browser-ext) |
+| Proxy     | [simple-proxy](https://docs.pstream.net/proxy)          | [source code](https://github.com/xp-technologies-dev/simple-proxy) |
+| Backend   | [backend](https://github.com/xp-technologies-dev/backend) | [source code](https://github.com/xp-technologies-dev/backend) |
+| Frontend  | [P-Stream](https://docs.pstream.net/instances)          | [source code](https://github.com/xp-technologies-dev/p-stream) |
+
 
 ## Referrers
 
