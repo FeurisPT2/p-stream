@@ -94,6 +94,7 @@ export function formatTMDBMeta(
 
   return {
     title: media.title,
+    originalTitle: media.originalTitle,
     id: media.id.toString(),
     year: media.original_release_date?.getFullYear()?.toString(),
     poster: media.poster,
@@ -585,6 +586,7 @@ export function formatTMDBSearchResult(
     const show = result as TMDBShowSearchResult;
     return {
       title: show.name,
+      originalTitle: show.original_name,
       poster: getMediaPoster(show.poster_path),
       id: show.id,
       original_release_date: new Date(show.first_air_date),
@@ -596,6 +598,7 @@ export function formatTMDBSearchResult(
 
   return {
     title: movie.title,
+    originalTitle: movie.original_title,
     poster: getMediaPoster(movie.poster_path),
     id: movie.id,
     original_release_date: new Date(movie.release_date),

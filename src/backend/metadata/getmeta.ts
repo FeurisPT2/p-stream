@@ -44,6 +44,7 @@ export function formatTMDBMetaResult(
     return {
       id: details.id,
       title: movie.title,
+      originalTitle: movie.original_title,
       object_type: mediaTypeToTMDB(type),
       poster: getMediaPoster(movie.poster_path) ?? undefined,
       original_release_date: new Date(movie.release_date),
@@ -55,6 +56,7 @@ export function formatTMDBMetaResult(
     return {
       id: details.id,
       title: show.name,
+      originalTitle: show.original_name,
       object_type: mediaTypeToTMDB(type),
       seasons: show.seasons.map((v) => ({
         id: v.id,
