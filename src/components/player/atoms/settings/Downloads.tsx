@@ -21,7 +21,6 @@ export function useDownloadLink() {
         ? source.qualities[currentQuality]
         : undefined;
       if (quality) return quality.url;
-      // Fallback to the first available quality if currentQuality is not set
       const firstQuality = Object.values(source.qualities)[0];
       return firstQuality?.url;
     }
@@ -49,35 +48,110 @@ function StyleTrans(props: { k: string }) {
   );
 }
 
-export function DownloadView({ id }: { id: string }) {
+function OriginalFileView({ id }: { id: string }) {
+  const router = useOverlayRouter(id);
+  const { t } = useTranslation();
+  const selectedCaption = usePlayerStore((s) => s.caption?.selected);
+
+  const openSubtitleDownload = useCallback(() => {
+    const dataUrl = selectedCaption
+      ? convertSubtitlesToSrtDataurl(selectedCaption?.srtData)
+      : null;
+    if (!dataUrl) return;
+    window.open(dataUrl);
+  }, [selectedCaption]);
+
+  return (
+    <>
+      <Menu.BackLink onClick={() => router.navigate("/download")}>
+        {t("player.menus.downloads.original.cardTitle")}
+      </Menu.BackLink>
+      <Menu.Section>
+        <Menu.Paragraph marginClass="mb-6">
+          {t("player.menus.downloads.original.description")}
+        </Menu.Paragraph>
+        <Button className="w-full" theme="purple" disabled>
+          {t("player.menus.downloads.original.downloadButton")}
+        </Button>
+        <Button
+          className="w-full mt-2"
+          onClick={openSubtitleDownload}
+          disabled={!selectedCaption}
+          theme="secondary"
+        >
+          {t("player.menus.downloads.downloadSubtitle")}
+        </Button>
+      </Menu.Section>
+    </>
+  );
+}
+
+function StreamLinkView({ id }: { id: string }) {
   const router = useOverlayRouter(id);
   const { t } = useTranslation();
   const downloadUrl = useDownloadLink();
-
-  // Custom function to process the download URL
-  const processDownloadUrl = useCallback(() => {
-    if (!downloadUrl) return "";
-
-    // Check if the URL contains the m3u8-proxy and the ?url= parameter
-    const match = downloadUrl.match(/m3u8-proxy\?url=(.*)$/);
-    if (match && match[1]) {
-      // Decode the URL component
-      return decodeURIComponent(match[1]);
-    }
-
-    return downloadUrl; // Return original if no specific pattern is found
-  }, [downloadUrl]);
-
-  const hlsDownload = `https://hlsdownloader.thetuhin.com/?url=${encodeURIComponent(processDownloadUrl())}`;
   const [, copyToClipboard] = useCopyToClipboard();
+  const selectedCaption = usePlayerStore((s) => s.caption?.selected);
 
-  const sourceType = usePlayerStore((s) => s.source?.type);
+  const openSubtitleDownload = useCallback(() => {
+    const dataUrl = selectedCaption
+      ? convertSubtitlesToSrtDataurl(selectedCaption?.srtData)
+      : null;
+    if (!dataUrl) return;
+    window.open(dataUrl);
+  }, [selectedCaption]);
+
+  return (
+    <>
+      <Menu.BackLink onClick={() => router.navigate("/download")}>
+        {t("player.menus.downloads.stream.cardTitle")}
+      </Menu.BackLink>
+      <Menu.Section>
+        <Button
+          className="w-full"
+          theme="purple"
+          onClick={(event) => {
+            event.preventDefault();
+            copyToClipboard(downloadUrl ?? "");
+          }}
+        >
+          {t("player.menus.downloads.copyHlsPlaylist")}
+        </Button>
+        <Button
+          className="w-full mt-2"
+          onClick={openSubtitleDownload}
+          disabled={!selectedCaption}
+          theme="secondary"
+        >
+          {t("player.menus.downloads.downloadSubtitle")}
+        </Button>
+
+        <Menu.Divider />
+
+        <Menu.ChevronLink onClick={() => router.navigate("/download/pc")}>
+          {t("player.menus.downloads.onPc.title")}
+        </Menu.ChevronLink>
+        <Menu.ChevronLink onClick={() => router.navigate("/download/ios")}>
+          {t("player.menus.downloads.onIos.title")}
+        </Menu.ChevronLink>
+        <Menu.ChevronLink onClick={() => router.navigate("/download/android")}>
+          {t("player.menus.downloads.onAndroid.title")}
+        </Menu.ChevronLink>
+      </Menu.Section>
+    </>
+  );
+}
+
+function DesktopDownloadView({ id }: { id: string }) {
+  const router = useOverlayRouter(id);
+  const { t } = useTranslation();
+  const downloadUrl = useDownloadLink();
+  const meta = usePlayerStore((s) => s.meta);
   const selectedCaption = usePlayerStore((s) => s.caption?.selected);
   const captionList = usePlayerStore((s) => s.captionList);
-  const meta = usePlayerStore((s) => s.meta);
   const duration = usePlayerStore((s) => s.progress.duration);
   const source = usePlayerStore((s) => s.source);
-  const isDesktopApp = useIsDesktopApp();
+  const sourceType = usePlayerStore((s) => s.source?.type);
 
   const startOfflineDownload = useCallback(async () => {
     if (!downloadUrl) return;
@@ -88,7 +162,6 @@ export function DownloadView({ id }: { id: string }) {
     if (selectedCaption?.srtData) {
       subtitleText = selectedCaption.srtData;
     } else if (captionList.length > 0) {
-      // Auto-fetch the first English caption, or the first available one
       const defaultCaption =
         captionList.find((c) => c.language === "en") ?? captionList[0];
       try {
@@ -130,13 +203,31 @@ export function DownloadView({ id }: { id: string }) {
     t,
   ]);
 
-  const openSubtitleDownload = useCallback(() => {
-    const dataUrl = selectedCaption
-      ? convertSubtitlesToSrtDataurl(selectedCaption?.srtData)
-      : null;
-    if (!dataUrl) return;
-    window.open(dataUrl);
-  }, [selectedCaption]);
+  return (
+    <>
+      <Menu.BackLink onClick={() => router.navigate("/")}>
+        {t("player.menus.downloads.title")}
+      </Menu.BackLink>
+      <Menu.Section>
+        <Menu.Paragraph marginClass="mb-6">
+          <Trans i18nKey="player.menus.downloads.desktopDisclaimer" />
+        </Menu.Paragraph>
+        <Button className="w-full" theme="purple" onClick={startOfflineDownload}>
+          {t("player.menus.downloads.offlineButton")}
+        </Button>
+      </Menu.Section>
+    </>
+  );
+}
+
+export function DownloadView({ id }: { id: string }) {
+  const isDesktopApp = useIsDesktopApp();
+  const router = useOverlayRouter(id);
+  const { t } = useTranslation();
+
+  if (isDesktopApp) {
+    return <DesktopDownloadView id={id} />;
+  }
 
   return (
     <>
@@ -144,159 +235,56 @@ export function DownloadView({ id }: { id: string }) {
         {t("player.menus.downloads.title")}
       </Menu.BackLink>
       <Menu.Section>
-        <div className="mb-4">
-          {sourceType === "hls" ? (
-            <div className="mb-6">
-              {isDesktopApp ? (
-                <>
-                  <Menu.Paragraph marginClass="mb-6">
-                    <StyleTrans k="player.menus.downloads.disclaimer" />
-                  </Menu.Paragraph>
-
-                  <Menu.Paragraph marginClass="mb-6">
-                    <Trans i18nKey="player.menus.downloads.desktopDisclaimer" />
-                  </Menu.Paragraph>
-                  <Button
-                    className="w-full mt-2"
-                    theme="purple"
-                    onClick={startOfflineDownload}
-                  >
-                    {t("player.menus.downloads.offlineButton")}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Menu.Paragraph marginClass="mb-6">
-                    <StyleTrans k="player.menus.downloads.hlsDisclaimer" />
-                  </Menu.Paragraph>
-
-                  <Button
-                    className="w-full mt-2"
-                    theme="purple"
-                    href={hlsDownload}
-                  >
-                    {t("player.menus.downloads.button")}
-                  </Button>
-                  <p className="text-xs py-4">
-                    <Trans i18nKey="player.menus.downloads.hlsDownloader">
-                      <a
-                        className="text-type-link"
-                        href="https://hlsdownloader.thetuhin.com/"
-                      />
-                    </Trans>
-                  </p>
-                </>
-              )}
-              <Button
-                className="w-full mt-2"
-                theme="secondary"
-                href={downloadUrl}
-                onClick={(event) => {
-                  // Allow context menu & left click to copy
-                  event.preventDefault();
-
-                  copyToClipboard(downloadUrl ?? "");
-                }}
-              >
-                {t("player.menus.downloads.copyHlsPlaylist")}
-              </Button>
-              <Button
-                className="w-full mt-2"
-                onClick={openSubtitleDownload}
-                disabled={!selectedCaption}
-                theme="secondary"
-              >
-                {t("player.menus.downloads.downloadSubtitle")}
-              </Button>
+        <div className="flex flex-col gap-3 mt-2">
+          <button
+            type="button"
+            className="w-full rounded-lg bg-video-context-light/10 hover:bg-video-context-light/20 transition-colors p-4 text-left cursor-pointer"
+            onClick={() => router.navigate("/download/original")}
+          >
+            <div className="flex items-center gap-3">
+              <Icon
+                icon={Icons.FILE_ARROW_DOWN}
+                className="text-2xl text-video-context-type-accent"
+              />
+              <div>
+                <p className="text-sm font-medium text-video-context-type-main">
+                  {t("player.menus.downloads.original.cardTitle")}
+                </p>
+                <p className="text-xs text-video-context-type-secondary mt-0.5">
+                  {t("player.menus.downloads.original.cardDesc")}
+                </p>
+              </div>
             </div>
-          ) : sourceType === "file" ? (
-            <div className="mb-6">
-              {isDesktopApp ? (
-                <>
-                  <Menu.Paragraph marginClass="mb-6">
-                    <Trans i18nKey="player.menus.downloads.desktopDisclaimer" />
-                  </Menu.Paragraph>
-                  <Button
-                    className="w-full mt-2"
-                    theme="purple"
-                    onClick={startOfflineDownload}
-                  >
-                    {t("player.menus.downloads.offlineButton")}
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Menu.ChevronLink
-                    onClick={() => router.navigate("/download/pc")}
-                  >
-                    {t("player.menus.downloads.onPc.title")}
-                  </Menu.ChevronLink>
-                  <Menu.ChevronLink
-                    onClick={() => router.navigate("/download/ios")}
-                  >
-                    {t("player.menus.downloads.onIos.title")}
-                  </Menu.ChevronLink>
-                  <Menu.ChevronLink
-                    onClick={() => router.navigate("/download/android")}
-                  >
-                    {t("player.menus.downloads.onAndroid.title")}
-                  </Menu.ChevronLink>
+          </button>
 
-                  <Menu.Divider />
+          <div className="flex items-center gap-3 px-2">
+            <div className="flex-1 h-px bg-video-context-border" />
+            <span className="text-xs text-video-context-type-secondary uppercase">
+              {t("player.menus.downloads.or")}
+            </span>
+            <div className="flex-1 h-px bg-video-context-border" />
+          </div>
 
-                  <Menu.Paragraph marginClass="my-6">
-                    <StyleTrans k="player.menus.downloads.disclaimer" />
-                  </Menu.Paragraph>
-                  <Button className="w-full" href={downloadUrl} theme="purple">
-                    {t("player.menus.downloads.downloadVideo")}
-                  </Button>
-                </>
-              )}
-              <Button
-                className="w-full mt-2"
-                onClick={openSubtitleDownload}
-                disabled={!selectedCaption}
-                theme="secondary"
-                download="subtitles.srt"
-              >
-                {t("player.menus.downloads.downloadSubtitle")}
-              </Button>
+          <button
+            type="button"
+            className="w-full rounded-lg bg-video-context-light/10 hover:bg-video-context-light/20 transition-colors p-4 text-left cursor-pointer"
+            onClick={() => router.navigate("/download/stream")}
+          >
+            <div className="flex items-center gap-3">
+              <Icon
+                icon={Icons.LINK}
+                className="text-2xl text-video-context-type-accent"
+              />
+              <div>
+                <p className="text-sm font-medium text-video-context-type-main">
+                  {t("player.menus.downloads.stream.cardTitle")}
+                </p>
+                <p className="text-xs text-video-context-type-secondary mt-0.5">
+                  {t("player.menus.downloads.stream.cardDesc")}
+                </p>
+              </div>
             </div>
-          ) : (
-            <>
-              <Menu.ChevronLink onClick={() => router.navigate("/download/pc")}>
-                {t("player.menus.downloads.onPc.title")}
-              </Menu.ChevronLink>
-              <Menu.ChevronLink
-                onClick={() => router.navigate("/download/ios")}
-              >
-                {t("player.menus.downloads.onIos.title")}
-              </Menu.ChevronLink>
-              <Menu.ChevronLink
-                onClick={() => router.navigate("/download/android")}
-              >
-                {t("player.menus.downloads.onAndroid.title")}
-              </Menu.ChevronLink>
-
-              <Menu.Divider />
-
-              <Menu.Paragraph marginClass="my-6">
-                <StyleTrans k="player.menus.downloads.disclaimer" />
-              </Menu.Paragraph>
-              <Button className="w-full" href={downloadUrl} theme="purple">
-                {t("player.menus.downloads.downloadVideo")}
-              </Button>
-              <Button
-                className="w-full mt-2"
-                onClick={openSubtitleDownload}
-                disabled={!selectedCaption}
-                theme="secondary"
-                download="subtitles.srt"
-              >
-                {t("player.menus.downloads.downloadSubtitle")}
-              </Button>
-            </>
-          )}
+          </button>
         </div>
       </Menu.Section>
     </>
@@ -309,7 +297,7 @@ function AndroidExplanationView({ id }: { id: string }) {
 
   return (
     <>
-      <Menu.BackLink onClick={() => router.navigate("/download")}>
+      <Menu.BackLink onClick={() => router.navigate("/download/stream")}>
         {t("player.menus.downloads.onAndroid.shortTitle")}
       </Menu.BackLink>
       <Menu.Section>
@@ -327,7 +315,7 @@ function PCExplanationView({ id }: { id: string }) {
 
   return (
     <>
-      <Menu.BackLink onClick={() => router.navigate("/download")}>
+      <Menu.BackLink onClick={() => router.navigate("/download/stream")}>
         {t("player.menus.downloads.onPc.shortTitle")}
       </Menu.BackLink>
       <Menu.Section>
@@ -344,7 +332,7 @@ function IOSExplanationView({ id }: { id: string }) {
 
   return (
     <>
-      <Menu.BackLink onClick={() => router.navigate("/download")}>
+      <Menu.BackLink onClick={() => router.navigate("/download/stream")}>
         <StyleTrans k="player.menus.downloads.onIos.shortTitle" />
       </Menu.BackLink>
       <Menu.Section>
@@ -359,9 +347,19 @@ function IOSExplanationView({ id }: { id: string }) {
 export function DownloadRoutes({ id }: { id: string }) {
   return (
     <>
-      <OverlayPage id={id} path="/download" width={343} height={490}>
+      <OverlayPage id={id} path="/download" width={343} height={320}>
         <Menu.CardWithScrollable>
           <DownloadView id={id} />
+        </Menu.CardWithScrollable>
+      </OverlayPage>
+      <OverlayPage id={id} path="/download/original" width={343} height={340}>
+        <Menu.CardWithScrollable>
+          <OriginalFileView id={id} />
+        </Menu.CardWithScrollable>
+      </OverlayPage>
+      <OverlayPage id={id} path="/download/stream" width={343} height={440}>
+        <Menu.CardWithScrollable>
+          <StreamLinkView id={id} />
         </Menu.CardWithScrollable>
       </OverlayPage>
       <OverlayPage id={id} path="/download/ios" width={343} height={440}>
