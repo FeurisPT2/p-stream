@@ -38,7 +38,7 @@
     },
     "q6": {
       "title": "Is there a P-Stream app?",
-      "body": "Yes! We now have an official desktop app available for download! https://github.com/xp-technologies-dev/p-stream-desktop/releases",
+      "body": "no.",
       "section": "general"
     },
     "q7": {
@@ -102,13 +102,13 @@
       "section": "playback"
     },
     "q20": {
-      "title": "What is FED API?",
-      "body": "FED API is our private scraper that pulls streams directly from Febbox. Each free Febbox account includes 100 GB/month of unlimited bandwidth, and we use your UI token to scrape content as if you're watching it yourself. Setup is easiest via desktop browser, but mobile instructions are available on our Fluxer.",
+      "title": "What is Finger API?",
+      "body": "Finger API is our private scraper that pulls streams directly from Febbox.",
       "section": "connections"
     },
     "q21": {
-      "title": "Does FED API work on all devices?",
-      "body": "Yes. Once set up, your token works across all devices!",
+      "title": "Does Finger API work on all devices?",
+      "body": "Yes.",
       "section": "connections"
     },
     "q22": {
@@ -158,7 +158,7 @@
     }
   },
   "auth": {
-    "createAccount": "Don't have an account yet 😬 <0>Create an account.</0>",
+    "createAccount": "Don't have an account yet? <0>Create an account.</0>",
     "deviceNameLabel": "Device name",
     "deviceNamePlaceholder": "Personal phone",
     "generate": {
@@ -217,12 +217,12 @@
       "host": "You are connecting to <0>{{hostname}}</0> - please confirm you trust it before making an account...",
       "no": "Go back",
       "title": "Do you trust this server?",
-      "yes": "I trust this server 🤞"
+      "yes": "I trust this server."
     },
     "verify": {
       "description": "Please enter your passphrase from earlier to confirm you have saved it and to create your account",
       "invalidData": "Data is not valid",
-      "noMatch": "Passphrase doesn't match 😭",
+      "noMatch": "Passphrase doesn't match.",
       "passphraseLabel": "Your 12-word passphrase",
       "recaptchaFailed": "ReCaptcha validation failed",
       "register": "Create account",
@@ -233,7 +233,7 @@
     }
   },
   "errors": {
-    "badge": "It broke 💀",
+    "badge": "It broke",
     "details": "Error details",
     "adBlocker": "This is likely caused by your adblocker — we don't have any ads, so it's safe to whitelist us!",
     "adBlockerLink": "How to whitelist a site",
@@ -408,28 +408,24 @@
       "allResults": "That's all we have...",
       "failed": "Failed to find media, try again!",
       "loading": "Loading...",
-      "noResults": "We couldn't find anything :(",
+      "noResults": "We couldn't find anything.",
       "placeholder": {
         "default": "What do you want to watch?",
         "extra": [
           "What are you in the mood for?",
-          "Should we delete your browser history?",
           "What do you want to stream?",
-          "P-Stream is the best site ever!",
           "What's on your watchlist today?",
           "How was your day?",
           "My bad the site never works...",
-          "Isn't P-Stream just the best?",
           ">ᴗ<"
         ]
       },
       "empty": {
         "default": "Welcome, find media to watch here!",
         "extra": [
-          "There's nothing here :(",
+          "There's nothing here.",
           "So empty...",
-          "Such emptiness.",
-          "Hi new user :3"
+          "Such emptiness."
         ]
       },
       "sectionTitle": "Search results",
@@ -456,11 +452,11 @@
       },
       "420": {
         "default": "What would you like to watch this 4/20?",
-        "extra": ["Happy 4/20 🥳!"]
+        "extra": ["Happy 4/20!"]
       },
       "69": {
-        "default": "Up for something spicy?",
-        "extra": ["Happy 69 day 😘!"]
+        "default": "What would you like to watch this.. day?",
+        "extra": ["Viva la P-Stream!"]
       },
       "halloween": {
         "default": "What spooky movie would you like to watch this Halloween?",
@@ -476,9 +472,9 @@
       "title": "P-Stream needs your help!",
       "description": "P-Stream is run at a loss, and we need help to keep it ad free! If you enjoy using P-Stream, please consider donating to help us cover our costs.",
       "moreInfo": "More info",
-      "explanation": "If you aren't using the extension or don't have FED API set up, it may be harder to find content! We want to fix this, but it's a lot harder to provide content without expensive servers. So please, if you enjoy using P-Stream, please consider donating to help us cover our growing costs.",
+      "explanation": "If you aren't using the extension, it may be harder to find content! We want to fix this, but it's a lot harder to provide content without expensive servers. So please, if you enjoy using P-Stream, please consider donating to help us cover our growing costs.",
       "explanation2": "If you want more info, please join our ",
-      "fluxer": "Fluxer",
+      "fluxer": "Discord",
       "thankYou": "Thank you for your support!",
       "donate": "Donate",
       "label": "Project Funding: ${{current}} / ${{goal}}",
@@ -568,8 +564,8 @@
       "recaptchaLabel": "ReCaptcha Key (Optional)",
       "toggleLable": "Needs ReCaptcha?",
       "status": {
-        "error": "Failed to migrate your data. 😿",
-        "success": "Your data has been migrated successfully! 🎉"
+        "error": "Failed to migrate your data.",
+        "success": "Your data has been migrated successfully!"
       },
       "button": {
         "migrate": "Migrate",
@@ -582,8 +578,8 @@
       "title": "Download data",
       "description": "This will download your data to your device. You can then upload it to the new server or just keep it for safekeeping.",
       "status": {
-        "error": "Failed to download your data. 😿",
-        "success": "Your data has been downloaded successfully! 🎉"
+        "error": "Failed to download your data.",
+        "success": "Your data has been downloaded successfully!"
       },
       "button": {
         "download": "Download data",
@@ -596,9 +592,9 @@
       "description": "Upload your previously exported data file to restore your bookmarks and progress on this account.",
       "status": {
         "processing": "Processing data...",
-        "error": "Failed to upload your data. 😿",
-        "success": "Your data has been uploaded successfully! 🎉",
-        "successLocal": "Your data has been saved locally! 🎉"
+        "error": "Failed to upload your data.",
+        "success": "Your data has been uploaded successfully!",
+        "successLocal": "Your data has been saved locally!"
       },
       "file": {
         "description": "Select the file you want to upload",
@@ -620,7 +616,7 @@
   },
   "navigation": {
     "banner": {
-      "offline": "Check your internet connection, silly goose! 🦢"
+      "offline": "Check your internet connection..?"
     },
     "menu": {
       "about": "About and FAQ",
@@ -637,7 +633,7 @@
     "badge": "Not found",
     "goHome": "Back to home",
     "reloadButton": "Try again",
-    "message": "We looked everywhere: under the bins, in the closet, behind the proxy, but ultimately couldn't find the page you are looking for. (ಥ﹏ಥ)",
+    "message": "We looked everywhere: under the bins, in the closet, behind the proxy, but ultimately couldn't find the page you are looking for.",
     "title": "Couldn't find that page"
   },
   "downtimeNotice": {
@@ -656,7 +652,7 @@
     },
     "extension": {
       "back": "Go back",
-      "explainer": "Using the browser extension, you can get the best streams we have to offer. With just a simple install. 👌",
+      "explainer": "Using the browser extension, you can get the best streams we have to offer. With just a simple install.",
       "explainerIos": "Unfortunately, the browser extension is not supported on iOS, Press <bold>Go back</bold> to choose another option.",
       "extensionHelp": "If you've installed the extension but it's not detected, <bold>open the extension through your browsers extension menu</bold> and follow the steps on screen.",
       "linkChrome": "Install Chrome extension",
@@ -708,22 +704,22 @@
             "fedapi": "Additional: Febbox token",
             "fedapiDescription": "Bring your own FREE Febbox account to gain access to FED API, the best sources with 4K quality, Dolby Atmos, skip intro and the fastest load times! Highly recommended option!"
           },
-          "outro": "If you have more questions on how this works, feel free to ask on the <0>P-Stream Fluxer</0> server!"
+          "outro": "If you have more questions on how this works, feel free to ask on the <0>P-Stream Discord</0> server!"
         },
         "recommended": {
           "title": "Not sure what to choose?",
           "subtitle": "Recommended Configurations:",
           "desktop": {
             "title": "Desktop:",
-            "description": "Extension (or app) + Febbox token"
+            "description": "Extension (or app)"
           },
           "iOS": {
             "title": "iOS:",
-            "description": "Custom proxy + Febbox token"
+            "description": "Custom proxy"
           },
           "android": {
             "title": "Android:",
-            "description": "Extension + Febbox token"
+            "description": "Extension"
           }
         }
       },
@@ -754,7 +750,7 @@
           "title": "Additional sources:"
         }
       },
-      "title": "Let's get you setup with P-Stream 🥳"
+      "title": "Let's get you setup with P-Stream."
     }
   },
   "overlays": {
@@ -856,8 +852,8 @@
           "title": "No embeds found"
         },
         "noStream": {
-          "text": "This source has no streams for this movie or show. /ᐠ - ˕ -マ Ⳋ",
-          "title": "No stream :("
+          "text": "This source has no streams for this movie or show.",
+          "title": "No stream."
         },
         "title": "Sources",
         "unknownOption": "Unknown",
@@ -884,7 +880,7 @@
         },
         "title": "Subtitles",
         "unknownLanguage": "Unknown",
-        "dropSubtitleFile": "Drop subtitle file here! >_<",
+        "dropSubtitleFile": "Drop subtitle file here!",
         "scrapeButton": "Scrape subtitles",
         "refresh": "Refresh External Subtitles",
         "refreshing": "Refreshing...",
@@ -914,13 +910,13 @@
       },
       "legal": {
         "badge": "Removed",
-        "text": "This media is no longer available due to a takedown notice or copyright claim. 😨",
+        "text": "This media is no longer available due to a takedown notice or copyright claim.",
         "title": "Media has been removed"
       },
       "extensionPermission": {
         "badge": "Permission Missing",
         "button": "Use extension",
-        "text": "You have the browser extension, but we need your permission to get started using the extension. (¬_¬)",
+        "text": "You have the browser extension, but we need your permission to get started using the extension.",
         "title": "Configure the extension"
       },
       "failed": {
@@ -932,7 +928,7 @@
       "notFound": {
         "badge": "Not found",
         "homeButton": "Back to home",
-        "text": "We couldn't find the media you requested. Either it's been removed or you tampered with the URL (naughty, naughty).",
+        "text": "We couldn't find the media you requested. Either it's been removed or you entered a wrong URL.",
         "title": "Couldn't find that media."
       }
     },
@@ -956,18 +952,18 @@
         "errorNetwork": "Some kind of network error occurred which prevented the media from being successfully fetched, despite having previously been available.",
         "errorNotSupported": "The media or media provider object is not supported."
       },
-      "autoResumeText": "There was an error trying to play the media 😖. Automatically trying the other sources...",
+      "autoResumeText": "There was an error trying to play the media. Automatically trying the other sources...",
       "copyDebugInfo": "Copy debug info",
       "debugInfo": "Check console for more details.",
       "homeButton": "Go home",
       "resumeButton": "Try next sources",
-      "text": "There was an error trying to play the media 😖. Please try again or try a different source!",
+      "text": "There was an error trying to play the media.. Please try again or try a different source!",
       "title": "Failed to play video!"
     },
     "scraping": {
       "items": {
         "failure": "Error occurred",
-        "notFound": "Doesn't have the video (╥﹏╥)",
+        "notFound": "Doesn't have the video.",
         "pending": "Checking for videos..."
       },
       "notFound": {
@@ -1118,7 +1114,7 @@
     "title": "Support",
     "text": "P-Stream is designed to be as user-friendly as possible. However, people still have questions and issues. This page is here to help resolve these shortcomings",
     "q1": {
-      "body": "You can join the official <0>P-Stream fluxer</0> and ask questions there or you can email the one provided at the bottom of this page.",
+      "body": "You can join the official <0>P-Stream discord</0> and ask questions there or you can email the one provided at the bottom of this page.",
       "title": "Where can I get help?"
     },
     "q2": {
@@ -1153,7 +1149,7 @@
       "disconectCancel": "Cancel"
     },
     "migration": {
-      "failed": "Failed to migrate your data. 😿",
+      "failed": "Failed to migrate your data.",
       "inProgress": "Please hold, we are migrating your data. This shouldn't take long..."
     }
   },
@@ -1214,7 +1210,7 @@
       },
       "register": {
         "cta": "Get started",
-        "text": "Share your watch progress between devices and keep them synced. ( ̧⸝⸝⍢⸝⸝)ෆ",
+        "text": "Share your watch progress between devices and keep them synced.",
         "title": "Sync to the Cloud"
       },
       "title": "Account"
@@ -1329,9 +1325,9 @@
         "doSetup": "Do setup",
         "errorStatus": {
           "description": "It seems that one or more items in this setup need your attention.",
-          "title": "Something needs your attention 😱"
+          "title": "Something needs your attention."
         },
-        "itemError": "There is something wrong with this setting. Go through setup again to fix it. (ᴗ_ ᴗ。)",
+        "itemError": "There is something wrong with this setting. Go through setup again to fix it.",
         "items": {
           "default": "Default setup",
           "extension": "Extension",
@@ -1340,7 +1336,7 @@
         },
         "redoSetup": "Redo setup",
         "successStatus": {
-          "description": "All things are in place for you to start watching your favorite media. (๑>◡<๑)",
+          "description": "All things are in place for you to start watching your favorite media.",
           "title": "Everything is set up!"
         },
         "unsetStatus": {
@@ -1378,7 +1374,7 @@
     "preferences": {
       "title": "Preferences",
       "language": "Application language",
-      "languageDescription": "Language applied to the entire application, only English has silly stuff 🙁.",
+      "languageDescription": "Language applied to the entire application, only English has silly stuff.",
       "thumbnail": "Generate thumbnails",
       "thumbnailDescription": "Most of the time, videos don't have thumbnails. You can enable this setting to generate them on the fly but they can make your video slower.",
       "thumbnailLabel": "Generate thumbnails",
