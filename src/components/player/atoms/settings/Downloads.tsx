@@ -1,4 +1,6 @@
-import { useCallback, useMemo } from "react";
+import { fetchGridData } from "@p-stream/providers";
+import type { GridData } from "@p-stream/providers";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useCopyToClipboard } from "react-use";
 
@@ -11,6 +13,9 @@ import { convertSubtitlesToSrtDataurl } from "@/components/player/utils/captions
 import { useIsDesktopApp } from "@/hooks/useIsDesktopApp";
 import { useOverlayRouter } from "@/hooks/useOverlayRouter";
 import { usePlayerStore } from "@/stores/player/store";
+// I swear
+
+// If any of you abuse my api I swear to god I'll turn it down and never make shit again so please don't. Y'all arent supposed to use this.
 
 export function useDownloadLink() {
   const source = usePlayerStore((s) => s.source);
@@ -51,7 +56,30 @@ function StyleTrans(props: { k: string }) {
 function OriginalFileView({ id }: { id: string }) {
   const router = useOverlayRouter(id);
   const { t } = useTranslation();
+  const meta = usePlayerStore((s) => s.meta);
   const selectedCaption = usePlayerStore((s) => s.caption?.selected);
+  const [data, setData] = useState<GridData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const tmdbId = meta?.tmdbId;
+
+  useEffect(() => {
+    if (!tmdbId) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+
+    fetchGridData(tmdbId).then((json) => {
+      if (!cancelled) setData(json);
+    }).catch(() => {
+      if (!cancelled) setError(true);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [tmdbId]);
 
   const openSubtitleDownload = useCallback(() => {
     const dataUrl = selectedCaption
@@ -61,18 +89,55 @@ function OriginalFileView({ id }: { id: string }) {
     window.open(dataUrl);
   }, [selectedCaption]);
 
+  const hasDownloads = data?.downloads && data.downloads.length > 0;
+
   return (
     <>
       <Menu.BackLink onClick={() => router.navigate("/download")}>
         {t("player.menus.downloads.original.cardTitle")}
       </Menu.BackLink>
       <Menu.Section>
-        <Menu.Paragraph marginClass="mb-6">
-          {t("player.menus.downloads.original.description")}
-        </Menu.Paragraph>
-        <Button className="w-full" theme="purple" disabled>
-          {t("player.menus.downloads.original.downloadButton")}
-        </Button>
+        {loading && (
+          <Menu.Paragraph marginClass="mb-4">
+            {t("player.menus.downloads.original.loading")}
+          </Menu.Paragraph>
+        )}
+        {error && (
+          <Menu.Paragraph marginClass="mb-4">
+            {t("player.menus.downloads.original.error")}
+          </Menu.Paragraph>
+        )}
+        {!loading && !error && !hasDownloads && (
+          <Menu.Paragraph marginClass="mb-4">
+            {t("player.menus.downloads.original.noResults")}
+          </Menu.Paragraph>
+        )}
+        {hasDownloads && data?.downloads.map((dl, i) => (
+          <div
+            key={`${dl.title}-${i}`}
+            className="w-full rounded-lg bg-video-context-light/10 p-3 mb-2"
+          >
+            <p className="text-xs text-video-context-type-main break-all mb-1">
+              {dl.title}
+            </p>
+            <p className="text-xs text-video-context-type-secondary mb-2">
+              {dl.size}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {dl.sources.map((src, j) => (
+                <a
+                  key={`${src.url}-${j}`}
+                  href={src.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-0 text-center px-3 py-1.5 rounded bg-video-context-type-accent/20 hover:bg-video-context-type-accent/40 transition-colors text-xs font-medium text-video-context-type-main"
+                >
+                  {src.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
         <Button
           className="w-full mt-2"
           onClick={openSubtitleDownload}
@@ -107,6 +172,9 @@ function StreamLinkView({ id }: { id: string }) {
         {t("player.menus.downloads.stream.cardTitle")}
       </Menu.BackLink>
       <Menu.Section>
+        <Menu.Paragraph marginClass="mb-4">
+          <Trans i18nKey="player.menus.downloads.desktopDisclaimer" />
+        </Menu.Paragraph>
         <Button
           className="w-full"
           theme="purple"
@@ -224,6 +292,7 @@ export function DownloadView({ id }: { id: string }) {
   const isDesktopApp = useIsDesktopApp();
   const router = useOverlayRouter(id);
   const { t } = useTranslation();
+  const isPstream = window.location.hostname === "pstream.net" || window.location.hostname === "www.pstream.net";
 
   if (isDesktopApp) {
     return <DesktopDownloadView id={id} />;
@@ -238,22 +307,34 @@ export function DownloadView({ id }: { id: string }) {
         <div className="flex flex-col gap-3 mt-2">
           <button
             type="button"
-            className="w-full rounded-lg bg-video-context-light/10 hover:bg-video-context-light/20 transition-colors p-4 text-left cursor-pointer"
-            onClick={() => router.navigate("/download/original")}
+            className={`w-full rounded-lg bg-video-context-light/10 transition-colors p-4 text-left relative group ${isPstream ? "hover:bg-video-context-light/20 cursor-pointer" : "opacity-50 cursor-not-allowed"}`}
+            onClick={() => isPstream && router.navigate("/download/original")}
+            disabled={!isPstream}
           >
             <div className="flex items-center gap-3">
               <Icon
                 icon={Icons.FILE_ARROW_DOWN}
-                className="text-2xl text-video-context-type-accent"
+                className={`text-2xl ${isPstream ? "text-video-context-type-accent" : "text-video-context-type-secondary"}`}
               />
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-medium text-video-context-type-main">
                   {t("player.menus.downloads.original.cardTitle")}
                 </p>
                 <p className="text-xs text-video-context-type-secondary mt-0.5">
-                  {t("player.menus.downloads.original.cardDesc")}
+                  {isPstream ? t("player.menus.downloads.original.cardDesc") : t("player.menus.downloads.original.selfhosted")}
                 </p>
               </div>
+              {isPstream && (
+                <div className="relative">
+                  <Icon
+                    icon={Icons.CIRCLE_QUESTION}
+                    className="text-lg text-video-context-type-secondary hover:text-video-context-type-main transition-colors peer"
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-64 p-3 rounded-lg bg-video-context-background border border-video-context-border text-xs text-video-context-type-secondary leading-relaxed opacity-0 pointer-events-none peer-hover:opacity-100 peer-hover:pointer-events-auto transition-opacity z-50 shadow-lg">
+                    {t("player.menus.downloads.original.description")}
+                  </div>
+                </div>
+              )}
             </div>
           </button>
 
@@ -267,7 +348,7 @@ export function DownloadView({ id }: { id: string }) {
 
           <button
             type="button"
-            className="w-full rounded-lg bg-video-context-light/10 hover:bg-video-context-light/20 transition-colors p-4 text-left cursor-pointer"
+            className="w-full rounded-lg bg-video-context-light/10 hover:bg-video-context-light/20 transition-colors p-4 text-left cursor-pointer relative group"
             onClick={() => router.navigate("/download/stream")}
           >
             <div className="flex items-center gap-3">
@@ -275,13 +356,22 @@ export function DownloadView({ id }: { id: string }) {
                 icon={Icons.LINK}
                 className="text-2xl text-video-context-type-accent"
               />
-              <div>
+              <div className="flex-1">
                 <p className="text-sm font-medium text-video-context-type-main">
                   {t("player.menus.downloads.stream.cardTitle")}
                 </p>
                 <p className="text-xs text-video-context-type-secondary mt-0.5">
                   {t("player.menus.downloads.stream.cardDesc")}
                 </p>
+              </div>
+              <div className="relative">
+                <Icon
+                  icon={Icons.CIRCLE_QUESTION}
+                  className="text-lg text-video-context-type-secondary hover:text-video-context-type-main transition-colors peer"
+                />
+                <div className="absolute right-0 top-full mt-2 w-64 p-3 rounded-lg bg-video-context-background border border-video-context-border text-xs text-video-context-type-secondary leading-relaxed opacity-0 pointer-events-none peer-hover:opacity-100 peer-hover:pointer-events-auto transition-opacity z-50 shadow-lg">
+                  {t("player.menus.downloads.stream.description")}
+                </div>
               </div>
             </div>
           </button>
@@ -347,17 +437,17 @@ function IOSExplanationView({ id }: { id: string }) {
 export function DownloadRoutes({ id }: { id: string }) {
   return (
     <>
-      <OverlayPage id={id} path="/download" width={343} height={320}>
+      <OverlayPage id={id} path="/download" width={343} height={400}>
         <Menu.CardWithScrollable>
           <DownloadView id={id} />
         </Menu.CardWithScrollable>
       </OverlayPage>
-      <OverlayPage id={id} path="/download/original" width={343} height={340}>
+      <OverlayPage id={id} path="/download/original" width={343} height={440}>
         <Menu.CardWithScrollable>
           <OriginalFileView id={id} />
         </Menu.CardWithScrollable>
       </OverlayPage>
-      <OverlayPage id={id} path="/download/stream" width={343} height={440}>
+      <OverlayPage id={id} path="/download/stream" width={343} height={480}>
         <Menu.CardWithScrollable>
           <StreamLinkView id={id} />
         </Menu.CardWithScrollable>

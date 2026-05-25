@@ -776,12 +776,17 @@
         "original": {
           "cardTitle": "Original File",
           "cardDesc": "Download the video file directly",
-          "description": "Download the original video file from the source. This option will be huge in file size (up to 80gb+).",
-          "downloadButton": "wip"
+          "description": "Download the original video file from the source. This option will be massive in file size (up to 80gb+) due to the files being high quality and contain multiple dub/sub options in one .",
+          "downloadButton": "Download",
+          "loading": "Fetching available downloads...",
+          "error": "Couldn't load downloads right now. Try again later.",
+          "noResults": "No direct downloads available for this title yet.",
+          "selfhosted": "This feature is only available on pstream.net"
         },
         "stream": {
           "cardTitle": "Stream Link",
-          "cardDesc": "Copy the HLS playlist URL"
+          "cardDesc": "Copy the HLS playlist URL",
+          "description": "Copy the streaming link (HLS playlist) for use with external tools. This is a temporary link from the current stream source and may expire."
         },
         "onAndroid": {
           "1": "To download on Android, click the download button then, on the new page, <bold>tap and hold</bold> on the video, then select <bold>save</bold>.",
