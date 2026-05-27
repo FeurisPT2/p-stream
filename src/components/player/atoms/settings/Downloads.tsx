@@ -117,11 +117,23 @@ function OriginalFileView({ id }: { id: string }) {
             key={`${dl.title}-${i}`}
             className="w-full rounded-lg bg-video-context-light/10 p-3 mb-2"
           >
-            <p className="text-xs text-video-context-type-main break-all mb-1">
+            <div className="flex items-center gap-2 mb-1">
+              {dl.format && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-video-context-type-accent/20 text-video-context-type-accent">
+                  {dl.format}
+                </span>
+              )}
+              {dl.resolution && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-video-context-light/20 text-video-context-type-main">
+                  {dl.resolution}
+                </span>
+              )}
+              <span className="text-xs text-video-context-type-secondary ml-auto">
+                {dl.size}
+              </span>
+            </div>
+            <p className="text-xs text-video-context-type-secondary break-all mb-2">
               {dl.title}
-            </p>
-            <p className="text-xs text-video-context-type-secondary mb-2">
-              {dl.size}
             </p>
             <div className="flex gap-2 flex-wrap">
               {dl.sources.map((src, j) => (
