@@ -77,6 +77,12 @@ export async function getMetaFromId(
   id: string,
   seasonId?: string,
 ): Promise<DetailedMeta | null> {
+  if (type === MWMediaType.SERIES) {
+    const { getImdbOverride } = await import("./imdbMetadataProvider");
+    const override = await getImdbOverride(id, seasonId);
+    if (override) return override;
+  }
+
   const details = await getMediaDetails(id, mediaTypeToTMDB(type));
 
   if (!details) return null;

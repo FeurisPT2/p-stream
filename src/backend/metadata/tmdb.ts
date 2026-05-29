@@ -9,6 +9,7 @@ import { MediaItem } from "@/utils/mediaTypes";
 import { getProxyUrls } from "@/utils/proxyUrls";
 
 import { MWMediaMeta, MWMediaType, MWSeasonMeta } from "./types/mw";
+import { getImdbEpisodes } from "./imdbMetadataProvider";
 import {
   ExternalIdMovieSearchResult,
   TMDBContentTypes,
@@ -527,6 +528,9 @@ export async function getEpisodes(
   id: string,
   season: number,
 ): Promise<TMDBEpisodeShort[]> {
+  const overrideEps = await getImdbEpisodes(id, season);
+  if (overrideEps) return overrideEps;
+
   const data = await get<TMDBSeason>(`/tv/${id}/season/${season}`);
   return data.episodes.map((e) => ({
     id: e.id,
