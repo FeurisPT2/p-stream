@@ -186,33 +186,6 @@ export function OnboardingPage() {
         {/* Desktop Cards */}
         <div className="hidden md:flex w-full flex-row gap-3 pb-6">
           <Card
-            onClick={() =>
-              window.open(
-                "https://github.com/xp-technologies-dev/p-stream-desktop/releases",
-                "_blank",
-              )
-            }
-            className="w-1/3"
-          >
-            <CardContent
-              colorClass="!text-onboarding-best"
-              title={t("onboarding.start.options.desktopapp.title")}
-              subtitle={t("onboarding.start.options.desktopapp.quality")}
-              description={t("onboarding.start.options.desktopapp.description")}
-            >
-              <Link className="!text-onboarding-best">
-                {t("onboarding.start.options.desktopapp.action")}
-              </Link>
-            </CardContent>
-          </Card>
-          <div className="hidden md:grid grid-rows-[1fr,auto,1fr] justify-center gap-4">
-            <VerticalLine className="items-end" />
-            <span className="text-xs uppercase font-bold">
-              {t("onboarding.start.options.or")}
-            </span>
-            <VerticalLine />
-          </div>
-          <Card
             onClick={() => navigate("/onboarding/extension")}
             className="w-1/3"
           >
@@ -227,34 +200,30 @@ export function OnboardingPage() {
               </Link>
             </CardContent>
           </Card>
-          {noProxies ? null : (
-            <>
-              <div className="hidden md:grid grid-rows-[1fr,auto,1fr] justify-center gap-4">
-                <VerticalLine className="items-end" />
-                <span className="text-xs uppercase font-bold">
-                  {t("onboarding.start.options.or")}
-                </span>
-                <VerticalLine />
-              </div>
-              <Card
-                onClick={
-                  isFebboxSetup && isExtensionActiveCached()
-                    ? () => completeAndRedirect()
-                    : skipModal.show
-                }
-                className="w-1/3"
-              >
-                <CardContent
-                  colorClass="!text-onboarding-bad"
-                  title={t("onboarding.defaultConfirm.confirm")}
-                  subtitle=""
-                  description={t("onboarding.defaultConfirm.description")}
-                >
-                  <Trans i18nKey="onboarding.start.options.default.text" />
-                </CardContent>
-              </Card>
-            </>
-          )}
+          <div className="hidden md:grid grid-rows-[1fr,auto,1fr] justify-center gap-4">
+            <VerticalLine className="items-end" />
+            <span className="text-xs uppercase font-bold">
+              {t("onboarding.start.options.or")}
+            </span>
+            <VerticalLine />
+          </div>
+          <Card
+            onClick={
+              isFebboxSetup && isExtensionActiveCached()
+                ? () => completeAndRedirect()
+                : skipModal.show
+            }
+            className="w-1/3"
+          >
+            <CardContent
+              colorClass="!text-onboarding-bad"
+              title={t("onboarding.defaultConfirm.confirm")}
+              subtitle=""
+              description={t("onboarding.defaultConfirm.description")}
+            >
+              <Trans i18nKey="onboarding.start.options.default.text" />
+            </CardContent>
+          </Card>
         </div>
 
         {/* Mobile Cards */}
