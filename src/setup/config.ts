@@ -140,11 +140,11 @@ export function conf(): RuntimeConfig {
     DMCA_EMAIL: getKey("DMCA_EMAIL"),
     ONBOARDING_CHROME_EXTENSION_INSTALL_LINK: getKey(
       "ONBOARDING_CHROME_EXTENSION_INSTALL_LINK",
-      "https://p-stream.github.io/docs/extension",
+      "https://chromewebstore.google.com/detail/p-stream-enchanced/geimjiobahmbkmaigaafjnoanebpmlmj",
     ),
     ONBOARDING_FIREFOX_EXTENSION_INSTALL_LINK: getKey(
       "ONBOARDING_FIREFOX_EXTENSION_INSTALL_LINK",
-      "https://p-stream.github.io/docs/extension",
+      "https://addons.mozilla.org/en-US/firefox/addon/p-stream-extension-v1/",
     ),
     ONBOARDING_PROXY_INSTALL_LINK: getKey("ONBOARDING_PROXY_INSTALL_LINK"),
     BACKEND_URLS: getKey("BACKEND_URL", BACKEND_URL)

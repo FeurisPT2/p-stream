@@ -402,7 +402,7 @@ export function FebboxSetup({
                 <Trans i18nKey="fedapi.onboarding.description" />
               </p>
               <p className="max-w-[30rem] mt-2 text-sm text-type-secondary italic">
-                {t("fedapi.onboarding.note")}
+                {t("fedapi.onboarding.note") + "FED API has been replaced by Finger API with same content, that does not need a token. This field is disabled."}
               </p>
             </div>
             <div>
@@ -485,9 +485,10 @@ export function FebboxSetup({
                       setFebboxKey(newToken);
                     }}
                     value={febboxKey ?? ""}
-                    placeholder="eyJ0eXAi..."
+                    placeholder="FED API has been replaced by Finger API with same content, that does not need a token. This field is disabled."
                     passwordToggleable
                     className="flex-grow"
+                    disabled
                   />
                 </div>
               </div>

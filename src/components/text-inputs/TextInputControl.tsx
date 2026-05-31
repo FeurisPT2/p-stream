@@ -13,6 +13,7 @@ export interface TextInputControlPropsNoLabel {
   placeholder?: string;
   className?: string;
   passwordToggleable?: boolean;
+  disabled?: boolean;
 }
 
 export interface TextInputControlProps extends TextInputControlPropsNoLabel {
@@ -35,6 +36,7 @@ export const TextInputControl = forwardRef<
       placeholder,
       onFocus,
       passwordToggleable,
+      disabled,
     },
     ref,
   ) => {
@@ -55,6 +57,7 @@ export const TextInputControl = forwardRef<
           autoComplete={autoComplete}
           onBlur={() => onUnFocus && onUnFocus()}
           onFocus={() => onFocus?.()}
+          disabled={disabled}
           onKeyDown={(e) =>
             e.key === "Enter" ? (e.target as HTMLInputElement).blur() : null
           }
