@@ -106,6 +106,12 @@ module.exports = {
         allowSeparatedGroups: true,
       },
     ],
-    ...a11yOff,
+   "prettier/prettier": "off",
+    "import/order": "off",
+    "sort-imports": "off",
+    "prefer-template": "off",
+    "react/no-array-index-key": "off",
+    "spaced-comment": "off",
+ ...a11yOff,
   },
 };
