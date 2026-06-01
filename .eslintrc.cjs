@@ -112,5 +112,6 @@ module.exports = {
     "prefer-template": "off",
     "react/no-array-index-key": "off",
     "spaced-comment": "off",
+ ...a11yOff,
   },
 };
