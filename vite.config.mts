@@ -109,7 +109,7 @@ export default defineConfig(({ mode }) => {
         typescript: true, // check typescript build errors in dev server
         eslint: {
           // check lint errors in dev server
-          lintCommand: "eslint --ext .tsx,.ts src",
+          lintCommand: "eslint --ext .tsx,.ts --max-warnings 999 src",
           dev: {
             logLevel: ["error"],
           },
@@ -120,6 +120,7 @@ export default defineConfig(({ mode }) => {
     ],
 
     build: {
+      chunkSizeWarningLimit: 2000,
       sourcemap: mode !== "production",
       rollupOptions: {
         output: {
