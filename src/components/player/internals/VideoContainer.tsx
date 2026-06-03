@@ -72,6 +72,38 @@ function VideoElement() {
   const enableNativeSubtitles = usePreferencesStore(
     (s) => s.enableNativeSubtitles,
   );
+  const videoBrightness = usePreferencesStore((s) => s.videoBrightness);
+  const volumeBoost = usePreferencesStore((s) => s.volumeBoost);
+
+  useEffect(() => {
+    if (!videoEl.current) return;
+    const video = videoEl.current;
+
+    // skip Web Audio if no boost needed
+    if (volumeBoost <= 100) {
+      video.removeAttribute("data-boosted");
+      return;
+    }
+
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+
+    // reuse existing context attached to this element
+    let ctx: AudioContext = (video as any).__audioCtx;
+    let gainNode: GainNode = (video as any).__gainNode;
+
+    if (!ctx) {
+      ctx = new AudioCtx();
+      const mediaEl = ctx.createMediaElementSource(video);
+      gainNode = ctx.createGain();
+      mediaEl.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      (video as any).__audioCtx = ctx;
+      (video as any).__gainNode = gainNode;
+    }
+
+    gainNode.gain.value = volumeBoost / 100;
+  }, [volumeBoost, videoEl]);
   const trackObjectUrl = useObjectUrl(
     () => (srtData ? convertSubtitlesToObjectUrl(srtData) : null),
     [srtData],
@@ -114,6 +146,7 @@ function VideoElement() {
     <video
       id="video-element"
       className="absolute inset-0 w-full h-screen bg-black"
+      style={{ filter: videoBrightness !== 100 ? `brightness(${videoBrightness}%)` : undefined }}
       autoPlay
       playsInline
       ref={videoEl}

@@ -14,6 +14,50 @@ import { usePreferencesStore } from "@/stores/preferences";
 import { useWatchPartyStore } from "@/stores/watchParty";
 import { isAutoplayAllowed } from "@/utils/autoplay";
 
+function Slider(props: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (v: number) => void;
+  onReset: () => void;
+  defaultValue: number;
+  unit?: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-type-secondary">{props.label}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-white tabular-nums">
+            {props.value}{props.unit ?? ""}
+          </span>
+          {props.value !== props.defaultValue && (
+            <button
+              type="button"
+              className="text-xs text-type-secondary hover:text-white tabbable"
+              onClick={props.onReset}
+            >
+              <Icon icon={Icons.X} className="text-sm" />
+            </button>
+          )}
+        </div>
+      </div>
+      <input
+        type="range"
+        min={props.min}
+        max={props.max}
+        step={props.step}
+        value={props.value}
+        onChange={(e) => props.onChange(Number(e.target.value))}
+        className="w-full accent-video-context-light cursor-pointer"
+        aria-label={props.label}
+      />
+    </div>
+  );
+}
+
 function ButtonList(props: {
   options: number[];
   selected: number;
@@ -182,13 +226,16 @@ export function PlaybackSettingsView({ id }: { id: string }) {
   const router = useOverlayRouter(id);
   const playbackRate = usePlayerStore((s) => s.mediaPlaying.playbackRate);
   const display = usePlayerStore((s) => s.display);
-  const enableThumbnails = usePreferencesStore((s) => s.enableThumbnails);
-  const setEnableThumbnails = usePreferencesStore((s) => s.setEnableThumbnails);
   const enableAutoplay = usePreferencesStore((s) => s.enableAutoplay);
   const setEnableAutoplay = usePreferencesStore((s) => s.setEnableAutoplay);
   const enableLowPerformanceMode = usePreferencesStore(
     (s) => s.enableLowPerformanceMode,
   );
+  const videoBrightness = usePreferencesStore((s) => s.videoBrightness);
+  const setVideoBrightness = usePreferencesStore((s) => s.setVideoBrightness);
+  const volumeBoost = usePreferencesStore((s) => s.volumeBoost);
+  const setVolumeBoost = usePreferencesStore((s) => s.setVolumeBoost);
+  const [volumeBoostEnabled, setVolumeBoostEnabled] = useState(volumeBoost > 100);
   const isInWatchParty = useWatchPartyStore((s) => s.enabled);
 
   const account = useAuthStore((s) => s.account);
@@ -197,30 +244,11 @@ export function PlaybackSettingsView({ id }: { id: string }) {
   const canShowAutoplay =
     !isInWatchParty && allowAutoplay && !enableLowPerformanceMode;
 
-  // Save settings to backend
-  const saveThumbnailSetting = useCallback(
-    async (value: boolean) => {
-      if (!account || !backendUrl) return;
-
-      try {
-        await updateSettings(backendUrl, account, {
-          enableThumbnails: value,
-        });
-      } catch (error) {
-        console.error("Failed to save thumbnail setting:", error);
-      }
-    },
-    [account, backendUrl],
-  );
-
   const saveAutoplaySetting = useCallback(
     async (value: boolean) => {
       if (!account || !backendUrl) return;
-
       try {
-        await updateSettings(backendUrl, account, {
-          enableAutoplay: value,
-        });
+        await updateSettings(backendUrl, account, { enableAutoplay: value });
       } catch (error) {
         console.error("Failed to save autoplay setting:", error);
       }
@@ -230,27 +258,24 @@ export function PlaybackSettingsView({ id }: { id: string }) {
 
   const setPlaybackRate = useCallback(
     (v: number) => {
-      if (isInWatchParty) return; // Don't allow changes in watch party
+      if (isInWatchParty) return;
       display?.setPlaybackRate(v);
     },
     [display, isInWatchParty],
   );
 
-  // Handle thumbnail toggle with backend save
-  const handleThumbnailToggle = useCallback(() => {
-    const newValue = !enableThumbnails;
-    setEnableThumbnails(newValue);
-    saveThumbnailSetting(newValue);
-  }, [enableThumbnails, setEnableThumbnails, saveThumbnailSetting]);
-
-  // Handle autoplay toggle with backend save
   const handleAutoplayToggle = useCallback(() => {
     const newValue = !enableAutoplay;
     setEnableAutoplay(newValue);
     saveAutoplaySetting(newValue);
   }, [enableAutoplay, setEnableAutoplay, saveAutoplaySetting]);
 
-  // Force 1x speed in watch party
+  const handleVolumeBoostToggle = useCallback(() => {
+    const next = !volumeBoostEnabled;
+    setVolumeBoostEnabled(next);
+    if (!next) setVolumeBoost(100);
+  }, [volumeBoostEnabled, setVolumeBoost]);
+
   useEffect(() => {
     if (isInWatchParty && display && playbackRate !== 1) {
       display.setPlaybackRate(1);
@@ -287,26 +312,42 @@ export function PlaybackSettingsView({ id }: { id: string }) {
           {canShowAutoplay && (
             <Menu.Link
               rightSide={
-                <Toggle
-                  enabled={enableAutoplay}
-                  onClick={handleAutoplayToggle}
-                />
+                <Toggle enabled={enableAutoplay} onClick={handleAutoplayToggle} />
               }
             >
               {t("settings.preferences.autoplayLabel")}
             </Menu.Link>
           )}
-          {!enableLowPerformanceMode && (
-            <Menu.Link
-              rightSide={
-                <Toggle
-                  enabled={enableThumbnails}
-                  onClick={handleThumbnailToggle}
-                />
-              }
-            >
-              {t("settings.preferences.thumbnailLabel")}
-            </Menu.Link>
+          <Slider
+            label="Brightness"
+            value={videoBrightness}
+            min={10}
+            max={200}
+            step={5}
+            defaultValue={100}
+            unit="%"
+            onChange={setVideoBrightness}
+            onReset={() => setVideoBrightness(100)}
+          />
+          <Menu.Link
+            rightSide={
+              <Toggle enabled={volumeBoostEnabled} onClick={handleVolumeBoostToggle} />
+            }
+          >
+            Volume Boost
+          </Menu.Link>
+          {volumeBoostEnabled && (
+            <Slider
+              label="Boost level"
+              value={volumeBoost}
+              min={100}
+              max={300}
+              step={10}
+              defaultValue={100}
+              unit="%"
+              onChange={setVolumeBoost}
+              onReset={() => setVolumeBoost(100)}
+            />
           )}
         </div>
       </Menu.Section>
