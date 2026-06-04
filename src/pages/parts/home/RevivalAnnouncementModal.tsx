@@ -1,26 +1,20 @@
 import { useCallback, useEffect } from "react";
-
 import { IconPatch } from "@/components/buttons/IconPatch";
 import { Icons } from "@/components/Icon";
 import { useModal } from "@/components/overlays/Modal";
 import { OverlayPortal } from "@/components/overlays/OverlayDisplay";
 import { Flare } from "@/components/utils/Flare";
 
-const MODAL_ID = "revival-announcement";
-const DISMISSED_KEY = `modal-${MODAL_ID}-dismissed`;
+const MODAL_ID = "domain-change";
 
 export function RevivalAnnouncementModal() {
   const modal = useModal(MODAL_ID);
 
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") return;
-    if (!localStorage.getItem(DISMISSED_KEY)) {
-      modal.show();
-    }
+    modal.show();
   }, [modal]);
 
   const handleClose = useCallback(() => {
-    localStorage.setItem(DISMISSED_KEY, "true");
     modal.hide();
   }, [modal]);
 
@@ -39,7 +33,7 @@ export function RevivalAnnouncementModal() {
               <Flare.Child className="pointer-events-auto relative">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold text-white">
-                    P-Stream is Back
+                    ⚠️ Domain Change Notice
                   </h2>
                   <button
                     type="button"
@@ -50,32 +44,30 @@ export function RevivalAnnouncementModal() {
                   </button>
                 </div>
                 <div className="space-y-4 text-base text-type-secondary">
-                  <p className="text-white font-bold border-l-2 border-white pl-3">
-                    This is a fork of the original P-Stream. XP Technologies
-                    holds no ownership over the original project and makes no
-                    claim to it.
+                  <p className="text-white font-bold border-l-2 border-yellow-400 pl-3">
+                    We're changing domains - IMPORTANT
                   </p>
                   <p>
-                    The original main contributor has stepped down and will no
-                    longer be responsible for any public hosting. We respect
-                    their decision and wish to keep their identity private.
+                    Due to legal issues,{" "}
+                    <strong className="text-white">pstream.net</strong> will be
+                    going offline soon. The site may be temporarily unavailable
+                    during the transition — this is expected.
                   </p>
                   <p>
-                    The XP Technologies team has taken on the responsibility of
-                    continuing their legacy. We are committed to keeping
-                    P-Stream <strong className="text-white">open source</strong>{" "}
-                    and{" "}
-                    <strong className="text-white">completely ad-free</strong>.
+                    Bookmark the link below to get the new domain as soon as
+                    it's live:
                   </p>
-                  <p>
-                    <a
-                      href="https://github.com/xp-technologies-dev/p-stream"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-400 hover:text-blue-300 underline transition-colors"
-                    >
-                      View the project on GitHub &rarr;
-                    </a>
+                  <a
+                    href="https://rentry.co/xpstream"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl transition-colors"
+                  >
+                    📌 rentry.co/xpstream — Bookmark This!
+                  </a>
+                  <p className="text-sm text-type-secondary">
+                    P-Stream will continue as normal on the new domain. See you
+                    there.
                   </p>
                 </div>
               </Flare.Child>
