@@ -1,25 +1,18 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useState } from "react";
 import { IconPatch } from "@/components/buttons/IconPatch";
 import { Icons } from "@/components/Icon";
-import { useModal } from "@/components/overlays/Modal";
 import { OverlayPortal } from "@/components/overlays/OverlayDisplay";
 import { Flare } from "@/components/utils/Flare";
 
-const MODAL_ID = "domain-change";
-
 export function RevivalAnnouncementModal() {
-  const modal = useModal(MODAL_ID);
-
-  useEffect(() => {
-    modal.show();
-  }, [modal]);
+  const [isShown, setIsShown] = useState(true);
 
   const handleClose = useCallback(() => {
-    modal.hide();
-  }, [modal]);
+    setIsShown(false);
+  }, []);
 
   return (
-    <OverlayPortal darken close={handleClose} show={modal.isShown}>
+    <OverlayPortal darken close={handleClose} show={isShown}>
       <div className="flex absolute inset-0 items-center justify-center p-4 overflow-hidden">
         <div className="overflow-y-auto max-h-[85vh] pointer-events-auto">
           <Flare.Base className="group rounded-3xl bg-background-main transition-colors duration-300 focus:relative focus:z-10 w-full max-w-lg p-6 bg-mediaCard-hoverBackground bg-opacity-60 backdrop-filter backdrop-blur-lg shadow-lg">
@@ -45,7 +38,7 @@ export function RevivalAnnouncementModal() {
                 </div>
                 <div className="space-y-4 text-base text-type-secondary">
                   <p className="text-white font-bold border-l-2 border-yellow-400 pl-3">
-                    We're changing domains - IMPORTANT
+                    P-Stream is NOT shutting down — we&apos;re changing domains.
                   </p>
                   <p>
                     Due to legal issues,{" "}
