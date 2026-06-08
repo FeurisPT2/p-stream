@@ -111,14 +111,9 @@ module.exports = {
     "prefer-template": "off",
     "react/no-array-index-key": "off",
     "spaced-comment": "off",
-<<<<<<< deving
     "react/no-unescaped-entities": "off",
     "import/no-unresolved": "off",
     "import/extensions": "off",
- ...a11yOff,
-=======
-    "react/no-unescaped-entities": "off", // added
     ...a11yOff,
->>>>>>> production
   },
 };
