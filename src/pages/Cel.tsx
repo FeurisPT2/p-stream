@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import { Trans, useTranslation } from "react-i18next";
 
 import { ThinContainer } from "@/components/layout/ThinContainer";
 import { Heading1, Paragraph } from "@/components/utils/Text";
@@ -30,23 +29,15 @@ function Button(props: {
 }
 
 export function CelPage() {
-  const { t } = useTranslation();
-
   return (
     <SubPageLayout>
       <PageTitle subpage k="global.pages.cel" />
       <ThinContainer>
-        <Heading1>Mükemmel bi' film tadında</Heading1>
+        <Heading1>Mükemmel bi&apos; film tadında</Heading1>
         <Paragraph className="flex flex-col gap-6">
-          <Trans
-         
-            components={{
-              bold: <span className="font-bold" style={{ color: "#cfcfcf" }} />,
-            }}
-          />
-         
+          <span style={{ color: "#cfcfcf" }}>
             sen ve ben, karanlıkta - onca yıldızın içinde
-         
+          </span>
         </Paragraph>
       </ThinContainer>
     </SubPageLayout>
