@@ -35,6 +35,7 @@ export function RevivalAnnouncementModal() {
     } catch {
       // ignore
     }
+    setShouldShow(false);
     modal.hide();
   }, [modal]);
 

@@ -93,8 +93,13 @@ function VideoElement() {
     if (!videoEl.current) return;
     const video = videoEl.current;
 
-    // skip Web Audio if no boost needed
+    // Web Audio is only attachable once per element. If we've never boosted on
+    // this element there's no graph yet — nothing to reset, just bail.
+    const existingCtx: AudioContext | undefined = (video as any).__audioCtx;
+    const existingGain: GainNode | undefined = (video as any).__gainNode;
+
     if (volumeBoost <= 100) {
+      if (existingGain) existingGain.gain.value = 1;
       video.removeAttribute("data-boosted");
       return;
     }
@@ -102,9 +107,8 @@ function VideoElement() {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
 
-    // reuse existing context attached to this element
-    let ctx: AudioContext = (video as any).__audioCtx;
-    let gainNode: GainNode = (video as any).__gainNode;
+    let ctx = existingCtx;
+    let gainNode = existingGain;
 
     if (!ctx) {
       ctx = new AudioCtx();
@@ -116,8 +120,14 @@ function VideoElement() {
       (video as any).__gainNode = gainNode;
     }
 
-    gainNode.gain.value = volumeBoost / 100;
-  }, [volumeBoost, videoEl]);
+    // New contexts start suspended until a user gesture resumes them. The
+    // boost toggle IS a user gesture, so resume here — otherwise the routed
+    // audio is silent and the boost looks broken.
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+
+    if (gainNode) gainNode.gain.value = volumeBoost / 100;
+    video.setAttribute("data-boosted", "true");
+  }, [volumeBoost]);
   const trackObjectUrl = useObjectUrl(
     () => (srtData ? convertSubtitlesToObjectUrl(srtData) : null),
     [srtData],
