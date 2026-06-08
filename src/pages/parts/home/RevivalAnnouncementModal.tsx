@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { IconPatch } from "@/components/buttons/IconPatch";
 import { Icons } from "@/components/Icon";
-import { useModal } from "@/components/overlays/Modal";
 import { OverlayPortal } from "@/components/overlays/OverlayDisplay";
 import { Flare } from "@/components/utils/Flare";
 
@@ -42,7 +41,7 @@ export function RevivalAnnouncementModal() {
   if (!shouldShow) return null;
 
   return (
-    <OverlayPortal darken close={handleClose} show={modal.isShown}>
+    <OverlayPortal darken close={handleClose} show={isShown}>
       <div className="flex absolute inset-0 items-center justify-center p-4 overflow-hidden">
         <div className="overflow-y-auto max-h-[85vh] pointer-events-auto">
           <Flare.Base className="group rounded-3xl bg-background-main transition-colors duration-300 focus:relative focus:z-10 w-full max-w-lg p-6 bg-mediaCard-hoverBackground bg-opacity-60 backdrop-filter backdrop-blur-lg shadow-lg">
