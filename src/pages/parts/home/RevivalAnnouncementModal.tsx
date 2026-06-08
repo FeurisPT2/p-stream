@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { IconPatch } from "@/components/buttons/IconPatch";
 import { Icons } from "@/components/Icon";
+import { useModal } from "@/components/overlays/Modal";
 import { OverlayPortal } from "@/components/overlays/OverlayDisplay";
 import { Flare } from "@/components/utils/Flare";
 
 const MODAL_ID = "rebrand-notice";
-// Bump this when the rebrand notice changes — old viewers see it once more.
+
 const REBRAND_VERSION = "zstream-2026-06-08";
 const STORAGE_KEY = "pstream::rebrand-seen";
 
@@ -19,7 +20,7 @@ export function RevivalAnnouncementModal() {
         setShouldShow(true);
       }
     } catch {
-      // private mode / blocked storage — show once per page load, won't persist
+      
       setShouldShow(true);
     }
   }, []);
@@ -41,7 +42,7 @@ export function RevivalAnnouncementModal() {
   if (!shouldShow) return null;
 
   return (
-    <OverlayPortal darken close={handleClose} show={isShown}>
+    <OverlayPortal darken close={handleClose} show={modal.isShown}>
       <div className="flex absolute inset-0 items-center justify-center p-4 overflow-hidden">
         <div className="overflow-y-auto max-h-[85vh] pointer-events-auto">
           <Flare.Base className="group rounded-3xl bg-background-main transition-colors duration-300 focus:relative focus:z-10 w-full max-w-lg p-6 bg-mediaCard-hoverBackground bg-opacity-60 backdrop-filter backdrop-blur-lg shadow-lg">

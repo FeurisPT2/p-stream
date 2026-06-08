@@ -8,7 +8,7 @@ import { usePreferencesStore } from "@/stores/preferences";
 
 import { useInitializeSource } from "../hooks/useInitializePlayer";
 
-// initialize display interface
+
 function useDisplayInterface() {
   const display = usePlayerStore((s) => s.display);
   const setDisplay = usePlayerStore((s) => s.setDisplay);
@@ -47,14 +47,12 @@ function useObjectUrl(cb: () => string | null, deps: any[]) {
     const data = cb();
     lastObjectUrl.current = data;
     return data;
-    // deps are passed in, cb is known not to be changed
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, deps);
 
   useEffect(() => {
     return () => {
-      // this is intentionally done only in cleanup
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+
       if (lastObjectUrl.current) URL.revokeObjectURL(lastObjectUrl.current);
     };
   }, []);
@@ -78,8 +76,7 @@ function VideoElement() {
   const videoHueRotate  = usePreferencesStore((s) => s.videoHueRotate);
   const volumeBoost = usePreferencesStore((s) => s.volumeBoost);
 
-  // Compose CSS filter from all advanced color sliders. Empty string when all
-  // are at defaults so the browser doesn't pay for a no-op filter pass.
+
   const filterStr = useMemo(() => {
     const parts: string[] = [];
     if (videoBrightness !== 100) parts.push(`brightness(${videoBrightness}%)`);
@@ -93,8 +90,7 @@ function VideoElement() {
     if (!videoEl.current) return;
     const video = videoEl.current;
 
-    // Web Audio is only attachable once per element. If we've never boosted on
-    // this element there's no graph yet — nothing to reset, just bail.
+
     const existingCtx: AudioContext | undefined = (video as any).__audioCtx;
     const existingGain: GainNode | undefined = (video as any).__gainNode;
 
@@ -120,9 +116,7 @@ function VideoElement() {
       (video as any).__gainNode = gainNode;
     }
 
-    // New contexts start suspended until a user gesture resumes them. The
-    // boost toggle IS a user gesture, so resume here — otherwise the routed
-    // audio is silent and the boost looks broken.
+
     if (ctx.state === "suspended") ctx.resume().catch(() => {});
 
     if (gainNode) gainNode.gain.value = volumeBoost / 100;
@@ -133,25 +127,25 @@ function VideoElement() {
     [srtData],
   );
 
-  // Use native tracks when the setting is enabled
+
   const shouldUseNativeTrack = enableNativeSubtitles && source !== null;
 
-  // report video element to display interface
+
   useEffect(() => {
     if (display && videoEl.current) {
       display.processVideoElement(videoEl.current);
     }
   }, [display, videoEl]);
 
-  // Control track visibility based on setting
+
   useEffect(() => {
     if (trackEl.current) {
       trackEl.current.track.mode = shouldUseNativeTrack ? "showing" : "hidden";
     }
   }, [shouldUseNativeTrack, trackEl]);
 
-  // Attach track when native subtitles are enabled
-  // SubtitleView handles showing custom captions when native subtitles are disabled
+
+
   let subtitleTrack: ReactNode = null;
   if (shouldUseNativeTrack && trackObjectUrl && language) {
     subtitleTrack = (
