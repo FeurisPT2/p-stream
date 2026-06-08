@@ -44,6 +44,9 @@ export interface PreferencesStore {
   gamepadMapping: Record<string, string>;
   keyboardShortcuts: KeyboardShortcuts;
   videoBrightness: number;
+  videoContrast: number;
+  videoSaturation: number;
+  videoHueRotate: number;
   volumeBoost: number;
 
   setEnableThumbnails(v: boolean): void;
@@ -82,6 +85,9 @@ export interface PreferencesStore {
   setGamepadMapping(v: Record<string, string>): void;
   setKeyboardShortcuts(v: KeyboardShortcuts): void;
   setVideoBrightness(v: number): void;
+  setVideoContrast(v: number): void;
+  setVideoSaturation(v: number): void;
+  setVideoHueRotate(v: number): void;
   setVolumeBoost(v: number): void;
 }
 
@@ -124,6 +130,9 @@ export const usePreferencesStore = create(
       gamepadMapping: {},
       keyboardShortcuts: DEFAULT_KEYBOARD_SHORTCUTS,
       videoBrightness: 100,
+      videoContrast: 100,
+      videoSaturation: 100,
+      videoHueRotate: 0,
       volumeBoost: 100,
       setEnableThumbnails(v) {
         set((s) => {
@@ -313,6 +322,21 @@ export const usePreferencesStore = create(
       setVolumeBoost(v) {
         set((s) => {
           s.volumeBoost = v;
+        });
+      },
+      setVideoContrast(v) {
+        set((s) => {
+          s.videoContrast = v;
+        });
+      },
+      setVideoSaturation(v) {
+        set((s) => {
+          s.videoSaturation = v;
+        });
+      },
+      setVideoHueRotate(v) {
+        set((s) => {
+          s.videoHueRotate = v;
         });
       },
     })),

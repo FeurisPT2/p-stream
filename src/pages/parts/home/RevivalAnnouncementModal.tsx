@@ -1,18 +1,48 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { IconPatch } from "@/components/buttons/IconPatch";
 import { Icons } from "@/components/Icon";
+import { useModal } from "@/components/overlays/Modal";
 import { OverlayPortal } from "@/components/overlays/OverlayDisplay";
 import { Flare } from "@/components/utils/Flare";
 
-export function RevivalAnnouncementModal() {
-  const [isShown, setIsShown] = useState(true);
+const MODAL_ID = "rebrand-notice";
 
-  const handleClose = useCallback(() => {
-    setIsShown(false);
+const REBRAND_VERSION = "zstream-2026-06-08";
+const STORAGE_KEY = "pstream::rebrand-seen";
+
+export function RevivalAnnouncementModal() {
+  const modal = useModal(MODAL_ID);
+  const [shouldShow, setShouldShow] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(STORAGE_KEY) !== REBRAND_VERSION) {
+        setShouldShow(true);
+      }
+    } catch {
+      
+      setShouldShow(true);
+    }
   }, []);
 
+  useEffect(() => {
+    if (shouldShow) modal.show();
+  }, [shouldShow, modal]);
+
+  const handleClose = useCallback(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, REBRAND_VERSION);
+    } catch {
+      // ignore
+    }
+    setShouldShow(false);
+    modal.hide();
+  }, [modal]);
+
+  if (!shouldShow) return null;
+
   return (
-    <OverlayPortal darken close={handleClose} show={isShown}>
+    <OverlayPortal darken close={handleClose} show={modal.isShown}>
       <div className="flex absolute inset-0 items-center justify-center p-4 overflow-hidden">
         <div className="overflow-y-auto max-h-[85vh] pointer-events-auto">
           <Flare.Base className="group rounded-3xl bg-background-main transition-colors duration-300 focus:relative focus:z-10 w-full max-w-lg p-6 bg-mediaCard-hoverBackground bg-opacity-60 backdrop-filter backdrop-blur-lg shadow-lg">
@@ -26,7 +56,7 @@ export function RevivalAnnouncementModal() {
               <Flare.Child className="pointer-events-auto relative">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-bold text-white">
-                    ⚠️ Domain Change Notice
+                    🚀 We have rebranded!
                   </h2>
                   <button
                     type="button"
@@ -37,31 +67,33 @@ export function RevivalAnnouncementModal() {
                   </button>
                 </div>
                 <div className="space-y-4 text-base text-type-secondary">
-                  <p className="text-white font-bold border-l-2 border-yellow-400 pl-3">
-                    P-Stream is NOT shutting down — we&apos;re changing domains.
+                  <p className="text-white font-bold border-l-2 border-blue-400 pl-3">
+                    P-Stream is now Z-Stream
                   </p>
                   <p>
-                    Due to legal issues,{" "}
-                    <strong className="text-white">pstream.net</strong> will be
-                    going offline soon. The site may be temporarily unavailable
-                    during the transition — this is expected.
-                  </p>
-                  <p>
-                    Bookmark the link below to get the new domain as soon as
-                    it's live:
+                    Our new home is{" "}
+                    <strong className="text-white">zstream.mov</strong>. Better infrastructure and a fresh domain. Update your bookmarks and
+                    you are all set. Your data is all intact, just log in.
                   </p>
                   <a
-                    href="https://rentry.co/xpstream"
+                    href="https://zstream.mov"
                     target="_blank"
                     rel="noreferrer"
                     className="block text-center bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl transition-colors"
                   >
-                    📌 rentry.co/xpstream — Bookmark This!
+                    📌 Visit zstream.mov
                   </a>
                   <p className="text-sm text-type-secondary">
-                    P-Stream will continue as normal on the new domain. See you
-                    there.
+                    Join our Discord for support, updates, and to be part of the
+                    community.
                   </p>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    className="block w-full text-center bg-video-context-light/10 hover:bg-video-context-light/20 text-white py-2 px-4 rounded-xl transition-colors"
+                  >
+                    Got it, do not show this again
+                  </button>
                 </div>
               </Flare.Child>
             </div>

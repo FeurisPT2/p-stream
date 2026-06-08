@@ -8,7 +8,7 @@ import { usePreferencesStore } from "@/stores/preferences";
 
 import { useInitializeSource } from "../hooks/useInitializePlayer";
 
-// initialize display interface
+
 function useDisplayInterface() {
   const display = usePlayerStore((s) => s.display);
   const setDisplay = usePlayerStore((s) => s.setDisplay);
@@ -47,14 +47,11 @@ function useObjectUrl(cb: () => string | null, deps: any[]) {
     const data = cb();
     lastObjectUrl.current = data;
     return data;
-    // deps are passed in, cb is known not to be changed
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   useEffect(() => {
     return () => {
-      // this is intentionally done only in cleanup
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       if (lastObjectUrl.current) URL.revokeObjectURL(lastObjectUrl.current);
     };
   }, []);
@@ -73,14 +70,31 @@ function VideoElement() {
     (s) => s.enableNativeSubtitles,
   );
   const videoBrightness = usePreferencesStore((s) => s.videoBrightness);
+  const videoContrast   = usePreferencesStore((s) => s.videoContrast);
+  const videoSaturation = usePreferencesStore((s) => s.videoSaturation);
+  const videoHueRotate  = usePreferencesStore((s) => s.videoHueRotate);
   const volumeBoost = usePreferencesStore((s) => s.volumeBoost);
+
+
+  const filterStr = useMemo(() => {
+    const parts: string[] = [];
+    if (videoBrightness !== 100) parts.push(`brightness(${videoBrightness}%)`);
+    if (videoContrast   !== 100) parts.push(`contrast(${videoContrast}%)`);
+    if (videoSaturation !== 100) parts.push(`saturate(${videoSaturation}%)`);
+    if (videoHueRotate  !== 0)   parts.push(`hue-rotate(${videoHueRotate}deg)`);
+    return parts.length ? parts.join(" ") : undefined;
+  }, [videoBrightness, videoContrast, videoSaturation, videoHueRotate]);
 
   useEffect(() => {
     if (!videoEl.current) return;
     const video = videoEl.current;
 
-    // skip Web Audio if no boost needed
+
+    const existingCtx: AudioContext | undefined = (video as any).__audioCtx;
+    const existingGain: GainNode | undefined = (video as any).__gainNode;
+
     if (volumeBoost <= 100) {
+      if (existingGain) existingGain.gain.value = 1;
       video.removeAttribute("data-boosted");
       return;
     }
@@ -88,9 +102,8 @@ function VideoElement() {
     const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioCtx) return;
 
-    // reuse existing context attached to this element
-    let ctx: AudioContext = (video as any).__audioCtx;
-    let gainNode: GainNode = (video as any).__gainNode;
+    let ctx = existingCtx;
+    let gainNode = existingGain;
 
     if (!ctx) {
       ctx = new AudioCtx();
@@ -102,38 +115,42 @@ function VideoElement() {
       (video as any).__gainNode = gainNode;
     }
 
-    gainNode.gain.value = volumeBoost / 100;
-  }, [volumeBoost, videoEl]);
+
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+
+    if (gainNode) gainNode.gain.value = volumeBoost / 100;
+    video.setAttribute("data-boosted", "true");
+  }, [volumeBoost]);
   const trackObjectUrl = useObjectUrl(
     () => (srtData ? convertSubtitlesToObjectUrl(srtData) : null),
     [srtData],
   );
 
-  // Use native tracks when the setting is enabled
+
   const shouldUseNativeTrack = enableNativeSubtitles && source !== null;
 
-  // report video element to display interface
+
   useEffect(() => {
     if (display && videoEl.current) {
       display.processVideoElement(videoEl.current);
     }
   }, [display, videoEl]);
 
-  // Control track visibility based on setting
+
   useEffect(() => {
     if (trackEl.current) {
       trackEl.current.track.mode = shouldUseNativeTrack ? "showing" : "hidden";
     }
   }, [shouldUseNativeTrack, trackEl]);
 
-  // Attach track when native subtitles are enabled
-  // SubtitleView handles showing custom captions when native subtitles are disabled
+
+
   let subtitleTrack: ReactNode = null;
   if (shouldUseNativeTrack && trackObjectUrl && language) {
     subtitleTrack = (
       <track
         ref={trackEl}
-        label="P-Stream Captions"
+        label="Z-Stream Captions"
         kind="subtitles"
         srcLang={language}
         src={trackObjectUrl}
@@ -146,7 +163,7 @@ function VideoElement() {
     <video
       id="video-element"
       className="absolute inset-0 w-full h-screen bg-black"
-      style={{ filter: videoBrightness !== 100 ? `brightness(${videoBrightness}%)` : undefined }}
+      style={{ filter: filterStr }}
       autoPlay
       playsInline
       ref={videoEl}

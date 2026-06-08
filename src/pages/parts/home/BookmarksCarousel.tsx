@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
+import { getMediaDetails } from "@/backend/metadata/tmdb";
+import { TMDBContentTypes } from "@/backend/metadata/types/tmdb";
 import { EditButton } from "@/components/buttons/EditButton";
 import { EditButtonWithText } from "@/components/buttons/EditButtonWithText";
 import { Dropdown, OptionItem } from "@/components/form/Dropdown";
@@ -97,6 +99,7 @@ export function BookmarksCarousel({
     const saved = localStorage.getItem("__MW::bookmarksSort");
     return (saved as SortOption) || "date";
   });
+  const [runtimeData, setRuntimeData] = useState<Record<string, number>>({});
   const removeBookmark = useBookmarkStore((s) => s.removeBookmark);
 
   useEffect(() => {
@@ -125,6 +128,34 @@ export function BookmarksCarousel({
   const bookmarks = useBookmarkStore((state) => state.bookmarks);
   const groupOrder = useGroupOrderStore((s) => s.groupOrder);
 
+  useEffect(() => {
+    if (sortBy !== "length-asc" && sortBy !== "length-desc") return;
+    const ids = Object.keys(bookmarks);
+    const missing = ids.filter((id) => !(id in runtimeData));
+    if (missing.length === 0) return;
+
+    Promise.all(
+      missing.map(async (id) => {
+        const type = bookmarks[id].type === "movie" ? TMDBContentTypes.MOVIE : TMDBContentTypes.TV;
+        try {
+          const data = await getMediaDetails(id, type, false);
+          const value = type === TMDBContentTypes.MOVIE
+            ? (data as any).runtime ?? 0
+            : (data as any).number_of_episodes ?? 0;
+          return [id, value] as [string, number];
+        } catch {
+          return [id, 0] as [string, number];
+        }
+      }),
+    ).then((results) => {
+      setRuntimeData((prev) => {
+        const next = { ...prev };
+        results.forEach(([id, val]) => { next[id] = val; });
+        return next;
+      });
+    });
+  }, [sortBy, bookmarks, runtimeData]);
+
   const items = useMemo(() => {
     const output: MediaItem[] = [];
     Object.entries(bookmarks).forEach((entry) => {
@@ -133,8 +164,8 @@ export function BookmarksCarousel({
         ...entry[1],
       });
     });
-    return sortMediaItems(output, sortBy, bookmarks, progressItems);
-  }, [bookmarks, progressItems, sortBy]);
+    return sortMediaItems(output, sortBy, bookmarks, progressItems, runtimeData);
+  }, [bookmarks, progressItems, sortBy, runtimeData]);
 
   const { groupedItems, regularItems } = useMemo(() => {
     const grouped: Record<string, MediaItem[]> = {};
@@ -161,6 +192,7 @@ export function BookmarksCarousel({
         sortBy,
         bookmarks,
         progressItems,
+        runtimeData,
       );
     });
 
@@ -170,10 +202,11 @@ export function BookmarksCarousel({
       sortBy,
       bookmarks,
       progressItems,
+      runtimeData,
     );
 
     return { groupedItems: grouped, regularItems: sortedRegular };
-  }, [items, bookmarks, progressItems, sortBy]);
+  }, [items, bookmarks, progressItems, sortBy, runtimeData]);
 
   const sortedSections = useMemo(() => {
     const sections: Array<{
@@ -292,6 +325,8 @@ export function BookmarksCarousel({
     { id: "title-desc", name: t("home.bookmarks.sorting.options.titleDesc") },
     { id: "year-asc", name: t("home.bookmarks.sorting.options.yearAsc") },
     { id: "year-desc", name: t("home.bookmarks.sorting.options.yearDesc") },
+    { id: "length-asc", name: t("home.bookmarks.sorting.options.lengthAsc") },
+    { id: "length-desc", name: t("home.bookmarks.sorting.options.lengthDesc") },
   ];
 
   const selectedSortOption =

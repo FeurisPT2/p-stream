@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import { Trans, useTranslation } from "react-i18next";
 
 import { ThinContainer } from "@/components/layout/ThinContainer";
 import { Heading1, Paragraph } from "@/components/utils/Text";
@@ -7,7 +6,7 @@ import { PageTitle } from "@/pages/parts/util/PageTitle";
 
 import { SubPageLayout } from "./layouts/SubPageLayout";
 
-// too lazy to import the actual button component
+
 function Button(props: {
   className: string;
   onClick?: () => void;
@@ -29,27 +28,16 @@ function Button(props: {
   );
 }
 
-export function JipPage() {
-  const { t } = useTranslation();
-
+export function CelPage() {
   return (
     <SubPageLayout>
-      <PageTitle subpage k="global.pages.jip" />
+      <PageTitle subpage k="global.pages.cel" />
       <ThinContainer>
-        <Heading1>{t("jip.title")}</Heading1>
+        <Heading1>Mükemmel bi&apos; film tadında</Heading1>
         <Paragraph className="flex flex-col gap-6">
-          <Trans
-            i18nKey="jip.text"
-            components={{
-              bold: <span className="font-bold" style={{ color: "#cfcfcf" }} />,
-            }}
-          />
-          <Button
-            className="box-content w-full py-1 text-lg bg-buttons-secondary hover:bg-buttons-secondaryHover bg-opacity-90 text-buttons-secondaryText justify-center items-center inline-block"
-            onClick={() => window.open("https://github.com/jipfr", "_blank")}
-          >
-            Jipfr on GitHub
-          </Button>
+          <span style={{ color: "#cfcfcf" }}>
+            sen ve ben, karanlıkta - onca yıldızın içinde
+          </span>
         </Paragraph>
       </ThinContainer>
     </SubPageLayout>
