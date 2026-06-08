@@ -47,12 +47,11 @@ function useObjectUrl(cb: () => string | null, deps: any[]) {
     const data = cb();
     lastObjectUrl.current = data;
     return data;
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   useEffect(() => {
     return () => {
-
       if (lastObjectUrl.current) URL.revokeObjectURL(lastObjectUrl.current);
     };
   }, []);
