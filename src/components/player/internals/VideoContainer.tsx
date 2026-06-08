@@ -73,7 +73,21 @@ function VideoElement() {
     (s) => s.enableNativeSubtitles,
   );
   const videoBrightness = usePreferencesStore((s) => s.videoBrightness);
+  const videoContrast   = usePreferencesStore((s) => s.videoContrast);
+  const videoSaturation = usePreferencesStore((s) => s.videoSaturation);
+  const videoHueRotate  = usePreferencesStore((s) => s.videoHueRotate);
   const volumeBoost = usePreferencesStore((s) => s.volumeBoost);
+
+  // Compose CSS filter from all advanced color sliders. Empty string when all
+  // are at defaults so the browser doesn't pay for a no-op filter pass.
+  const filterStr = useMemo(() => {
+    const parts: string[] = [];
+    if (videoBrightness !== 100) parts.push(`brightness(${videoBrightness}%)`);
+    if (videoContrast   !== 100) parts.push(`contrast(${videoContrast}%)`);
+    if (videoSaturation !== 100) parts.push(`saturate(${videoSaturation}%)`);
+    if (videoHueRotate  !== 0)   parts.push(`hue-rotate(${videoHueRotate}deg)`);
+    return parts.length ? parts.join(" ") : undefined;
+  }, [videoBrightness, videoContrast, videoSaturation, videoHueRotate]);
 
   useEffect(() => {
     if (!videoEl.current) return;
@@ -146,7 +160,7 @@ function VideoElement() {
     <video
       id="video-element"
       className="absolute inset-0 w-full h-screen bg-black"
-      style={{ filter: videoBrightness !== 100 ? `brightness(${videoBrightness}%)` : undefined }}
+      style={{ filter: filterStr }}
       autoPlay
       playsInline
       ref={videoEl}

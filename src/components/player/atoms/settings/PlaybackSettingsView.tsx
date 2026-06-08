@@ -14,7 +14,7 @@ import { usePreferencesStore } from "@/stores/preferences";
 import { useWatchPartyStore } from "@/stores/watchParty";
 import { isAutoplayAllowed } from "@/utils/autoplay";
 
-function Slider(props: {
+export function Slider(props: {
   label: string;
   value: number;
   min: number;
@@ -236,6 +236,7 @@ export function PlaybackSettingsView({ id }: { id: string }) {
   const volumeBoost = usePreferencesStore((s) => s.volumeBoost);
   const setVolumeBoost = usePreferencesStore((s) => s.setVolumeBoost);
   const [volumeBoostEnabled, setVolumeBoostEnabled] = useState(volumeBoost > 100);
+
   const isInWatchParty = useWatchPartyStore((s) => s.enabled);
 
   const account = useAuthStore((s) => s.account);
@@ -349,6 +350,9 @@ export function PlaybackSettingsView({ id }: { id: string }) {
               onReset={() => setVolumeBoost(100)}
             />
           )}
+          <Menu.ChevronLink onClick={() => router.navigate("/playback/advanced")}>
+            Advanced color
+          </Menu.ChevronLink>
         </div>
       </Menu.Section>
     </>

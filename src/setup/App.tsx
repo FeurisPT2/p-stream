@@ -30,7 +30,7 @@ import { MoreContent } from "@/pages/discover/MoreContent";
 import MaintenancePage from "@/pages/errors/MaintenancePage";
 import { NotFoundPage } from "@/pages/errors/NotFoundPage";
 import { HomePage } from "@/pages/HomePage";
-import { JipPage } from "@/pages/Jip";
+import { CelPage } from "@/pages/Cel";
 import { LegalPage, shouldHaveLegalPage } from "@/pages/Legal";
 import { LoginPage } from "@/pages/Login";
 import { MigrationPage } from "@/pages/migration/Migration";
@@ -192,7 +192,7 @@ function App() {
           ) : null}
           {/* Support page */}
           <Route path="/support" element={<SupportPage />} />
-          <Route path="/jip" element={<JipPage />} />
+          <Route path="/cel" element={<CelPage />} />
           <Route path="/pas" element={<PasPage />} />
           {/* Discover pages */}
           <Route path="/discover" element={<Discover />} />
