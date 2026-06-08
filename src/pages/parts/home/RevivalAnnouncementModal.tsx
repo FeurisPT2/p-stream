@@ -71,9 +71,8 @@ export function RevivalAnnouncementModal() {
                   </p>
                   <p>
                     Our new home is{" "}
-                    <strong className="text-white">zstream.mov</strong>. Same
-                    project, same team, fresh domain. Update your bookmarks and
-                    you are all set.
+                    <strong className="text-white">zstream.mov</strong>. Better infrastructure and a fresh domain. Update your bookmarks and
+                    you are all set. Your data is all intact, just log in.
                   </p>
                   <a
                     href="https://zstream.mov"
