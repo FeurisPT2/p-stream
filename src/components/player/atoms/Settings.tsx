@@ -28,6 +28,7 @@ import { SkipSegmentsView } from "./settings/SkipSegmentsView";
 import { TranscriptView } from "./settings/TranscriptView";
 import { TranslateSubtitleView } from "./settings/TranslateSubtitleView";
 import { WatchPartyView } from "./settings/WatchPartyView";
+import { VariantView } from "./settings/VariantView";
 
 function SettingsOverlay({ id }: { id: string }) {
   const [chosenSourceId, setChosenSourceId] = useState<string | null>(null);
@@ -197,6 +198,11 @@ function SettingsOverlay({ id }: { id: string }) {
           </Menu.CardWithScrollable>
         </OverlayPage>
         <DownloadRoutes id={id} />
+        <OverlayPage id={id} path="/variant" width={343} height={496}>
+          <Menu.CardWithScrollable>
+            <VariantView id={id} />
+          </Menu.CardWithScrollable>
+        </OverlayPage>
         <OverlayPage id={id} path="/watchparty" width={343} height={496}>
           <Menu.CardWithScrollable>
             <WatchPartyView id={id} />

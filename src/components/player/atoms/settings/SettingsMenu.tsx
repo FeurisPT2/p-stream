@@ -11,6 +11,7 @@ import { usePlayerStore } from "@/stores/player/store";
 import { qualityToString } from "@/stores/player/utils/qualities";
 import { useSubtitleStore } from "@/stores/subtitles";
 import { getPrettyLanguageNameFromLocale } from "@/utils/language";
+import { getVariantMeta } from "@p-stream/providers";
 
 export function SettingsMenu({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -53,6 +54,9 @@ export function SettingsMenu({ id }: { id: string }) {
   const source = usePlayerStore((s) => s.source);
 
   const downloadable = source?.type === "file" || source?.type === "hls";
+
+  const variantMeta = currentSourceId === "aurora" ? getVariantMeta() : null;
+  const hasVariants = (variantMeta?.variants?.length ?? 0) > 1;
 
   return (
     <Menu.Card>
@@ -136,7 +140,16 @@ export function SettingsMenu({ id }: { id: string }) {
           {t("player.menus.watchparty.watchpartyItem")}
         </Menu.Link>
       </Menu.Section>
-      <Menu.SectionTitle />
+      {hasVariants ? (
+        <Menu.Section>
+          <Menu.ChevronLink onClick={() => router.navigate("/variant")}>
+            Stream Variants
+            <span className="text-type-secondary text-sm">
+              {variantMeta!.variants!.length} versions
+            </span>
+          </Menu.ChevronLink>
+        </Menu.Section>
+      ) : null}
       <Menu.Section>
         <Menu.Link
           rightSide={

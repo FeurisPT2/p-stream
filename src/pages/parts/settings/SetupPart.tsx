@@ -64,22 +64,18 @@ export async function fetchFebboxQuota(febboxKey: string | null): Promise<any> {
     return null;
   }
 
-  console.log("SetupPart.tsx: Fetching Febbox quota");
   try {
     const response = await fetch(
-      `https://mznxiwqjdiq00239q.space/fedapi/quota?ui=${febboxKey}`,
+      `https://aurora.fontaine.lol/traffic?ui=${febboxKey}`,
     );
 
     if (!response.ok) {
-      console.error("Febbox quota API failed with status:", response.status);
       return null;
     }
 
     const data = await response.json();
-    console.log("SetupPart.tsx: Febbox quota fetched successfully");
     return data;
-  } catch (error) {
-    console.error("SetupPart.tsx: Error fetching Febbox quota:", error);
+  } catch {
     return null;
   }
 }
@@ -91,7 +87,7 @@ export async function testFebboxKey(febboxKey: string | null): Promise<Status> {
 
   try {
     const response = await fetch(
-      `https://mznxiwqjdiq00239q.space/fedapi/quota?ui=${febboxKey}`,
+      `https://aurora.fontaine.lol/traffic?ui=${febboxKey}`,
     );
 
     if (!response.ok) {
