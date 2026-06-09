@@ -320,7 +320,6 @@ export function FebboxSetup({
   setFebboxKey,
   mode,
 }: FebboxSetupProps) {
-  const { t } = useTranslation();
   const [showVideo, setShowVideo] = useState(false);
   const user = useAuthStore();
   const preferences = usePreferencesStore();
@@ -396,13 +395,13 @@ export function FebboxSetup({
           <div className="flex justify-between items-center gap-4">
             <div className="my-3">
               <p className="text-white font-bold mb-3">
-                {t("fedapi.onboarding.title")}
+                Aurora API (4K)
               </p>
               <p className="max-w-[30rem] font-medium">
-                <Trans i18nKey="fedapi.onboarding.description" />
+                Bring your own FREE Febbox account to unlock Aurora API — the best sources with 4K quality, Dolby Atmos, and the fastest load times.
               </p>
               <p className="max-w-[30rem] mt-2 text-sm text-type-secondary italic">
-                {t("fedapi.onboarding.note") + "FED API has been replaced by Finger API with same content, that does not need a token. This field is disabled."}
+                Aurora requires a Febbox token. Your token is never stored on our servers — it is sent directly from your browser to Febbox.
               </p>
             </div>
             <div>
@@ -420,16 +419,14 @@ export function FebboxSetup({
 
               <div className="my-3">
                 <p className="max-w-[30rem] font-medium">
-                  {t("fedapi.setup.title")}
+                  To get your Febbox token:
                   <br />
                   <div
                     onClick={() => setShowVideo(!showVideo)}
                     className="flex items-center justify-between p-1 px-2 my-2 w-fit border border-type-secondary rounded-lg cursor-pointer text-type-secondary hover:text-white transition-colors duration-200"
                   >
                     <span className="text-sm">
-                      {showVideo
-                        ? t("fedapi.setup.hideVideo")
-                        : t("fedapi.setup.showVideo")}
+                      {showVideo ? "Hide Video Tutorial" : "Show Video Tutorial"}
                     </span>
                     {showVideo ? (
                       <Icon icon={Icons.CHEVRON_UP} className="pl-1" />
@@ -444,38 +441,34 @@ export function FebboxSetup({
                           src="https://player.vimeo.com/video/1059834885?h=c3ab398d42&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
                           allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
                           className="absolute top-0 left-0 w-full h-full border border-type-secondary rounded-lg bg-black"
-                          title="Z-Stream FED API Setup Tutorial"
+                          title="Aurora API Setup Tutorial"
                         />
                       </div>
                       <br />
                     </>
                   )}
-                  <Trans i18nKey="fedapi.setup.step.1">
-                    <MwLink url="https://febbox.com" />
-                  </Trans>
+                  1. Go to <MwLink url="https://febbox.com">febbox.com</MwLink> and log in with Google (use a fresh account!)
                   <br />
-                  <Trans i18nKey="fedapi.setup.step.2" />
+                  2. Open DevTools or inspect the page
                   <br />
-                  <Trans i18nKey="fedapi.setup.step.3" />
+                  3. Go to Application tab &rarr; Cookies
                   <br />
-                  <Trans i18nKey="fedapi.setup.step.4" />{" "}
+                  4. Copy the &apos;ui&apos; cookie&apos;s value.{" "}
                   <button
                     type="button"
                     onClick={exampleModal.show}
                     className="text-type-link hover:text-type-linkHover"
                   >
-                    <Trans i18nKey="fedapi.setup.tokenExample.button" />
+                    (Example)
                   </button>
                   <br />
-                  <Trans i18nKey="fedapi.setup.step.5" />
+                  5. Close the tab, but do NOT logout!
                 </p>
               </div>
 
               <Divider marginClass="my-6 px-8 box-content -mx-8" />
               <p className="text-white font-bold mb-3">
-                {mode === "settings"
-                  ? t("settings.connections.febbox.tokenLabel", "Token")
-                  : t("fedapi.setup.tokenLabel")}
+                Token
               </p>
               <div className="flex md:flex-row flex-col items-center w-full gap-4">
                 <div className="flex items-center w-full">
@@ -485,26 +478,25 @@ export function FebboxSetup({
                       setFebboxKey(newToken);
                     }}
                     value={febboxKey ?? ""}
-                    placeholder="FED API has been replaced by Finger API with same content, that does not need a token. This field is disabled."
+                    placeholder="eyJ0eXAiOiJKV1QiLCJhbGciOi..."
                     passwordToggleable
                     className="flex-grow"
-                    disabled
                   />
                 </div>
               </div>
               {status === "error" && (
                 <p className="text-type-danger mt-4">
-                  {t("fedapi.status.failure")}
+                  Failed to validate token. Please check your Febbox token.
                 </p>
               )}
               {status === "api_down" && (
                 <p className="text-type-danger mt-4">
-                  {t("fedapi.status.api_down")}
+                  Cannot reach Aurora API. Please try again later.
                 </p>
               )}
               {status === "invalid_token" && (
                 <p className="text-type-danger mt-4">
-                  {t("fedapi.status.invalid_token")}
+                  Your token is invalid or expired. Please get a new one from Febbox.
                 </p>
               )}
               {status === "success" &&
@@ -519,10 +511,10 @@ export function FebboxSetup({
                   return (
                     <>
                       <p className="text-sm text-green-500 mt-2">
-                        {t("fedapi.setup.traffic", { used, limit, reset })}
+                        {used} / {limit} High-speed Traffic (resets {reset})
                       </p>
                       <p className="max-w-[30rem] text-xs opacity-70 mt-2">
-                        {t("fedapi.setup.trafficExplanation")}
+                        Febbox gives you high-speed traffic per month. Streams may buffer more after you&apos;ve used your quota.
                       </p>
                     </>
                   );
@@ -530,7 +522,7 @@ export function FebboxSetup({
               <div className="flex justify-between items-center gap-4 mt-6">
                 <div className="my-3">
                   <p className="max-w-[32rem] font-medium">
-                    {t("fedapi.setup.useMp4")}
+                    Enable MP4 streams. May be faster outside of the U.S., but audio tracks cannot be changed.
                   </p>
                 </div>
                 <div>
@@ -548,20 +540,20 @@ export function FebboxSetup({
         <Modal id={exampleModal.id}>
           <ModalCard>
             <Heading2 className="!mt-0 !mb-4 !text-2xl">
-              {t("fedapi.setup.tokenExample.title")}
+              Example Token
             </Heading2>
             <Paragraph className="!mt-1 !mb-6">
-              {t("fedapi.setup.tokenExample.description")}
+              This is what a Febbox UI token looks like:
             </Paragraph>
             <div className="bg-authentication-inputBg p-4 rounded-lg mb-6 font-mono text-sm break-all">
               eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE3NDc1MTI2MTksIm5iZiI6MTc0NzUxMjYxOSwiZXhwIjoxNzc4NjE2NjM5LCJkYXRhIjp7InVpZCI6NTI1NTc3LCsudujeI6IjE4NTQ4NmEwMzBjMGNlMWJjY2IzYWJjMjI2OTYwYzQ4dhdhs.qkuTF2aVPu54S0RFJS_ca7rlHuGz_Fe6kWkBydYQoCg
             </div>
             <Paragraph className="!mt-1 !mb-6 text-type-danger">
-              {t("fedapi.setup.tokenExample.warning")}
+              Don&apos;t try to use this — it&apos;s fake.
             </Paragraph>
             <div className="flex justify-end">
               <Button theme="secondary" onClick={exampleModal.hide}>
-                {t("fedapi.setup.tokenExample.close")}
+                Got it
               </Button>
             </div>
           </ModalCard>
