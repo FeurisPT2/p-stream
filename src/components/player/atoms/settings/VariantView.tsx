@@ -65,15 +65,6 @@ export function VariantView({ id }: { id: string }) {
           return;
         }
 
-        const streamEntries = Object.entries(result.streams);
-        const hlsEntry = streamEntries.find(([, s]) => s.type === "hls");
-        const firstEntry = hlsEntry ?? streamEntries[0];
-        if (!firstEntry) {
-          setError(variant.fid);
-          return;
-        }
-
-        const [, streamData] = firstEntry;
         const captions = result.subtitles
           ? Object.entries(result.subtitles).map(([key, sub]) => ({
               id: sub.subtitle_link,
@@ -88,21 +79,41 @@ export function VariantView({ id }: { id: string }) {
             }))
           : [];
 
-        if (streamData.type === "hls") {
-          setSource(
-            { type: "hls", url: streamData.url },
-            captions,
-            progressTime,
-          );
+        const parsed: Record<string, { url: string; type: "hls" | "mp4" }> =
+          {};
+        for (const [quality, entry] of Object.entries(result.streams)) {
+          if (quality === "AUTO") {
+            parsed.auto = { url: entry.url, type: entry.type };
+          } else if (quality === "4K") {
+            parsed["2160"] = { url: entry.url, type: entry.type };
+          } else if (quality === "ORG") {
+            parsed.unknown = { url: entry.url, type: entry.type };
+          } else {
+            const num = parseInt(quality.replace("P", ""), 10);
+            if (!Number.isNaN(num)) parsed[String(num)] = { url: entry.url, type: entry.type };
+          }
+        }
+
+        const hlsStream =
+          parsed.auto ??
+          parsed["2160"] ??
+          parsed["1080"] ??
+          parsed["720"] ??
+          parsed["480"] ??
+          parsed["360"] ??
+          parsed.unknown;
+
+        if (hlsStream?.type === "hls") {
+          setSource({ type: "hls", url: hlsStream.url }, captions, progressTime);
         } else {
-          setSource(
-            {
-              type: "file",
-              qualities: { unknown: { type: "mp4", url: streamData.url } },
-            },
-            captions,
-            progressTime,
-          );
+          const qualities: Record<string, { type: "mp4"; url: string }> = {};
+          if (parsed["2160"]) qualities["4k"] = { type: "mp4", url: parsed["2160"].url };
+          if (parsed["1080"]) qualities["1080"] = { type: "mp4", url: parsed["1080"].url };
+          if (parsed["720"]) qualities["720"] = { type: "mp4", url: parsed["720"].url };
+          if (parsed["480"]) qualities["480"] = { type: "mp4", url: parsed["480"].url };
+          if (parsed["360"]) qualities["360"] = { type: "mp4", url: parsed["360"].url };
+          if (parsed.unknown) qualities.unknown = { type: "mp4", url: parsed.unknown.url };
+          setSource({ type: "file", qualities }, captions, progressTime);
         }
         setCaption(null);
         router.close();

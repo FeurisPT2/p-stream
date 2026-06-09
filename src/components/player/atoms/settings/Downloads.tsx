@@ -304,7 +304,7 @@ export function DownloadView({ id }: { id: string }) {
   const isDesktopApp = useIsDesktopApp();
   const router = useOverlayRouter(id);
   const { t } = useTranslation();
-  const isPstream = window.location.hostname === "pstream.net" || window.location.hostname === "www.pstream.net";
+  const isPstream = window.location.hostname === "zstream.mov" || window.location.hostname === "www.zstream.mov";
 
   if (isDesktopApp) {
     return <DesktopDownloadView id={id} />;

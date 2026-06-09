@@ -142,11 +142,11 @@ export function SettingsMenu({ id }: { id: string }) {
       </Menu.Section>
       {hasVariants ? (
         <Menu.Section>
-          <Menu.ChevronLink onClick={() => router.navigate("/variant")}>
+          <Menu.ChevronLink
+            onClick={() => router.navigate("/variant")}
+            rightText={`${variantMeta!.variants!.length}`}
+          >
             Stream Variants
-            <span className="text-type-secondary text-sm">
-              {variantMeta!.variants!.length} versions
-            </span>
           </Menu.ChevronLink>
         </Menu.Section>
       ) : null}
