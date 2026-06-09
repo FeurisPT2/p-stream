@@ -502,12 +502,10 @@ export function FebboxSetup({
               {status === "success" &&
                 quota &&
                 (() => {
-                  if (!quota?.data?.flow) return null;
-                  const {
-                    traffic_usage: used,
-                    traffic_limit: limit,
-                    reset_at: reset,
-                  } = quota.data.flow;
+                  if (!quota?.traffic_today_usage) return null;
+                  const used = quota.traffic_today_usage;
+                  const limit = quota.traffic_limit;
+                  const reset = quota.reset_at;
                   return (
                     <>
                       <p className="text-sm text-green-500 mt-2">
