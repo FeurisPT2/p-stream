@@ -93,6 +93,7 @@ export function PlaybackErrorPart(props: PlaybackErrorPartProps) {
     settingsRouter,
     setLastSuccessfulSource,
     enableAutoResumeOnPlaybackError,
+    props.autoResumeExhausted,
   ]);
 
   // Automatically resume scraping from the next source if enabled
