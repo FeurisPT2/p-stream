@@ -40,9 +40,8 @@ jobs:
               echo "$PROVIDERS_SHA" > .providers-sha
             else
               echo "[deploy] Providers unchanged — skipping reinstall"
-              pnpm install --no-frozen-lockfile --prefer-offline --prod=false
+              pnpm install --no-frozen-lockfile --prefer-offline
             fi
 
             pnpm build || { echo "[deploy] BUILD FAILED, aborting"; exit 1; }
-            pm2 restart pstream
-            echo "[deploy] Done"
+            echo "[deploy] Done — nginx serves dist/ directly"
