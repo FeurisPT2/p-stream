@@ -15,20 +15,34 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          command_timeout: 30m
           script: |
             set -e
             cd ~/p-stream
             git pull origin production
             ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+
             PROVIDERS_SHA=$(git ls-remote git@github.com:xp-technologies-dev/private-providers.git main | awk '{print $1}')
-            echo "[deploy] Pinning providers to $PROVIDERS_SHA"
-            node -e "
-              const fs = require('fs');
-              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-              pkg.dependencies['@p-stream/providers'] = 'github:xp-technologies-dev/private-providers#' + '$PROVIDERS_SHA';
-              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-            "
-            rm -rf node_modules/@p-stream node_modules/.pnpm/@p-stream*
-            pnpm install --no-frozen-lockfile
+            CURRENT_SHA=$(cat .providers-sha 2>/dev/null || echo "")
+            echo "[deploy] Remote providers SHA: $PROVIDERS_SHA"
+            echo "[deploy] Current providers SHA: ${CURRENT_SHA:-none}"
+
+            if [ "$PROVIDERS_SHA" != "$CURRENT_SHA" ]; then
+              echo "[deploy] Providers changed — rebuilding"
+              node -e "
+                const fs = require('fs');
+                const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+                pkg.dependencies['@p-stream/providers'] = 'github:xp-technologies-dev/private-providers#' + '$PROVIDERS_SHA';
+                fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+              "
+              rm -rf node_modules/@p-stream node_modules/.pnpm/@p-stream*
+              pnpm install --no-frozen-lockfile --prefer-offline
+              echo "$PROVIDERS_SHA" > .providers-sha
+            else
+              echo "[deploy] Providers unchanged — skipping reinstall"
+              pnpm install --no-frozen-lockfile --prefer-offline --prod=false
+            fi
+
             pnpm build || { echo "[deploy] BUILD FAILED, aborting"; exit 1; }
             pm2 restart pstream
+            echo "[deploy] Done"
