@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { useAsync } from "react-use";
 
+import { getProviders } from "@/backend/providers/providers";
 import { DetailedMeta } from "@/backend/metadata/getmeta";
 import { usePlayer } from "@/components/player/hooks/usePlayer";
 import { usePlayerMeta } from "@/components/player/hooks/usePlayerMeta";
@@ -72,6 +73,7 @@ export function RealPlayerView() {
   );
   const router = useOverlayRouter("settings");
   const openedWatchPartyRef = useRef<boolean>(false);
+  const autoResumeCount = useRef(0);
   const progressItems = useProgressStore((s) => s.items);
 
   // Reset last successful source when leaving the player
@@ -97,6 +99,7 @@ export function RealPlayerView() {
   useEffect(() => {
     reset();
     openedWatchPartyRef.current = false;
+    autoResumeCount.current = 0;
     return () => {
       reset();
     };
@@ -181,10 +184,9 @@ export function RealPlayerView() {
 
   const handleResumeScraping = useCallback(
     (startFromSourceId: string) => {
-      // Set resume source first
+      autoResumeCount.current += 1;
       setResumeFromSourceId(startFromSourceId);
       setResumeFromSourceIdInStore(startFromSourceId);
-      // Then change status in next tick to ensure re-render
       setTimeout(() => {
         setStatus(playerStatus.SCRAPING);
       }, 0);
@@ -209,13 +211,10 @@ export function RealPlayerView() {
     (out: RunOutput | null) => {
       if (!out) return;
 
+      autoResumeCount.current = 0;
+
       let startAt: number | undefined;
       if (startAtParam) startAt = parseTimestamp(startAtParam) ?? undefined;
-
-      // Clear failed sources and embeds when we successfully find a working source
-      const playerStore = usePlayerStore.getState();
-      playerStore.clearFailedSources();
-      playerStore.clearFailedEmbeds();
 
       playMedia(
         convertRunoutputToSource(out),
@@ -277,6 +276,7 @@ export function RealPlayerView() {
         <PlaybackErrorPart
           onResume={handleResumeScraping}
           currentSourceId={sourceId}
+          autoResumeExhausted={autoResumeCount.current >= getProviders().listSources().length}
         />
       ) : null}
     </PlayerPart>

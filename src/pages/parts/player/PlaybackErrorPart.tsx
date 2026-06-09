@@ -18,6 +18,7 @@ import { ErrorCardInModal } from "../errors/ErrorCard";
 export interface PlaybackErrorPartProps {
   onResume?: (startFromSourceId: string) => void;
   currentSourceId?: string | null;
+  autoResumeExhausted?: boolean;
 }
 
 export function PlaybackErrorPart(props: PlaybackErrorPartProps) {
@@ -73,7 +74,7 @@ export function PlaybackErrorPart(props: PlaybackErrorPartProps) {
         }
       }
 
-      if (!hasOpenedSettings.current && !enableAutoResumeOnPlaybackError) {
+      if (!hasOpenedSettings.current && (!enableAutoResumeOnPlaybackError || props.autoResumeExhausted)) {
         hasOpenedSettings.current = true;
         // Reset the last successful source when a playback error occurs
         setLastSuccessfulSource(null);
@@ -100,16 +101,17 @@ export function PlaybackErrorPart(props: PlaybackErrorPartProps) {
       playbackError &&
       !hasAutoResumed.current &&
       enableAutoResumeOnPlaybackError &&
+      !props.autoResumeExhausted &&
       props.currentSourceId &&
       props.onResume
     ) {
       hasAutoResumed.current = true;
-      // Immediately call resume without delay since we don't need the overlay
       props.onResume!(props.currentSourceId!);
     }
   }, [
     playbackError,
     enableAutoResumeOnPlaybackError,
+    props.autoResumeExhausted,
     props.currentSourceId,
     props.onResume,
   ]);
@@ -125,14 +127,14 @@ export function PlaybackErrorPart(props: PlaybackErrorPartProps) {
         <IconPill icon={Icons.WAND}>{t("player.playbackError.badge")}</IconPill>
         <Title>{t("player.playbackError.title")}</Title>
         <Paragraph>
-          {enableAutoResumeOnPlaybackError
+          {enableAutoResumeOnPlaybackError && !props.autoResumeExhausted
             ? t("player.playbackError.autoResumeText")
             : t("player.playbackError.text")}
         </Paragraph>
         <div className="flex gap-3">
           {props.currentSourceId &&
             props.onResume &&
-            !enableAutoResumeOnPlaybackError && (
+            (!enableAutoResumeOnPlaybackError || props.autoResumeExhausted) && (
               <Button
                 onClick={() => props.onResume!(props.currentSourceId!)}
                 theme="purple"
