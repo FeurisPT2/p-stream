@@ -32,10 +32,13 @@ jobs:
       - name: Add known hosts
         run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
+      - name: Configure git for private deps
+        run: git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
       - name: Resolve providers
         id: providers
         run: |
-          PROVIDERS_SHA=$(git ls-remote https://${{ secrets.GH_TOKEN }}@github.com/xp-technologies-dev/private-providers.git main | awk '{print $1}')
+          PROVIDERS_SHA=$(git ls-remote https://github.com/xp-technologies-dev/private-providers.git main | awk '{print $1}')
           echo "sha=$PROVIDERS_SHA" >> $GITHUB_OUTPUT
 
       - name: Update package.json with providers
@@ -43,7 +46,7 @@ jobs:
           node -e "
             const fs = require('fs');
             const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.dependencies['@p-stream/providers'] = 'https://${{ secrets.GH_TOKEN }}@github.com/xp-technologies-dev/private-providers.git#${{ steps.providers.outputs.sha }}';
+            pkg.dependencies['@p-stream/providers'] = 'https://github.com/xp-technologies-dev/private-providers.git#${{ steps.providers.outputs.sha }}';
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
 
@@ -52,6 +55,10 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Clean credentials
+        if: always()
+        run: git config --global --unset-all url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf || true
 
       - name: Deploy to VPS
         run: |
