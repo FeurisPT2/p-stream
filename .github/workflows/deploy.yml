@@ -48,20 +48,17 @@ jobs:
           if [ -z "$PROVIDERS_SHA" ]; then echo "Failed to resolve providers" && exit 1; fi
           echo "sha=$PROVIDERS_SHA" >> $GITHUB_OUTPUT
 
-      - name: Update package.json with providers
+      - name: Force private providers
         run: |
-          node -e "
-            const fs = require('fs');
-            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-            pkg.dependencies['@p-stream/providers'] = 'https://github.com/xp-technologies-dev/private-providers.git#${{ steps.providers.outputs.sha }}';
-            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-          cat package.json | grep providers
+          sed -i 's|xp-technologies-dev/providers#production|xp-technologies-dev/private-providers.git#${{ steps.providers.outputs.sha }}|g' package.json
+          sed -i 's|xp-technologies-dev/providers|xp-technologies-dev/private-providers.git|g' package.json
+          echo "=== package.json providers line ==="
+          grep providers package.json
+          rm -f pnpm-lock.yaml
+          pnpm store prune
 
       - name: Install dependencies
-        run: |
-          rm -f pnpm-lock.yaml
-          pnpm install
+        run: pnpm install --force
 
       - name: Build
         run: pnpm build
