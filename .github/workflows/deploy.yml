@@ -9,39 +9,51 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH and deploy
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          version: 9.14.4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
           key: ${{ secrets.SSH_KEY }}
-          command_timeout: 30m
-          script: |
-            set -e
-            cd ~/p-stream
-            git pull origin production
-            ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          known_hosts: unnecessary
 
-            PROVIDERS_SHA=$(git ls-remote git@github.com:xp-technologies-dev/private-providers.git main | awk '{print $1}')
-            CURRENT_SHA=$(cat .providers-sha 2>/dev/null || echo "")
-            echo "[deploy] Remote providers SHA: $PROVIDERS_SHA"
-            echo "[deploy] Current providers SHA: ${CURRENT_SHA:-none}"
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null; ssh-keyscan -H github.com >> ~/.ssh/known_hosts 2>/dev/null
 
-            if [ "$PROVIDERS_SHA" != "$CURRENT_SHA" ]; then
-              echo "[deploy] Providers changed — rebuilding"
-              node -e "
-                const fs = require('fs');
-                const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-                pkg.dependencies['@p-stream/providers'] = 'github:xp-technologies-dev/private-providers#' + '$PROVIDERS_SHA';
-                fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-              "
-              rm -rf node_modules/@p-stream node_modules/.pnpm/@p-stream*
-              pnpm install --no-frozen-lockfile --prefer-offline
-              echo "$PROVIDERS_SHA" > .providers-sha
-            else
-              echo "[deploy] Providers unchanged — skipping reinstall"
-              pnpm install --no-frozen-lockfile --prefer-offline
-            fi
+      - name: Resolve providers
+        id: providers
+        run: |
+          PROVIDERS_SHA=$(git ls-remote git@github.com:xp-technologies-dev/private-providers.git main | awk '{print $1}')
+          echo "sha=$PROVIDERS_SHA" >> $GITHUB_OUTPUT
 
-            pnpm build || { echo "[deploy] BUILD FAILED, aborting"; exit 1; }
-            echo "[deploy] Done — nginx serves dist/ directly"
+      - name: Update package.json with providers
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies['@p-stream/providers'] = 'github:xp-technologies-dev/private-providers#${{ steps.providers.outputs.sha }}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Deploy to VPS
+        run: |
+          rsync -avz --delete dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/p-stream/dist/
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo '${{ steps.providers.outputs.sha }}' > ~/p-stream/.providers-sha"
