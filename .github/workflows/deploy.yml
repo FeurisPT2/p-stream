@@ -34,7 +34,7 @@ jobs:
 
       - name: Configure git for private deps
         run: |
-          echo "https://${{ secrets.GH_TOKEN }}@github.com" > ~/.git-credentials
+          echo "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com" > ~/.git-credentials
           git config --global credential.helper store
           git config --global url."https://github.com/".insteadOf "git@github.com:"
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
