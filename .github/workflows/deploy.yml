@@ -61,5 +61,6 @@ jobs:
 
       - name: Deploy to VPS
         run: |
-          rsync -avz --delete dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/p-stream/dist/
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo 'deployed' > ~/p-stream/.providers-sha"
+          tar -czf /tmp/dist.tar.gz -C dist .
+          scp /tmp/dist.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/p-stream/dist.tar.gz
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ~/p-stream && rm -rf dist && mkdir dist && tar -xzf dist.tar.gz -C dist && rm dist.tar.gz"
