@@ -34,15 +34,16 @@ jobs:
 
       - name: Configure git for private deps
         run: |
-          git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-          git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "git@github.com:"
-          git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
-          git config --global url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf "git+ssh://git@github.com/"
+          echo "https://${{ secrets.GH_TOKEN }}@github.com" > ~/.git-credentials
+          git config --global credential.helper store
+          git config --global url."https://github.com/".insteadOf "git@github.com:"
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          git config --global url."https://github.com/".insteadOf "git+ssh://git@github.com/"
 
       - name: Resolve providers
         id: providers
         run: |
-          PROVIDERS_SHA=$(git ls-remote https://github.com/xp-technologies-dev/private-providers.git main 2>/dev/null | awk '{print $1}')
+          PROVIDERS_SHA=$(git ls-remote https://github.com/xp-technologies-dev/private-providers.git main | awk '{print $1}')
           if [ -z "$PROVIDERS_SHA" ]; then echo "Failed to resolve providers" && exit 1; fi
           echo "sha=$PROVIDERS_SHA" >> $GITHUB_OUTPUT
 
@@ -64,7 +65,8 @@ jobs:
       - name: Clean credentials
         if: always()
         run: |
-          git config --global --unset-all url."https://${{ secrets.GH_TOKEN }}@github.com/".insteadOf || true
+          rm -f ~/.git-credentials
+          git config --global --unset credential.helper || true
 
       - name: Deploy to VPS
         run: |
