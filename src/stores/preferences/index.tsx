@@ -35,6 +35,8 @@ export interface PreferencesStore {
   enableNativeSubtitles: boolean;
   enableHoldToBoost: boolean;
   homeSectionOrder: string[];
+  bookmarkRowsToShow: number;
+  watchingRowsToShow: number;
   manualSourceSelection: boolean;
   enableDoubleClickToSeek: boolean;
   enableAutoResumeOnPlaybackError: boolean;
@@ -76,6 +78,8 @@ export interface PreferencesStore {
   setEnableNativeSubtitles(v: boolean): void;
   setEnableHoldToBoost(v: boolean): void;
   setHomeSectionOrder(v: string[]): void;
+  setBookmarkRowsToShow(v: number): void;
+  setWatchingRowsToShow(v: number): void;
   setManualSourceSelection(v: boolean): void;
   setEnableDoubleClickToSeek(v: boolean): void;
   setEnableAutoResumeOnPlaybackError(v: boolean): void;
@@ -120,7 +124,9 @@ export const usePreferencesStore = create(
       enableLowPerformanceMode: false,
       enableNativeSubtitles: false,
       enableHoldToBoost: true,
-      homeSectionOrder: ["watching", "bookmarks"],
+      homeSectionOrder: ["watching"],
+      bookmarkRowsToShow: 1,
+      watchingRowsToShow: 1,
       manualSourceSelection: false,
       enableDoubleClickToSeek: false,
       enableAutoResumeOnPlaybackError: true,
@@ -271,7 +277,17 @@ export const usePreferencesStore = create(
       },
       setHomeSectionOrder(v) {
         set((s) => {
-          s.homeSectionOrder = v.length > 0 ? v : ["watching", "bookmarks"];
+          s.homeSectionOrder = v;
+        });
+      },
+      setBookmarkRowsToShow(v) {
+        set((s) => {
+          s.bookmarkRowsToShow = v;
+        });
+      },
+      setWatchingRowsToShow(v) {
+        set((s) => {
+          s.watchingRowsToShow = v;
         });
       },
       setManualSourceSelection(v) {
