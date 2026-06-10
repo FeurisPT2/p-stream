@@ -33,29 +33,21 @@ jobs:
       - name: Add known hosts
         run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Configure git for private deps
+      - name: Clone private providers
         run: |
-          echo "https://x-access-token:${{ secrets.GH_TOKEN }}@github.com" > ~/.git-credentials
-          git config --global credential.helper store
-          git config --global url."https://github.com/".insteadOf "git@github.com:"
-          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
-          git config --global url."https://github.com/".insteadOf "git+ssh://git@github.com/"
-
-      - name: Resolve providers
-        id: providers
-        run: |
-          PROVIDERS_SHA=$(git ls-remote https://github.com/xp-technologies-dev/private-providers.git main | awk '{print $1}')
-          if [ -z "$PROVIDERS_SHA" ]; then echo "Failed to resolve providers" && exit 1; fi
-          echo "sha=$PROVIDERS_SHA" >> $GITHUB_OUTPUT
+          git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/xp-technologies-dev/private-providers.git /tmp/private-providers
+          ls /tmp/private-providers/lib/
 
       - name: Force private providers
         run: |
-          sed -i 's|xp-technologies-dev/providers#production|xp-technologies-dev/private-providers.git#${{ steps.providers.outputs.sha }}|g' package.json
-          sed -i 's|xp-technologies-dev/providers|xp-technologies-dev/private-providers.git|g' package.json
-          echo "=== package.json providers line ==="
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies['@p-stream/providers'] = 'file:/tmp/private-providers';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
           grep providers package.json
           rm -f pnpm-lock.yaml
-          pnpm store prune
 
       - name: Install dependencies
         run: pnpm install --force
@@ -65,11 +57,9 @@ jobs:
 
       - name: Clean credentials
         if: always()
-        run: |
-          rm -f ~/.git-credentials
-          git config --global --unset credential.helper || true
+        run: rm -rf /tmp/private-providers
 
       - name: Deploy to VPS
         run: |
           rsync -avz --delete dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/p-stream/dist/
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo '${{ steps.providers.outputs.sha }}' > ~/p-stream/.providers-sha"
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo 'deployed' > ~/p-stream/.providers-sha"
