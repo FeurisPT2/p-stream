@@ -54,6 +54,15 @@ jobs:
 
       - name: Build
         run: pnpm build
+        env:
+          VITE_TMDB_READ_API_KEY: ${{ secrets.VITE_TMDB_READ_API_KEY }}
+          VITE_SHOW_SUPPORT_BAR: "true"
+          VITE_ALLOW_FEBBOX_KEY: "true"
+          VITE_TRAKT_CLIENT_ID: ${{ secrets.VITE_TRAKT_CLIENT_ID }}
+          VITE_TRAKT_CLIENT_SECRET: ${{ secrets.VITE_TRAKT_CLIENT_SECRET }}
+          VITE_TRAKT_REDIRECT_URI: ${{ secrets.VITE_TRAKT_REDIRECT_URI }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+
 
       - name: Clean credentials
         if: always()
