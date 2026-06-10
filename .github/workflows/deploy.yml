@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
 
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
@@ -57,9 +56,12 @@ jobs:
             pkg.dependencies['@p-stream/providers'] = 'https://github.com/xp-technologies-dev/private-providers.git#${{ steps.providers.outputs.sha }}';
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           "
+          cat package.json | grep providers
 
       - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
+        run: |
+          rm -f pnpm-lock.yaml
+          pnpm install
 
       - name: Build
         run: pnpm build
