@@ -10,7 +10,7 @@ import { usePreferencesStore } from "@/stores/preferences";
 import { getTurnstileToken } from "@/utils/turnstile";
 
 // Thanks Nemo for this API
-const THE_INTRO_DB_BASE_URL = "https://api.theintrodb.org/v2";
+const THE_INTRO_DB_BASE_URL = "https://api.theintrodb.org/v3";
 const FED_SKIPS_BASE_URL = "";
 const INTRODB_BASE_URL = "https://api.introdb.app/intro";
 const MAX_RETRIES = 3;
@@ -39,8 +39,6 @@ export interface SegmentData {
   type: "intro" | "recap" | "credits" | "preview";
   start_ms: number | null;
   end_ms: number | null;
-  confidence: number | null;
-  submission_count: number;
 }
 
 export function useSkipTime() {
@@ -76,6 +74,13 @@ export function useSkipTime() {
           apiUrl += `&season=${meta.season.number}&episode=${meta.episode.number}`;
         }
 
+        const durationMs = Math.round(
+          (usePlayerStore.getState().progress?.duration ?? 0) * 1000,
+        );
+        if (durationMs > 0) {
+          apiUrl += `&duration_ms=${durationMs}`;
+        }
+
         const data = await mwFetch(apiUrl, {
           headers: {
             Authorization: tidbKey ? `Bearer ${tidbKey}` : undefined,
@@ -83,62 +88,20 @@ export function useSkipTime() {
         });
 
         const fetchedSegments: SegmentData[] = [];
+        const segmentTypes = [
+          "intro",
+          "recap",
+          "credits",
+          "preview",
+        ] as const;
 
-        // Process intro segments (v2: array of segments)
-        if (Array.isArray(data?.intro) && data.intro.length > 0) {
-          for (const segment of data.intro) {
-            if (segment.submission_count > 0) {
+        for (const segType of segmentTypes) {
+          if (Array.isArray(data?.[segType])) {
+            for (const segment of data[segType]) {
               fetchedSegments.push({
-                type: "intro",
+                type: segType,
                 start_ms: segment.start_ms,
                 end_ms: segment.end_ms,
-                confidence: segment.confidence,
-                submission_count: segment.submission_count,
-              });
-            }
-          }
-        }
-
-        // Process recap segments (v2: array of segments)
-        if (Array.isArray(data?.recap) && data.recap.length > 0) {
-          for (const segment of data.recap) {
-            if (segment.submission_count > 0) {
-              fetchedSegments.push({
-                type: "recap",
-                start_ms: segment.start_ms,
-                end_ms: segment.end_ms,
-                confidence: segment.confidence,
-                submission_count: segment.submission_count,
-              });
-            }
-          }
-        }
-
-        // Process credits segments (v2: array of segments)
-        if (Array.isArray(data?.credits) && data.credits.length > 0) {
-          for (const segment of data.credits) {
-            if (segment.submission_count > 0) {
-              fetchedSegments.push({
-                type: "credits",
-                start_ms: segment.start_ms,
-                end_ms: segment.end_ms,
-                confidence: segment.confidence,
-                submission_count: segment.submission_count,
-              });
-            }
-          }
-        }
-
-        // Process preview segments (v2: array of segments)
-        if (Array.isArray(data?.preview) && data.preview.length > 0) {
-          for (const segment of data.preview) {
-            if (segment.submission_count > 0) {
-              fetchedSegments.push({
-                type: "preview",
-                start_ms: segment.start_ms,
-                end_ms: segment.end_ms,
-                confidence: segment.confidence,
-                submission_count: segment.submission_count,
               });
             }
           }
@@ -262,8 +225,6 @@ export function useSkipTime() {
               type: "intro",
               start_ms: 0,
               end_ms: fedSkipsTime * 1000,
-              confidence: null,
-              submission_count: 1,
             };
           }
         }
@@ -277,8 +238,6 @@ export function useSkipTime() {
               type: "intro",
               start_ms: 0,
               end_ms: introDBTime * 1000,
-              confidence: null,
-              submission_count: 1,
             };
           }
         }

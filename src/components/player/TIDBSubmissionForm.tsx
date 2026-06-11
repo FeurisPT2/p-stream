@@ -161,11 +161,18 @@ export function TIDBSubmissionForm({
         episode?: number;
         start_sec?: number | null;
         end_sec?: number | null;
+        video_duration_ms?: number;
       } = {
         tmdb_id: parseInt(meta.tmdbId.toString(), 10),
         type: meta.type === "show" ? "tv" : "movie",
         segment: formData.segment,
       };
+
+      const playerDuration =
+        usePlayerStore.getState().progress?.duration ?? 0;
+      if (playerDuration > 0) {
+        submissionData.video_duration_ms = Math.round(playerDuration * 1000);
+      }
 
       if (meta.type === "show" && meta.season && meta.episode) {
         submissionData.season = meta.season.number;

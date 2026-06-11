@@ -10,24 +10,25 @@ export interface SubmissionRequest {
   end_sec?: number | null;
   start_ms?: number | null;
   end_ms?: number | null;
+  video_duration_ms?: number;
   tvdb_id?: number;
   imdb_id?: string;
 }
 
 export interface SubmissionResponse {
-  ok: boolean;
-  submission?: {
+  submissions: Array<{
     id: string;
     tmdbId: number;
     type: "movie" | "tv";
     segment: SegmentType;
     season?: number;
     episode?: number;
+    videoDurationMs?: number | null;
     startMs?: number | null;
     endMs?: number | null;
     status: "pending" | "accepted" | "rejected";
     weight: number;
-  };
+  }>;
 }
 
 export interface ErrorResponse {
@@ -53,7 +54,7 @@ export async function submitIntro(
   submission: SubmissionRequest,
   apiKey: string,
 ): Promise<SubmissionResponse> {
-  const response = await fetch("https://api.theintrodb.org/v1/submit", {
+  const response = await fetch("https://api.theintrodb.org/v3/submit", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -71,7 +72,6 @@ export async function submitIntro(
       errorMessage = errorData.error;
       details = errorData.details;
     } catch {
-      // If we can't parse the error response, use the status text
       errorMessage = response.statusText || errorMessage;
     }
 

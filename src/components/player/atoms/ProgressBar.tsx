@@ -122,7 +122,7 @@ export function ProgressBar() {
         const left = (startSec / duration) * 100;
         const width = ((endSec - startSec) / duration) * 100;
         return {
-          key: `${seg.type}-${seg.submission_count}-${seg.start_ms ?? "null"}`,
+          key: `${seg.type}-${seg.start_ms ?? "null"}`,
           left,
           width,
           color: SEGMENT_COLORS[seg.type],
