@@ -36,6 +36,7 @@ import { LoginPage } from "@/pages/Login";
 import { MigrationPage } from "@/pages/migration/Migration";
 import { MigrationDirectPage } from "@/pages/migration/MigrationDirect";
 import { MigrationDownloadPage } from "@/pages/migration/MigrationDownload";
+import { MigrationPasskeyPage } from "@/pages/migration/MigrationPasskey";
 import { MigrationUploadPage } from "@/pages/migration/MigrationUpload";
 import { OnboardingPage } from "@/pages/onboarding/Onboarding";
 import { OnboardingExtensionPage } from "@/pages/onboarding/OnboardingExtension";
@@ -186,6 +187,7 @@ function App() {
             element={<MigrationDownloadPage />}
           />
           <Route path="/migration/upload" element={<MigrationUploadPage />} />
+          <Route path="/migration/passkey" element={<MigrationPasskeyPage />} />
 
           {shouldHaveLegalPage() ? (
             <Route path="/legal" element={<LegalPage />} />

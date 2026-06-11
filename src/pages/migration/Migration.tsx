@@ -86,6 +86,23 @@ export function MigrationPage() {
             </CardContent>
           </Card>
         </div>
+
+        <div className="w-full mt-6">
+          <Card
+            onClick={() => navigate("/migration/passkey")}
+            className="w-full"
+          >
+            <CardContent
+              colorClass="!text-onboarding-best"
+              title="Passkey Recovery"
+              subtitle="Domain change"
+              description="Had a passkey on the old domain (pstream.net)? Recover your account by pasting the credential ID from the export tool."
+              icon={Icons.LOCK}
+            >
+              <Link>Recover passkey account</Link>
+            </CardContent>
+          </Card>
+        </div>
       </BiggerCenterContainer>
     </MinimalPageLayout>
   );
