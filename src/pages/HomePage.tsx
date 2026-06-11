@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
@@ -15,7 +15,6 @@ import { HomeLayout } from "@/pages/layouts/HomeLayout";
 import { BookmarksCarousel } from "@/pages/parts/home/BookmarksCarousel";
 import { BookmarksGrid } from "@/pages/parts/home/BookmarksGrid";
 import { HeroPart } from "@/pages/parts/home/HeroPart";
-import { HomeSectionCustomizer } from "@/pages/parts/home/HomeSectionCustomizer";
 import { WatchingCarousel } from "@/pages/parts/home/WatchingCarousel";
 import { WatchingGrid } from "@/pages/parts/home/WatchingGrid";
 import { SearchListPart } from "@/pages/parts/search/SearchListPart";
@@ -23,11 +22,7 @@ import { SearchLoadingPart } from "@/pages/parts/search/SearchLoadingPart";
 import { conf } from "@/setup/config";
 import { useOverlayStack } from "@/stores/interface/overlayStack";
 import { usePreferencesStore } from "@/stores/preferences";
-import { useProgressStore } from "@/stores/progress";
-import { shouldShowProgress } from "@/stores/progress/utils";
-import { useBookmarkStore } from "@/stores/bookmarks";
 import { MediaItem } from "@/utils/mediaTypes";
-import { Icon, Icons } from "@/components/Icon";
 
 import { Button } from "./About";
 import { AdsPart } from "./parts/home/AdsPart";
@@ -69,7 +64,6 @@ export function HomePage() {
   const s = useSearch(search);
   const [showBookmarks, setShowBookmarks] = useState(false);
   const [showWatching, setShowWatching] = useState(false);
-  const [isCustomizingLayout, setIsCustomizingLayout] = useState(false);
   const { showModal } = useOverlayStack();
   const enableDiscover = usePreferencesStore((state) => state.enableDiscover);
   const enableFeatured = usePreferencesStore((state) => state.enableFeatured);
@@ -86,15 +80,6 @@ export function HomePage() {
 
   const [carouselContainerRef] = useAutoAnimate<HTMLDivElement>();
   const [listContainerRef] = useAutoAnimate<HTMLDivElement>();
-
-  const progressItems = useProgressStore((store) => store.items);
-  const bookmarks = useBookmarkStore((store) => store.bookmarks);
-
-  const hasWatching = useMemo(() => {
-    return Object.values(progressItems).some((item) => shouldShowProgress(item).show);
-  }, [progressItems]);
-
-  const hasBookmarks = Object.keys(bookmarks).length > 0;
 
   const handleClick = (path: To) => {
     window.scrollTo(0, 0);

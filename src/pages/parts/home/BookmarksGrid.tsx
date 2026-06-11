@@ -79,7 +79,14 @@ export function BookmarksGrid({
   const bookmarks = useBookmarkStore((s) => s.bookmarks);
   const groupOrder = useGroupOrderStore((s) => s.groupOrder);
   const removeBookmark = useBookmarkStore((s) => s.removeBookmark);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(() => {
+    return localStorage.getItem("__MW::bookmarksEditing") === "true";
+  });
+  
+  useEffect(() => {
+    localStorage.setItem("__MW::bookmarksEditing", editing.toString());
+  }, [editing]);
+
   const bookmarkRowsToShow = usePreferencesStore((s) => s.bookmarkRowsToShow);
   const setBookmarkRowsToShow = usePreferencesStore((s) => s.setBookmarkRowsToShow);
   const columns = useMediaGridColumns();
