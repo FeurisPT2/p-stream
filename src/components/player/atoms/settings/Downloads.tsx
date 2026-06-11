@@ -1,3 +1,5 @@
+import { fetchGridData } from "@p-stream/providers";
+import type { GridData } from "@p-stream/providers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useCopyToClipboard } from "react-use";
@@ -11,6 +13,9 @@ import { convertSubtitlesToSrtDataurl } from "@/components/player/utils/captions
 import { useIsDesktopApp } from "@/hooks/useIsDesktopApp";
 import { useOverlayRouter } from "@/hooks/useOverlayRouter";
 import { usePlayerStore } from "@/stores/player/store";
+// I swear
+
+// If any of you abuse my api I swear to god I'll turn it down and never make shit again so please don't. Y'all arent supposed to use this.
 
 export function useDownloadLink() {
   const source = usePlayerStore((s) => s.source);
@@ -49,11 +54,112 @@ function StyleTrans(props: { k: string }) {
 }
 
 function OriginalFileView({ id }: { id: string }) {
-  
+  const router = useOverlayRouter(id);
+  const { t } = useTranslation();
+  const meta = usePlayerStore((s) => s.meta);
+  const selectedCaption = usePlayerStore((s) => s.caption?.selected);
+  const [data, setData] = useState<GridData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const tmdbId = meta?.tmdbId;
+
+  useEffect(() => {
+    if (!tmdbId) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+
+    fetchGridData(tmdbId).then((json) => {
+      if (!cancelled) setData(json);
+    }).catch(() => {
+      if (!cancelled) setError(true);
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [tmdbId]);
+
+  const openSubtitleDownload = useCallback(() => {
+    const dataUrl = selectedCaption
+      ? convertSubtitlesToSrtDataurl(selectedCaption?.srtData)
+      : null;
+    if (!dataUrl) return;
+    window.open(dataUrl);
+  }, [selectedCaption]);
+
+  const hasDownloads = data?.downloads && data.downloads.length > 0;
+
   return (
-    <div>
-      Removed from UI
-    </div>
+    <>
+      <Menu.BackLink onClick={() => router.navigate("/download")}>
+        {t("player.menus.downloads.original.cardTitle")}
+      </Menu.BackLink>
+      <Menu.Section>
+        {loading && (
+          <Menu.Paragraph marginClass="mb-4">
+            {t("player.menus.downloads.original.loading")}
+          </Menu.Paragraph>
+        )}
+        {error && (
+          <Menu.Paragraph marginClass="mb-4">
+            {t("player.menus.downloads.original.error")}
+          </Menu.Paragraph>
+        )}
+        {!loading && !error && !hasDownloads && (
+          <Menu.Paragraph marginClass="mb-4">
+            {t("player.menus.downloads.original.noResults")}
+          </Menu.Paragraph>
+        )}
+        {hasDownloads && data?.downloads.map((dl, i) => (
+          <div
+            key={`${dl.title}-${i}`}
+            className="w-full rounded-lg bg-video-context-light/10 p-3 mb-2"
+          >
+            <div className="flex items-center gap-2 mb-1">
+              {dl.format && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-video-context-type-accent/20 text-video-context-type-accent">
+                  {dl.format}
+                </span>
+              )}
+              {dl.resolution && (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-video-context-light/20 text-video-context-type-main">
+                  {dl.resolution}
+                </span>
+              )}
+              <span className="text-xs text-video-context-type-secondary ml-auto">
+                {dl.size}
+              </span>
+            </div>
+            <p className="text-xs text-video-context-type-secondary break-all mb-2">
+              {dl.title}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {dl.sources.map((src, j) => (
+                <a
+                  key={`${src.url}-${j}`}
+                  href={src.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 min-w-0 text-center px-3 py-1.5 rounded bg-video-context-type-accent/20 hover:bg-video-context-type-accent/40 transition-colors text-xs font-medium text-video-context-type-main"
+                >
+                  {src.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+        <Button
+          className="w-full mt-2"
+          onClick={openSubtitleDownload}
+          disabled={!selectedCaption}
+          theme="secondary"
+        >
+          {t("player.menus.downloads.downloadSubtitle")}
+        </Button>
+      </Menu.Section>
+    </>
   );
 }
 
