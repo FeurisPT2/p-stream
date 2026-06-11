@@ -26,8 +26,6 @@ export function SkipSegmentsView({ id }: { id: string }) {
       type: "intro" as const,
       start_ms: null,
       end_ms: null,
-      confidence: null,
-      submission_count: 0,
     }),
     [],
   );
@@ -88,7 +86,7 @@ export function SkipSegmentsView({ id }: { id: string }) {
 
               return (
                 <button
-                  key={`${segment.type}-${segment.submission_count}-${segment.start_ms || "null"}`}
+                  key={`${segment.type}-${segment.start_ms ?? "null"}`}
                   type="button"
                   onClick={() => handleSeek(startTime)}
                   className="w-full text-left p-3 rounded-xl bg-video-context-light bg-opacity-10 hover:bg-opacity-20 transition-colors cursor-pointer"
@@ -106,14 +104,6 @@ export function SkipSegmentsView({ id }: { id: string }) {
                         ? t("player.skipTime.endOfVideo")
                         : formatSeconds(endTime)}
                     </span>
-                  </div>
-                  <div className="text-xs text-type-secondary mt-1">
-                    {segment.submission_count} submissions
-                    {segment.confidence !== null && (
-                      <span className="ml-2">
-                        ({Math.round(segment.confidence * 100)}% confidence)
-                      </span>
-                    )}
                   </div>
                 </button>
               );

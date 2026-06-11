@@ -1025,8 +1025,6 @@
       "startsAt": "Starts at {{time}}",
       "endsAt": "Ends at {{time}}",
       "timeUnknown": "Time unknown",
-      "confidence": "confidence",
-      "submissions": "{{count}} submissions",
       "connectApiKeyMessage": "To submit new segments, enter your TheIntroDB API key in the connections settings",
       "endOfVideo": "End",
       "feedback": {
