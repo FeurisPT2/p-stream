@@ -12,6 +12,8 @@ import { useRandomTranslation } from "@/hooks/useRandomTranslation";
 import { useSearchQuery } from "@/hooks/useSearchQuery";
 import { useBannerSize } from "@/stores/banner";
 
+import { GenreChips } from "./GenreChips";
+
 export interface HeroPartProps {
   setIsSticky: (val: boolean) => void;
   searchParams: ReturnType<typeof useSearchQuery>;
@@ -87,25 +89,31 @@ export function HeroPart({
           </div>
         ) : null}
 
-        <div className="relative h-20 z-30">
-          <Sticky
-            topOffset={-topOffset}
-            stickyStyle={{
-              paddingTop: `${topOffset}px`,
-            }}
-            onFixedToggle={stickStateChanged}
-            scrollElement="window"
-          >
-            <SearchBarInput
-              ref={inputRef}
-              onChange={setSearch}
-              value={search}
-              onUnFocus={setSearchUnFocus}
-              placeholder={placeholder ?? ""}
-              isSticky={showBg}
-              isInFeatured={isInFeatured}
-            />
-          </Sticky>
+        <div className="relative z-30">
+          <div className="h-20">
+            <Sticky
+              topOffset={-topOffset}
+              stickyStyle={{
+                paddingTop: `${topOffset}px`,
+              }}
+              onFixedToggle={stickStateChanged}
+              scrollElement="window"
+            >
+              <SearchBarInput
+                ref={inputRef}
+                onChange={setSearch}
+                value={search}
+                onUnFocus={setSearchUnFocus}
+                placeholder={placeholder ?? ""}
+                isSticky={showBg}
+                isInFeatured={isInFeatured}
+              />
+            </Sticky>
+          </div>
+
+          {(!search || search.length === 0) && (
+            <GenreChips />
+          )}
         </div>
       </div>
     </ThinContainer>

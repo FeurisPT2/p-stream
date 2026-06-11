@@ -187,10 +187,8 @@ export function useScrape() {
         ? playerState.failedEmbedsPerMedia[mediaKey] || {}
         : {};
 
-      // Start with all available sources (filtered by failed ones only)
-      let baseSourceOrder = allSources
-        .filter((source) => !failedSources.includes(source.id))
-        .map((source) => source.id);
+      // Start with all available sources (DO NOT filter failed ones yet, so we can find startFromSourceId)
+      let baseSourceOrder = allSources.map((source) => source.id);
 
       // Apply custom source ordering if enabled
       if (enableSourceOrder && (preferredSourceOrder || []).length > 0) {
@@ -235,6 +233,11 @@ export function useScrape() {
           filteredSourceOrder = filteredSourceOrder.slice(startIndex + 1);
         }
       }
+
+      // Now filter out the failed sources so we don't try them again
+      filteredSourceOrder = filteredSourceOrder.filter(
+        (id) => !failedSources.includes(id)
+      );
 
       // Collect all failed embed IDs across all sources for current media
       const allFailedEmbedIds = Object.values(failedEmbeds).flat();
