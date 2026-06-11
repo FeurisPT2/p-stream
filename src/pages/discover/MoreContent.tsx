@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
-import { useWindowSize } from "react-use";
+import classNames from "classnames";
 
 import { Button } from "@/components/buttons/Button";
-import { Dropdown, OptionItem } from "@/components/form/Dropdown";
+import { Dropdown } from "@/components/form/Dropdown";
 import { Icon, Icons } from "@/components/Icon";
 import { WideContainer } from "@/components/layout/WideContainer";
 import { MediaCard } from "@/components/media/MediaCard";
@@ -29,22 +29,39 @@ interface MoreContentProps {
 export function MoreContent({ onShowDetails }: MoreContentProps) {
   const { mediaType = "movie", contentType, id, category } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedProvider, setSelectedProvider] = useState<OptionItem | null>(
-    null,
-  );
-  const [selectedGenre, setSelectedGenre] = useState<OptionItem | null>(null);
-  const [selectedRecommendationId, setSelectedRecommendationId] =
-    useState<string>("");
+  const currentKey = `${contentType}-${mediaType}-${id}`;
+  const [prevKey, setPrevKey] = useState(currentKey);
+
+  if (currentKey !== prevKey) {
+    setPrevKey(currentKey);
+    setCurrentPage(1);
+  }
+
+  const { providers, genres } = useDiscoverOptions(mediaType as MediaType);
+
+  const selectedProvider = React.useMemo(() => {
+    if (contentType === "provider" && id) {
+      const p = providers.find((provider) => provider.id === id);
+      return p ? { id: p.id, name: p.name } : null;
+    }
+    return null;
+  }, [contentType, id, providers]);
+
+  const selectedGenre = React.useMemo(() => {
+    if (contentType === "genre" && id) {
+      const g = genres.find((genre) => genre.id.toString() === id);
+      return g ? { id: g.id.toString(), name: g.name } : null;
+    }
+    return null;
+  }, [contentType, id, genres]);
+
+  const selectedRecommendationId = contentType === "recommendations" ? id || "" : "";
   const [isContentVisible, setIsContentVisible] = useState(false);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { showModal } = useOverlayStack();
   const { lastView } = useDiscoverStore();
-  const { width: windowWidth } = useWindowSize();
   const progressStore = useProgressStore();
-
-  // Get available providers and genres
-  const { providers, genres } = useDiscoverOptions(mediaType as MediaType);
 
   // Get recommendation sources from progress store
   const recommendationSources = Object.entries(progressStore.items || {})
@@ -130,191 +147,47 @@ export function MoreContent({ onShowDetails }: MoreContentProps) {
     setCurrentPage((prev) => prev + 1);
   };
 
-  // Set initial provider/genre/recommendation selection
-  useEffect(() => {
-    if (contentType === "provider" && id) {
-      const provider = providers.find((p) => p.id === id);
-      if (provider) {
-        setSelectedProvider({ id: provider.id, name: provider.name });
-      }
-    } else if (contentType === "genre" && id) {
-      const genre = genres.find((g) => g.id.toString() === id);
-      if (genre) {
-        setSelectedGenre({ id: genre.id.toString(), name: genre.name });
-      }
-    } else if (contentType === "recommendations" && id) {
-      setSelectedRecommendationId(id);
-    }
-  }, [contentType, id, providers, genres]);
-
-  // Handle selection changes
-  useEffect(() => {
-    if (contentType === "provider" && selectedProvider) {
-      navigate(
-        `/discover/more/provider/${selectedProvider.id}/${actualMediaType}`,
-      );
-    } else if (contentType === "genre" && selectedGenre) {
-      navigate(`/discover/more/genre/${selectedGenre.id}/${actualMediaType}`);
-    } else if (contentType === "recommendations" && selectedRecommendationId) {
-      navigate(
-        `/discover/more/recommendations/${selectedRecommendationId}/${actualMediaType}`,
-      );
-    }
-  }, [
-    selectedProvider,
-    selectedGenre,
-    selectedRecommendationId,
-    contentType,
-    actualMediaType,
-    navigate,
-  ]);
-
-  // Split buttons into visible and dropdown based on window width
-  const { visibleButtons, dropdownButtons } = React.useMemo(() => {
-    const items =
-      contentType === "provider"
-        ? providers
-        : contentType === "genre"
-          ? genres
-          : [];
-
-    const visible = windowWidth > 850 ? items.slice(0, 7) : items.slice(0, 2);
-    const dropdown = windowWidth > 850 ? items.slice(7) : items.slice(2);
-
-    return { visibleButtons: visible, dropdownButtons: dropdown };
-  }, [contentType, providers, genres, windowWidth]);
-
-  if (isLoading && currentPage === 1) {
-    return (
-      <SubPageLayout>
-        <WideContainer>
-          <div className="animate-pulse">
-            <div className="h-8 bg-mediaCard-hoverBackground rounded w-1/4 mb-8" />
-            <MediaGrid>
-              {Array(20)
-                .fill(null)
-                .map(() => (
-                  <div
-                    key={`loading-skeleton-${Math.random().toString(36).substring(2)}`}
-                    className="relative group cursor-default user-select-none rounded-xl p-2 bg-transparent"
-                  >
-                    <div className="animate-pulse">
-                      <div className="w-full aspect-[2/3] bg-mediaCard-hoverBackground rounded-lg" />
-                      <div className="mt-2 h-4 bg-mediaCard-hoverBackground rounded w-3/4" />
-                    </div>
-                  </div>
-                ))}
-            </MediaGrid>
-          </div>
-        </WideContainer>
-      </SubPageLayout>
-    );
-  }
-
   return (
     <SubPageLayout>
       <WideContainer>
-        <div className="flex items-center justify-between gap-8">
-          <Heading1 className="text-2xl font-bold text-white">
-            {sectionTitle}
-          </Heading1>
-          {contentType === "recommendations" && (
-            <div className="relative pr-4">
-              <Dropdown
-                selectedItem={
-                  selectedRecommendationSource
-                    ? {
-                        id: selectedRecommendationId,
-                        name: selectedRecommendationSource?.title || "",
-                      }
-                    : { id: "", name: "..." }
-                }
-                setSelectedItem={(item) => setSelectedRecommendationId(item.id)}
-                options={recommendationSources.map((source) => ({
-                  id: source.id,
-                  name: source.title,
-                }))}
-                customButton={
-                  <button
-                    type="button"
-                    className="px-2 py-1 text-sm bg-mediaCard-hoverBackground rounded-full hover:bg-mediaCard-background transition-colors flex items-center gap-1"
-                  >
-                    <span>{t("discover.carousel.change")}</span>
-                    <Icon
-                      icon={Icons.UP_DOWN_ARROW}
-                      className="text-xs text-dropdown-secondary"
-                    />
-                  </button>
-                }
-                side="right"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-4 pb-8">
-          <button
-            type="button"
-            onClick={handleBack}
-            className="flex items-center text-white hover:text-gray-300 transition-colors"
-          >
-            <Icon className="text-xl" icon={Icons.ARROW_LEFT} />
-            <span className="ml-2">{t("discover.page.back")}</span>
-          </button>
-        </div>
-
-        {(contentType === "provider" || contentType === "genre") && (
-          <div className="flex items-center space-x-2 mb-4">
-            {visibleButtons.map((item: any) => (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() => {
-                  if (contentType === "provider") {
-                    setSelectedProvider({ id: item.id, name: item.name });
-                  } else {
-                    setSelectedGenre({
-                      id: item.id.toString(),
-                      name: item.name,
-                    });
-                  }
-                }}
-                className={`px-3 py-1 text-sm rounded-full transition-colors whitespace-nowrap flex-shrink-0 ${
-                  item.id.toString() ===
-                  (selectedProvider?.id || selectedGenre?.id)
-                    ? "bg-mediaCard-background"
-                    : "bg-mediaCard-hoverBackground hover:bg-mediaCard-background"
-                }`}
-              >
-                {item.name}
-              </button>
-            ))}
-            {dropdownButtons.length > 0 && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex items-center text-white hover:text-gray-300 transition-colors"
+            >
+              <Icon className="text-xl" icon={Icons.ARROW_LEFT} />
+              <span className="ml-2">{t("discover.page.back")}</span>
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between gap-8 pb-4">
+            <Heading1 className="text-2xl font-bold text-white">
+              {sectionTitle}
+            </Heading1>
+            {contentType === "recommendations" && (
               <div className="relative">
                 <Dropdown
                   selectedItem={
-                    contentType === "provider"
-                      ? selectedProvider || { id: "", name: "..." }
-                      : selectedGenre || { id: "", name: "..." }
+                    selectedRecommendationSource
+                      ? {
+                          id: selectedRecommendationId,
+                          name: selectedRecommendationSource?.title || "",
+                        }
+                      : { id: "", name: "..." }
                   }
-                  setSelectedItem={(item) => {
-                    if (contentType === "provider") {
-                      setSelectedProvider(item);
-                    } else {
-                      setSelectedGenre(item);
-                    }
-                  }}
-                  options={dropdownButtons.map((item: any) => ({
-                    id:
-                      contentType === "provider" ? item.id : item.id.toString(),
-                    name: item.name,
+                  setSelectedItem={(item) => navigate(`/discover/more/recommendations/${item.id}/${actualMediaType}`)}
+                  options={recommendationSources.map((source) => ({
+                    id: source.id,
+                    name: source.title,
                   }))}
                   customButton={
                     <button
                       type="button"
-                      className="px-3 py-1 text-sm bg-mediaCard-hoverBackground hover:bg-mediaCard-background rounded-full transition-colors flex items-center gap-1"
+                      className="px-2 py-1 text-sm bg-mediaCard-hoverBackground rounded-full hover:bg-mediaCard-background transition-colors flex items-center gap-1"
                     >
-                      <span>...</span>
+                      <span>{t("discover.carousel.change")}</span>
                       <Icon
                         icon={Icons.UP_DOWN_ARROW}
                         className="text-xs text-dropdown-secondary"
@@ -326,13 +199,61 @@ export function MoreContent({ onShowDetails }: MoreContentProps) {
               </div>
             )}
           </div>
+        </div>
+
+        {(contentType === "provider" || contentType === "genre") && (
+          <div className="flex items-center gap-3 mb-4 overflow-x-auto no-scrollbar py-4 -mx-4 px-4 sm:mx-0 sm:px-0 mask-linear-right">
+            {(contentType === "provider" ? providers : genres).map((item: any) => {
+              const isSelected = item.id.toString() === (selectedProvider?.id || selectedGenre?.id);
+              return (
+                <button
+                  type="button"
+                  key={item.id}
+                  onClick={() => {
+                    if (contentType === "provider") {
+                      navigate(`/discover/more/provider/${item.id}/${actualMediaType}`);
+                    } else {
+                      navigate(`/discover/more/genre/${item.id}/${actualMediaType}`);
+                    }
+                  }}
+                  className={classNames(
+                    "px-4 py-2 rounded-full text-sm font-medium tracking-wide whitespace-nowrap transition-all duration-300 ease-out flex-shrink-0 select-none",
+                    isSelected
+                      ? "bg-white text-black shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+                      : "bg-search-background/40 backdrop-blur-md text-type-secondary hover:text-white hover:bg-search-hoverBackground/80 border border-white/5 hover:border-white/15 hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+                  )}
+                >
+                  {item.name}
+                </button>
+              );
+            })}
+          </div>
         )}
 
-        <div
-          className={`transition-opacity duration-300 ease-in-out ${
-            isContentVisible ? "opacity-100" : "opacity-0"
-          }`}
-        >
+        {isLoading && currentPage === 1 ? (
+          <div className="animate-pulse">
+            <MediaGrid>
+              {Array(20)
+                .fill(null)
+                .map((_, i) => (
+                  <div
+                    key={`loading-skeleton-${i}`}
+                    className="relative group cursor-default user-select-none rounded-xl p-2 bg-transparent"
+                  >
+                    <div className="animate-pulse">
+                      <div className="w-full aspect-[2/3] bg-mediaCard-hoverBackground rounded-lg" />
+                      <div className="mt-2 h-4 bg-mediaCard-hoverBackground rounded w-3/4" />
+                    </div>
+                  </div>
+                ))}
+            </MediaGrid>
+          </div>
+        ) : (
+          <div
+            className={`transition-opacity duration-300 ease-in-out ${
+              isContentVisible ? "opacity-100" : "opacity-0"
+            }`}
+          >
           <MediaGrid>
             {mediaItems.map((item) => {
               const isTVShow = Boolean(item.first_air_date);
@@ -372,20 +293,21 @@ export function MoreContent({ onShowDetails }: MoreContentProps) {
             })}
           </MediaGrid>
 
-          {hasMore && (
-            <div className="flex justify-center mt-8">
-              <Button
-                theme="purple"
-                onClick={handleLoadMore}
-                disabled={isLoading}
-              >
-                {isLoading
-                  ? t("discover.page.loading")
-                  : t("discover.page.loadMore")}
-              </Button>
-            </div>
-          )}
-        </div>
+            {hasMore && (
+              <div className="flex justify-center mt-8">
+                <Button
+                  theme="purple"
+                  onClick={handleLoadMore}
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? t("discover.page.loading")
+                    : t("discover.page.loadMore")}
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
       </WideContainer>
     </SubPageLayout>
   );

@@ -30,7 +30,6 @@ export function EditBookmarkModal({
   const [year, setYear] = useState<number | undefined>();
   const [groups, setGroups] = useState<string[]>([]);
 
-  // Get all available groups from all bookmarks
   const allGroups = useMemo(() => {
     const groupSet = new Set<string>();
     Object.values(bookmarks).forEach((bookmark) => {
@@ -106,7 +105,6 @@ export function EditBookmarkModal({
         </Paragraph>
 
         <div className="space-y-4 mt-6">
-          {/* Title */}
           <div>
             <label className="block text-sm font-medium mb-2">
               {t("home.bookmarks.edit.titleLabel")}

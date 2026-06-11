@@ -340,7 +340,8 @@ export function BookmarksCarousel({
   return (
     <>
       {/* Grouped Bookmarks Carousels */}
-      {sortedSections.map((section) => {
+      {sortedSections.map((section, index) => {
+        const isFirst = index === 0;
         if (section.type === "grouped") {
           const { icon, name } = parseGroupString(section.group || "");
           return (

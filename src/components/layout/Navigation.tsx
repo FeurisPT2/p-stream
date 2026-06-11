@@ -4,7 +4,7 @@ import { Link, To, useNavigate } from "react-router-dom";
 
 import { NoUserAvatar, UserAvatar } from "@/components/Avatar";
 import { IconPatch } from "@/components/buttons/IconPatch";
-import { Icons } from "@/components/Icon";
+import { Icon, Icons } from "@/components/Icon";
 import { LinksDropdown } from "@/components/LinksDropdown";
 import { useNotifications } from "@/components/overlays/notificationsModal";
 import { Lightbar } from "@/components/utils/Lightbar";
@@ -14,7 +14,46 @@ import { conf } from "@/setup/config";
 import { useBannerSize } from "@/stores/banner";
 import { usePreferencesStore } from "@/stores/preferences";
 
+import { HomeSectionCustomizer } from "@/pages/parts/home/HomeSectionCustomizer";
+
 import { BrandPill } from "./BrandPill";
+
+function HomeLayoutCustomizerToggle() {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Only show on the exact home page path
+  if (window.location.pathname !== "/") return null;
+  
+  return (
+    <div className="relative">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`group flex items-center h-10 rounded-full transition-all duration-300 ease-out overflow-hidden ${
+          isOpen
+            ? "bg-type-link text-white shadow-lg pr-4"
+            : "bg-pill-background bg-opacity-50 text-white hover:bg-pill-backgroundHover hover:bg-opacity-100 hover:pr-4 active:scale-105"
+        }`}
+        title="Edit Layout"
+      >
+        <div className="flex items-center justify-center w-10 h-10 shrink-0">
+          <Icon icon={Icons.LAYOUT} className="text-xl" />
+        </div>
+        <span className={`font-medium text-sm whitespace-nowrap transition-all duration-300 ease-out ${
+          isOpen
+            ? "max-w-[100px] opacity-100"
+            : "max-w-0 opacity-0 group-hover:max-w-[100px] group-hover:opacity-100"
+        }`}>
+          Layout
+        </span>
+      </button>
+      <HomeSectionCustomizer 
+        isOpen={isOpen} 
+        onClose={() => setIsOpen(false)} 
+      />
+    </div>
+  );
+}
 
 export interface NavigationProps {
   bg?: boolean;
@@ -156,34 +195,7 @@ export function Navigation(props: NavigationProps) {
                   navigation
                 />
               </a>
-              {!enableLowPerformanceMode &&
-                (window.location.pathname !== "/discover" ? (
-                  <a
-                    onClick={() => handleClick("/discover")}
-                    rel="noreferrer"
-                    className="text-xl text-white tabbable rounded-full backdrop-blur-lg"
-                  >
-                    <IconPatch
-                      icon={Icons.RISING_STAR}
-                      clickable
-                      downsized
-                      navigation
-                    />
-                  </a>
-                ) : (
-                  <a
-                    onClick={() => handleClick("/")}
-                    rel="noreferrer"
-                    className="text-lg text-white tabbable rounded-full backdrop-blur-lg"
-                  >
-                    <IconPatch
-                      icon={Icons.SEARCH}
-                      clickable
-                      downsized
-                      navigation
-                    />
-                  </a>
-                ))}
+
               <a
                 onClick={() => openNotifications()}
                 rel="noreferrer"
@@ -195,14 +207,15 @@ export function Navigation(props: NavigationProps) {
                   const shouldShow =
                     typeof count === "number" ? count > 0 : count === "99+";
                   return shouldShow ? (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[16px] aspect-square flex items-center justify-center">
                       {count}
                     </span>
                   ) : null;
                 })()}
               </a>
             </div>
-            <div className="relative pointer-events-auto">
+            <div className="relative pointer-events-auto flex items-center gap-3">
+              <HomeLayoutCustomizerToggle />
               <LinksDropdown>
                 {loggedIn ? <UserAvatar withName /> : <NoUserAvatar />}
               </LinksDropdown>

@@ -91,7 +91,7 @@ export const SearchBarInput = forwardRef<HTMLInputElement, SearchBarProps>(
               value={props.value}
               className={c(
                 "w-full flex-1 bg-transparent px-4 py-4 pl-12 !text-search-text focus:outline-none sm:py-4 sm:pr-2 transition-colors duration-300",
-                "transition-colors duration-300",
+                "transition-colors duration-300 select-none",
                 props.isInFeatured
                   ? lightTheme
                     ? "text-white/50"

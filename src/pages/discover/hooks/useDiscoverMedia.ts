@@ -122,6 +122,8 @@ export function useDiscoverMedia({
   const [sectionTitle, setSectionTitle] = useState<string>("");
   const [currentContentType, setCurrentContentType] =
     useState<string>(contentType);
+  const [currentId, setCurrentId] = useState<string | undefined>(id);
+  const [currentMediaType, setCurrentMediaType] = useState<string | undefined>(mediaType);
   const [actualContentType, setActualContentType] =
     useState<DiscoverContentType>(contentType);
 
@@ -129,14 +131,14 @@ export function useDiscoverMedia({
   const userLanguage = useLanguageStore((s) => s.language);
   const formattedLanguage = getTmdbLanguageCode(userLanguage);
 
-  // Reset media when content type or media type changes
-  useEffect(() => {
-    if (contentType !== currentContentType) {
-      setMedia([]);
-      setCurrentContentType(contentType);
-      setActualContentType(contentType); // Reset actual content type to original
-    }
-  }, [contentType, currentContentType]);
+  // Reset media when content type, media type, or id changes
+  if (contentType !== currentContentType || id !== currentId || mediaType !== currentMediaType) {
+    setMedia([]);
+    setCurrentContentType(contentType);
+    setCurrentId(id);
+    setCurrentMediaType(mediaType);
+    setActualContentType(contentType); // Reset actual content type to original
+  }
 
   const fetchTMDBMedia = useCallback(
     async (endpoint: string, params: Record<string, any> = {}) => {
