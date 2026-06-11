@@ -1,8 +1,10 @@
 import classNames from "classnames";
 import { useCallback, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import Sticky from "react-sticky-el";
 
 import { SearchBarInput } from "@/components/form/SearchBar";
+import { Icon, Icons } from "@/components/Icon";
 import { ThinContainer } from "@/components/layout/ThinContainer";
 import { useSlashFocus } from "@/components/player/hooks/useSlashFocus";
 import { HeroTitle } from "@/components/text/HeroTitle";
@@ -99,15 +101,39 @@ export function HeroPart({
               onFixedToggle={stickStateChanged}
               scrollElement="window"
             >
-              <SearchBarInput
-                ref={inputRef}
-                onChange={setSearch}
-                value={search}
-                onUnFocus={setSearchUnFocus}
-                placeholder={placeholder ?? ""}
-                isSticky={showBg}
-                isInFeatured={isInFeatured}
-              />
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <SearchBarInput
+                    ref={inputRef}
+                    onChange={setSearch}
+                    value={search}
+                    onUnFocus={setSearchUnFocus}
+                    placeholder={placeholder ?? ""}
+                    isSticky={showBg}
+                    isInFeatured={isInFeatured}
+                  />
+                </div>
+                <Link
+                  to="/discover"
+                  className="group relative flex items-center justify-center h-14 rounded-[28px] bg-search-background/50 hover:bg-search-background backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
+                >
+                  {/* Glowing border effect (only on hover) */}
+                  <div className="absolute inset-0 rounded-[28px] bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-pulse" />
+                  {/* Inner background to create border effect */}
+                  <div className="absolute inset-[2px] rounded-[26px] bg-search-background transition-colors duration-300" />
+                  
+                  {/* Content */}
+                  <div className="relative flex items-center justify-center px-4 sm:px-5 gap-2 h-full">
+                    <Icon 
+                      icon={Icons.RISING_STAR} 
+                      className="text-search-icon group-hover:text-pink-400 transition-colors duration-300 text-xl group-hover:rotate-12" 
+                    />
+                    <span className="max-w-0 opacity-0 group-hover:max-w-[80px] group-hover:opacity-100 group-hover:ml-1 text-white font-bold text-sm tracking-wide bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text group-hover:text-transparent transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
+                      Discover
+                    </span>
+                  </div>
+                </Link>
+              </div>
             </Sticky>
           </div>
 
