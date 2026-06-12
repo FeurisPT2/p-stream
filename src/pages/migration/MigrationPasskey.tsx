@@ -15,10 +15,7 @@ import {
   storeCredentialMapping,
 } from "@/backend/accounts/crypto";
 import { getLoginChallengeToken, loginAccount } from "@/backend/accounts/login";
-import {
-  getRegisterChallengeToken,
-  registerAccount,
-} from "@/backend/accounts/register";
+import { getRekeyChallengeToken, rekeyAccount } from "@/backend/accounts/rekey";
 import { getUser } from "@/backend/accounts/user";
 import { Button } from "@/components/buttons/Button";
 import { PassphraseDisplay } from "@/components/form/PassphraseDisplay";
@@ -81,6 +78,11 @@ export function MigrationPasskeyPage() {
     if (!isPasskeySupported())
       throw new Error("Passkeys not supported in this browser");
 
+    const trimmedOld = credentialId.trim();
+    if (!trimmedOld) throw new Error("Missing old credential ID");
+    const oldKeys = await keysFromCredentialId(trimmedOld);
+    const oldPublicKey = bytesToBase64Url(oldKeys.publicKey);
+
     const credential = await createPasskey(
       `user-${Date.now()}`,
       "Z-Stream User",
@@ -89,93 +91,67 @@ export function MigrationPasskeyPage() {
     const newKeys = await keysFromCredentialId(newCredId);
     const newPublicKey = bytesToBase64Url(newKeys.publicKey);
 
-    // Register a new identity with the new passkey
-    const { challenge } = await getRegisterChallengeToken(backendUrl);
-    const signature = await signChallenge(newKeys, challenge);
-    await registerAccount(backendUrl, {
-      challenge: { code: challenge, signature },
-      publicKey: newPublicKey,
+    const { challenge } = await getRekeyChallengeToken(backendUrl, oldPublicKey);
+    const oldSignature = await signChallenge(oldKeys, challenge);
+    const newSignature = await signChallenge(newKeys, challenge);
+
+    const result = await rekeyAccount(backendUrl, {
+      oldPublicKey,
+      newPublicKey,
+      challenge: { code: challenge, oldSignature, newSignature },
       device: await encryptData("Z-Stream Passkey", newKeys.seed),
-      profile: useAuthStore.getState().account?.profile ?? {
-        colorA: "#6366f1",
-        colorB: "#8b5cf6",
-        icon: "user",
-      },
     });
 
     storeCredentialMapping(backendUrl, newPublicKey, newCredId);
 
-    // Log into the new passkey account
-    const { challenge: lc } = await getLoginChallengeToken(
-      backendUrl,
-      newPublicKey,
-    );
-    const lSig = await signChallenge(newKeys, lc);
-    const lr = await loginAccount(backendUrl, {
-      challenge: { code: lc, signature: lSig },
-      publicKey: newPublicKey,
-      device: await encryptData("Z-Stream Passkey", newKeys.seed),
-    });
-
-    const user = await getUser(backendUrl, lr.token);
     useAuthStore.getState().setAccount({
-      token: lr.token,
-      sessionId: lr.session.id,
-      userId: user.user.id,
+      token: result.token,
+      sessionId: result.session.id,
+      userId: result.user.id,
       seed: bytesToBase64(newKeys.seed),
-      nickname: user.user.nickname,
-      profile: user.user.profile,
+      nickname: result.user.nickname,
+      profile: result.user.profile,
       deviceName: "Z-Stream Passkey",
     });
 
     setStep("done");
-  }, [backendUrl]);
+  }, [backendUrl, credentialId]);
 
   // Option B: Bind a passphrase
   const [phraseResult, bindPassphrase] = useAsyncFn(async () => {
     if (!backendUrl) throw new Error("No backend URL configured");
 
+    const trimmedOld = credentialId.trim();
+    if (!trimmedOld) throw new Error("Missing old credential ID");
+    const oldKeys = await keysFromCredentialId(trimmedOld);
+    const oldPublicKey = bytesToBase64Url(oldKeys.publicKey);
+
     const newKeys = await keysFromMnemonic(newMnemonic);
     const newPublicKey = bytesToBase64Url(newKeys.publicKey);
 
-    const { challenge } = await getRegisterChallengeToken(backendUrl);
-    const signature = await signChallenge(newKeys, challenge);
-    await registerAccount(backendUrl, {
-      challenge: { code: challenge, signature },
-      publicKey: newPublicKey,
-      device: await encryptData("Z-Stream", newKeys.seed),
-      profile: useAuthStore.getState().account?.profile ?? {
-        colorA: "#6366f1",
-        colorB: "#8b5cf6",
-        icon: "user",
-      },
-    });
+    const { challenge } = await getRekeyChallengeToken(backendUrl, oldPublicKey);
+    const oldSignature = await signChallenge(oldKeys, challenge);
+    const newSignature = await signChallenge(newKeys, challenge);
 
-    // Log into the new passphrase account
-    const { challenge: lc } = await getLoginChallengeToken(
-      backendUrl,
+    const result = await rekeyAccount(backendUrl, {
+      oldPublicKey,
       newPublicKey,
-    );
-    const lSig = await signChallenge(newKeys, lc);
-    const lr = await loginAccount(backendUrl, {
-      challenge: { code: lc, signature: lSig },
-      publicKey: newPublicKey,
+      challenge: { code: challenge, oldSignature, newSignature },
       device: await encryptData("Z-Stream", newKeys.seed),
     });
 
-    const user = await getUser(backendUrl, lr.token);
     useAuthStore.getState().setAccount({
-      token: lr.token,
-      sessionId: lr.session.id,
-      userId: user.user.id,
+      token: result.token,
+      sessionId: result.session.id,
+      userId: result.user.id,
       seed: bytesToBase64(newKeys.seed),
-      nickname: user.user.nickname,
-      profile: user.user.profile,
+      nickname: result.user.nickname,
+      profile: result.user.profile,
       deviceName: "Z-Stream",
     });
 
     setStep("done");
-  }, [backendUrl, newMnemonic]);
+  }, [backendUrl, credentialId, newMnemonic]);
 
   return (
     <MinimalPageLayout>
@@ -357,9 +333,8 @@ export function MigrationPasskeyPage() {
                   All Done
                 </h3>
                 <p className="text-type-secondary text-sm">
-                  Your new account is ready. Use the migration tools to
-                  transfer your bookmarks and watch history from the old
-                  account if needed.
+                  Your account is ready and all your bookmarks and history are
+                  intact. You&apos;re logged in now.
                 </p>
                 <Button theme="purple" onClick={() => navigate("/")}>
                   Go Home
