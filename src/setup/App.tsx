@@ -49,6 +49,7 @@ import { Layout } from "@/setup/Layout";
 import { useHistoryListener } from "@/stores/history";
 import { useClearModalsOnNavigation } from "@/stores/interface/overlayStack";
 import { LanguageProvider } from "@/stores/language";
+import { trackPath } from "@/utils/analytics";
 
 const DeveloperPage = lazy(() => import("@/pages/DeveloperPage"));
 const TestView = lazy(() => import("@/pages/developer/TestView"));
@@ -115,6 +116,10 @@ function App() {
   useClearModalsOnNavigation();
   const maintenance = false; // Shows maintance page
   const [showDowntime, setShowDowntime] = useState(maintenance);
+  const appLocation = useLocation();
+  useEffect(() => {
+    trackPath(appLocation.pathname);
+  }, [appLocation.pathname]);
 
   const handleButtonClick = () => {
     setShowDowntime(false);
