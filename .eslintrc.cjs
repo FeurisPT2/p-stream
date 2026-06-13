@@ -61,6 +61,8 @@ module.exports = {
     "no-nested-ternary": "off",
     "prefer-destructuring": "off",
     "no-param-reassign": "off",
+    "no-plusplus": "off",
+"no-empty": "off",
     "@typescript-eslint/no-unused-vars": [
       "warn",
       { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
