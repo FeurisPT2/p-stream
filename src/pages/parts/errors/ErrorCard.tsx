@@ -142,7 +142,14 @@ export function ErrorCardInPlainModal(props: {
 }) {
   if (!props.show || !props.error) return null;
   return (
-    <div className="fixed inset-0 flex h-full w-full items-center justify-center bg-black bg-opacity-30 p-12">
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[60] flex h-full w-full items-center justify-center bg-black bg-opacity-50 p-4 sm:p-12"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) props.onClose();
+      }}
+    >
       <div className="w-full max-w-2xl">
         <ErrorCard
           error={props.error}
