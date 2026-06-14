@@ -40,17 +40,49 @@ export function ScrapeErrorPart(props: ScrapeErrorPartProps) {
 
   const error = useMemo(() => {
     const data = props.data;
-    let str = "";
-    str += `URL - ${location.pathname}\n\n`;
-    Object.values(data.sources).forEach((v) => {
-      str += `${v.id}: ${v.status}\n`;
-      if (v.reason) str += `${v.reason}\n`;
-      if (v.error?.message)
-        str += `${v.error.name ?? "unknown"}: ${v.error.message}\n`;
-      else if (v.error) str += `${v.error.toString()}\n`;
+    const lines: string[] = [];
+    lines.push(`=== SCRAPE FAILURE ===`);
+    lines.push(`Time: ${new Date().toISOString()}`);
+    lines.push(`URL: ${location.pathname}${location.search}`);
+    lines.push(`Online: ${navigator.onLine}`);
+    lines.push(`Extension state: ${extensionState}`);
+    lines.push(`Extension active (cached): ${isExtensionActiveCached()}`);
+    lines.push(`Has febbox key: ${!!febboxKey}`);
+    lines.push(`User Agent: ${navigator.userAgent}`);
+    lines.push("");
+    lines.push(`=== SOURCE ORDER (${data.sourceOrder.length}) ===`);
+    data.sourceOrder.forEach((s, i) => {
+      const childCount = s.children?.length ?? 0;
+      lines.push(
+        `  ${i + 1}. ${s.id}${childCount > 0 ? ` (+${childCount} embeds)` : ""}`,
+      );
     });
-    return str;
-  }, [props, location]);
+    lines.push("");
+    lines.push(`=== SOURCE RESULTS (${Object.keys(data.sources).length}) ===`);
+    Object.values(data.sources).forEach((v) => {
+      lines.push(`--- ${v.id} ---`);
+      lines.push(`Status: ${v.status}`);
+      if (v.percentage !== undefined) lines.push(`Progress: ${v.percentage}%`);
+      if (v.reason) lines.push(`Reason: ${v.reason}`);
+      if (v.error) {
+        if (v.error instanceof Error) {
+          lines.push(`Error: ${v.error.name}: ${v.error.message}`);
+          if (v.error.stack) lines.push(`Stack:\n${v.error.stack}`);
+        } else if (typeof v.error === "object") {
+          const name = (v.error as any).name ?? "unknown";
+          const msg =
+            (v.error as any).message ?? JSON.stringify(v.error, null, 2);
+          lines.push(`Error: ${name}: ${msg}`);
+          const stack = (v.error as any).stack;
+          if (stack) lines.push(`Stack:\n${stack}`);
+        } else {
+          lines.push(`Error: ${String(v.error)}`);
+        }
+      }
+      lines.push("");
+    });
+    return lines.join("\n");
+  }, [props, location, extensionState, febboxKey]);
 
   useEffect(() => {
     getExtensionState().then((state: ExtensionStatus) => {

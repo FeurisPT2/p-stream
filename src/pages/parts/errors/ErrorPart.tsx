@@ -31,12 +31,6 @@ export function ErrorPart(props: { error: any; errorInfo: any }) {
   const { t } = useTranslation();
   const [showErrorCard, setShowErrorCard] = useState(false);
 
-  const maxLineCount = 5;
-  const errorLines = (props.errorInfo.componentStack || "")
-    .split("\n")
-    .slice(0, maxLineCount);
-
-  const error = `${props.error.toString()}\n${errorLines.join("\n")}`;
   const likelyAdBlocker = isAdBlockerError(props.error);
 
   return (
@@ -66,7 +60,8 @@ export function ErrorPart(props: { error: any; errorInfo: any }) {
             <ErrorCardInPlainModal
               show={showErrorCard}
               onClose={() => setShowErrorCard(false)}
-              error={error}
+              error={props.error}
+              componentStack={props.errorInfo?.componentStack}
             />
 
             <div className="flex gap-3">

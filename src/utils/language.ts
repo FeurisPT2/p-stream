@@ -178,7 +178,7 @@ export function getCountryCodeForLocale(locale: string): string | null {
 
   // If the language contains a region, check that against the countries and
   // return the region if it matches
-  const regionSubtag = tag?.region?.Subtag.toLowerCase();
+  const regionSubtag = tag?.region?.Subtag?.toLowerCase();
   if (regionSubtag) {
     const regionCode = output.countries.find(
       (c) =>
