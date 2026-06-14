@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/buttons/Button";
@@ -10,8 +10,28 @@ import {
   gatherErrorDebugInfo,
 } from "@/utils/errorDebugInfo";
 
+type AnyError = DisplayError | string | Error;
+
+function buildHeadline(
+  error: AnyError,
+  t: (key: string) => string,
+): string | null {
+  if (typeof error === "string") {
+    // First line of the string, in case it contains a stack trace.
+    const firstLine = error.split("\n", 1)[0];
+    return firstLine || error;
+  }
+  if (error instanceof Error) {
+    return `${error.name || "Error"}: ${error.message}`;
+  }
+  if (error.key) return `${error.type}: ${t(error.key)}`;
+  if (error.message) return `${error.type}: ${t(error.message)}`;
+  return null;
+}
+
 export function ErrorCard(props: {
-  error: DisplayError | string;
+  error: AnyError;
+  componentStack?: string;
   onClose: () => void;
 }) {
   const [hasCopied, setHasCopied] = useState(false);
@@ -20,20 +40,39 @@ export function ErrorCard(props: {
   );
   const { t } = useTranslation();
 
-  let errorMessage: string | null = null;
-  if (typeof props.error === "string") errorMessage = props.error;
-  else if (props.error.key)
-    errorMessage = `${props.error.type}: ${t(props.error.key)}`;
-  else if (props.error.message)
-    errorMessage = `${props.error.type}: ${t(props.error.message)}`;
+  const headline = useMemo(
+    () => buildHeadline(props.error, t),
+    [props.error, t],
+  );
+
+  // Build the full debug dump once per (error, componentStack) change.
+  // The same string is shown inline AND copied to clipboard, so what users
+  // can read is exactly what they paste back.
+  const formattedDebugInfo = useMemo(() => {
+    try {
+      const debugInfo = gatherErrorDebugInfo(
+        props.error,
+        props.componentStack,
+      );
+      return formatErrorDebugInfo(debugInfo);
+    } catch (e: any) {
+      // Never let the error reporter itself throw — fall back to a minimal dump.
+      const fallback =
+        typeof props.error === "string"
+          ? props.error
+          : props.error instanceof Error
+            ? `${props.error.name}: ${props.error.message}\n${props.error.stack ?? ""}`
+            : JSON.stringify(props.error, null, 2);
+      return `(failed to gather full debug info: ${e?.message ?? e})\n\n${fallback}`;
+    }
+  }, [props.error, props.componentStack]);
 
   function copyError() {
     if (!props.error || !navigator.clipboard) return;
 
-    const debugInfo = gatherErrorDebugInfo(props.error);
-    const formattedDebugInfo = formatErrorDebugInfo(debugInfo);
-
-    const fullErrorReport = `\`\`\`\n${errorMessage}\n\n${formattedDebugInfo}\n\`\`\``;
+    const fullErrorReport = headline
+      ? `\`\`\`\n${headline}\n\n${formattedDebugInfo}\n\`\`\``
+      : `\`\`\`\n${formattedDebugInfo}\n\`\`\``;
 
     navigator.clipboard.writeText(fullErrorReport);
 
@@ -81,8 +120,13 @@ export function ErrorCard(props: {
           </Button>
         </div>
       </div>
-      <div className="pointer-events-auto mt-4 h-60 select-text overflow-y-auto whitespace-pre text-left">
-        {errorMessage}
+      {headline ? (
+        <div className="mt-4 select-text break-words font-medium text-white">
+          {headline}
+        </div>
+      ) : null}
+      <div className="pointer-events-auto mt-3 max-h-[60vh] min-h-[15rem] select-text overflow-auto whitespace-pre-wrap break-words rounded bg-black/30 p-3 text-left font-mono text-xs leading-relaxed">
+        {formattedDebugInfo}
       </div>
       <p className="mt-4 text-sm">{t("player.playbackError.debugInfo")}</p>
     </div>
@@ -91,7 +135,8 @@ export function ErrorCard(props: {
 
 // use plain modal version if there is no access to history api (like in error boundary)
 export function ErrorCardInPlainModal(props: {
-  error?: DisplayError | string;
+  error?: AnyError;
+  componentStack?: string;
   onClose: () => void;
   show?: boolean;
 }) {
@@ -99,14 +144,19 @@ export function ErrorCardInPlainModal(props: {
   return (
     <div className="fixed inset-0 flex h-full w-full items-center justify-center bg-black bg-opacity-30 p-12">
       <div className="w-full max-w-2xl">
-        <ErrorCard error={props.error} onClose={props.onClose} />
+        <ErrorCard
+          error={props.error}
+          componentStack={props.componentStack}
+          onClose={props.onClose}
+        />
       </div>
     </div>
   );
 }
 
 export function ErrorCardInModal(props: {
-  error?: DisplayError | string;
+  error?: AnyError;
+  componentStack?: string;
   id: string;
   onClose: () => void;
 }) {
@@ -115,7 +165,11 @@ export function ErrorCardInModal(props: {
   return (
     <Modal id={props.id}>
       <div className="pointer-events-auto w-11/12 max-w-2xl">
-        <ErrorCard error={props.error} onClose={props.onClose} />
+        <ErrorCard
+          error={props.error}
+          componentStack={props.componentStack}
+          onClose={props.onClose}
+        />
       </div>
     </Modal>
   );

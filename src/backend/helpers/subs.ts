@@ -50,9 +50,8 @@ export async function downloadCaption(
   } else {
     const response = await fetch(caption.url);
     const contentType = response.headers.get("content-type") || "";
-    const charset = contentType.includes("charset=")
-      ? contentType.split("charset=")[1].toLowerCase()
-      : "utf-8";
+    const charset =
+      contentType.split("charset=")[1]?.trim().toLowerCase() || "utf-8";
 
     // Get the raw bytes
     const buffer = await response.arrayBuffer();

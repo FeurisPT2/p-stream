@@ -125,6 +125,10 @@ export const getCategoryColor = (category: string) => {
 };
 
 export const getCategoryLabel = (category: string) => {
+  if (!category || category.trim() === "") {
+    return category;
+  }
+
   switch (category.toLowerCase()) {
     case "announcement":
       return "Announcement";
