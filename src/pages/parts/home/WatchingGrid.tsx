@@ -26,7 +26,14 @@ export function WatchingGrid({
   const { t } = useTranslation();
   const progressItems = useProgressStore((s) => s.items);
   const removeItem = useProgressStore((s) => s.removeItem);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(() => {
+    return localStorage.getItem("__MW::watchingEditing") === "true";
+  });
+  
+  useEffect(() => {
+    localStorage.setItem("__MW::watchingEditing", editing.toString());
+  }, [editing]);
+
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     const saved = localStorage.getItem("__MW::watchingSort");
     return (saved as SortOption) || "date";
