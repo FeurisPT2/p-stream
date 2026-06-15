@@ -41,15 +41,15 @@ export function GenreChips() {
 
   return (
     <div
-      className="relative left-1/2 -translate-x-1/2 w-screen max-w-screen-xl mt-3 px-6"
+      className="relative left-1/2 -translate-x-1/2 w-screen max-w-screen-xl mt-6 px-6"
     >
       <div
         className={classNames(
-          "flex gap-2 mx-auto opacity-0 animate-fade-in",
-          "transition-[max-height] duration-700 ease-in-out overflow-hidden",
+          "flex gap-2 mx-auto py-2 opacity-0 animate-fade-in",
+          "transition-[max-height] duration-1000 ease-in-out overflow-hidden",
           expanded
             ? "flex-wrap justify-center max-h-[40rem]"
-            : "flex-nowrap justify-center max-h-12 overflow-x-auto scrollbar-none",
+            : "flex-nowrap justify-center max-h-16 overflow-x-auto scrollbar-none",
         )}
         style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}
       >

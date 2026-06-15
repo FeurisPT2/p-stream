@@ -33,6 +33,10 @@ const config: Config = {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
+        "gradient-flow": {
+          "0%": { "background-position": "0% 50%" },
+          "100%": { "background-position": "300% 50%" },
+        },
         "seek-left": {
           "0%": { transform: "translateX(0) scale(1)", opacity: "1" },
           "100%": { transform: "translateX(-50px) scale(1.2)", opacity: "0" },
@@ -45,6 +49,7 @@ const config: Config = {
       animation: {
         "loading-pin": "loading-pin 1.8s ease-in-out infinite",
         "fade-in": "fade-in 200ms ease-out forwards",
+        "gradient-flow": "gradient-flow 8s linear infinite",
         "seek-left": "seek-left 0.5s cubic-bezier(0, 0, 0.2, 1) forwards",
         "seek-right": "seek-right 0.5s cubic-bezier(0, 0, 0.2, 1) forwards",
       },
