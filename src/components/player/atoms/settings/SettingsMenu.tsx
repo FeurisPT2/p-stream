@@ -11,7 +11,7 @@ import { usePlayerStore } from "@/stores/player/store";
 import { qualityToString } from "@/stores/player/utils/qualities";
 import { useSubtitleStore } from "@/stores/subtitles";
 import { getPrettyLanguageNameFromLocale } from "@/utils/language";
-import { getVariantMeta } from "@p-stream/providers";
+import { getArtemisVariantMeta, getVariantMeta } from "@p-stream/providers";
 
 export function SettingsMenu({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -55,7 +55,12 @@ export function SettingsMenu({ id }: { id: string }) {
 
   const downloadable = source?.type === "file" || source?.type === "hls";
 
-  const variantMeta = currentSourceId === "aurora" ? getVariantMeta() : null;
+  const variantMeta =
+    currentSourceId === "aurora"
+      ? getVariantMeta()
+      : currentSourceId === "artemis"
+        ? getArtemisVariantMeta()
+        : null;
   const hasVariants = (variantMeta?.variants?.length ?? 0) > 1;
 
   return (

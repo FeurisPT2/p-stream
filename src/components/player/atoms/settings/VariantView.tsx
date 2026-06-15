@@ -48,22 +48,29 @@ export function VariantView({ id }: { id: string }) {
   const setSource = usePlayerStore((s) => s.setSource);
   const setCaption = usePlayerStore((s) => s.setCaption);
   const progressTime = usePlayerStore((s) => s.progress.time);
+  const currentSourceId = usePlayerStore((s) => s.sourceId);
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
 
-  const artemisMeta = getArtemisVariantMeta();
-  const auroraMeta = getVariantMeta();
-
+ 
   let mode: VariantMode = null;
-  if (artemisMeta?.variants && artemisMeta.variants.length > 0) {
-    mode = "artemis";
-  } else if (
-    auroraMeta?.variants &&
-    auroraMeta.variants.length > 0 &&
-    auroraMeta.shareKey
-  ) {
-    mode = "aurora";
+  let auroraMeta: ReturnType<typeof getVariantMeta> = null;
+  let artemisMeta: ReturnType<typeof getArtemisVariantMeta> = null;
+  if (currentSourceId === "artemis") {
+    artemisMeta = getArtemisVariantMeta();
+    if (artemisMeta?.variants && artemisMeta.variants.length > 0) {
+      mode = "artemis";
+    }
+  } else if (currentSourceId === "aurora") {
+    auroraMeta = getVariantMeta();
+    if (
+      auroraMeta?.variants &&
+      auroraMeta.variants.length > 0 &&
+      auroraMeta.shareKey
+    ) {
+      mode = "aurora";
+    }
   }
 
   const variants: AnyVariant[] =
