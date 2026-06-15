@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +16,82 @@ import { useOverlayStack } from "@/stores/interface/overlayStack";
 import { usePreferencesStore } from "@/stores/preferences";
 import { isAutoplayAllowed } from "@/utils/autoplay";
 import { getLocaleInfo, sortLangCodes } from "@/utils/language";
+
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: Icons;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 px-1">
+        <Icon icon={icon} className="text-base text-type-secondary" />
+        <h3 className="text-xs font-bold uppercase tracking-wider text-type-secondary">
+          {title}
+        </h3>
+      </div>
+      <div className="rounded-xl bg-dropdown-background/30 ring-1 ring-white/5 divide-y divide-white/5 overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ToggleRow({
+  title,
+  description,
+  enabled,
+  onChange,
+  disabled,
+  notice,
+  indent,
+}: {
+  title: string;
+  description?: ReactNode;
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+  notice?: ReactNode;
+  indent?: boolean;
+}) {
+  return (
+    <div
+      onClick={() => !disabled && onChange(!enabled)}
+      className={classNames(
+        "px-4 py-3 select-none flex items-start gap-4 transition-colors",
+        indent && "pl-8",
+        disabled
+          ? "cursor-not-allowed opacity-50 pointer-events-none"
+          : "cursor-pointer hover:bg-white/[0.03]",
+      )}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold leading-snug">{title}</p>
+        {description ? (
+          <p className="text-sm text-type-secondary mt-1 leading-snug">
+            {description}
+          </p>
+        ) : null}
+        {notice ? (
+          <div className="mt-1.5 flex items-start gap-2 text-xs text-type-secondary">
+            <Icon
+              icon={Icons.CIRCLE_EXCLAMATION}
+              className="mt-0.5 shrink-0"
+            />
+            <span>{notice}</span>
+          </div>
+        ) : null}
+      </div>
+      <div className="shrink-0 pt-0.5">
+        <Toggle enabled={enabled} />
+      </div>
+    </div>
+  );
+}
 
 export function PreferencesPart(props: {
   language: string;
@@ -47,13 +123,16 @@ export function PreferencesPart(props: {
 }) {
   const { t } = useTranslation();
   const { showModal } = useOverlayStack();
+  const navigate = useNavigate();
   const [isSourceListExpanded, setIsSourceListExpanded] = useState(false);
+
   const enableGamepadControls = usePreferencesStore(
     (s) => s.enableGamepadControls,
   );
   const setEnableGamepadControls = usePreferencesStore(
     (s) => s.setEnableGamepadControls,
   );
+
   const sorted = sortLangCodes(
     appLanguageOptions.map((item) => item.code),
     props.language,
@@ -84,26 +163,19 @@ export function PreferencesPart(props: {
     }));
   }, [props.sourceOrder, allSources]);
 
-  const navigate = useNavigate();
-
-  const handleLowPerformanceModeToggle = () => {
-    props.setEnableLowPerformanceMode(!props.enableLowPerformanceMode);
-  };
-
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       <Heading1 border>{t("settings.preferences.title")}</Heading1>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Column */}
-        <div className="space-y-8">
-          {/* Language Preference */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.preferences.language")}
-            </p>
-            <p className="max-w-[20rem] font-medium">
-              {t("settings.preferences.languageDescription")}
-            </p>
+
+      <Section title="Language" icon={Icons.TRANSLATE}>
+        <div className="px-4 py-3">
+          <p className="text-white font-semibold leading-snug">
+            {t("settings.preferences.language")}
+          </p>
+          <p className="text-sm text-type-secondary mt-1 leading-snug max-w-[24rem]">
+            {t("settings.preferences.languageDescription")}
+          </p>
+          <div className="mt-3 max-w-[24rem]">
             <Dropdown
               className="w-full"
               options={options}
@@ -111,316 +183,149 @@ export function PreferencesPart(props: {
               setSelectedItem={(opt) => props.setLanguage(opt.id)}
             />
           </div>
+        </div>
+      </Section>
 
-          {/* Thumbnail Preference */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.preferences.thumbnail")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.preferences.thumbnailDescription")}
-            </p>
-            <div
-              onClick={() => {
-                if (!props.enableLowPerformanceMode) {
-                  props.setEnableThumbnails(!props.enableThumbnails);
-                }
-              }}
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                props.enableLowPerformanceMode
-                  ? "cursor-not-allowed opacity-50 pointer-events-none"
-                  : "cursor-pointer opacity-100 pointer-events-auto",
-              )}
-            >
-              <Toggle enabled={props.enableThumbnails} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.preferences.thumbnailLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Autoplay Preference */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.preferences.autoplay")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.preferences.autoplayDescription")}
-            </p>
-            <div
-              onClick={() =>
-                allowAutoplay && !props.enableLowPerformanceMode
-                  ? props.setEnableAutoplay(!props.enableAutoplay)
-                  : null
-              }
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                allowAutoplay && !props.enableLowPerformanceMode
-                  ? "cursor-pointer opacity-100 pointer-events-auto"
-                  : "cursor-not-allowed opacity-50 pointer-events-none",
-              )}
-            >
-              <Toggle enabled={props.enableAutoplay && allowAutoplay} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.preferences.autoplayLabel")}
-              </p>
-            </div>
-
-            {/* Skip End Credits Preference */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="space-y-8">
+          <Section title="Playback" icon={Icons.PLAY}>
+            <ToggleRow
+              title={t("settings.preferences.autoplayLabel")}
+              description={t("settings.preferences.autoplayDescription")}
+              enabled={props.enableAutoplay && allowAutoplay}
+              onChange={(v) => props.setEnableAutoplay(v)}
+              disabled={!allowAutoplay || props.enableLowPerformanceMode}
+            />
             {props.enableAutoplay &&
               allowAutoplay &&
               !props.enableLowPerformanceMode && (
-                <div className="pt-4 pl-4 border-l-8 border-dropdown-background">
-                  <p className="text-white font-bold mb-3">
-                    {t("settings.preferences.skipCredits")}
-                  </p>
-                  <p className="max-w-[25rem] font-medium">
-                    {t("settings.preferences.skipCreditsDescription")}
-                  </p>
-                  <div
-                    onClick={() =>
-                      props.setEnableSkipCredits(!props.enableSkipCredits)
-                    }
-                    className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-                  >
-                    <Toggle enabled={props.enableSkipCredits} />
-                    <p className="flex-1 text-white font-bold">
-                      {t("settings.preferences.skipCreditsLabel")}
-                    </p>
-                  </div>
-
-                  {/* Auto Skip Segments Preference */}
-                  <div className="pt-4 mt-4">
-                    <p className="text-white font-bold mb-3">
-                      {t("settings.preferences.autoSkipSegments")}
-                    </p>
-                    <p className="max-w-[25rem] font-medium">
-                      {t("settings.preferences.autoSkipSegmentsDescription")}
-                    </p>
-                    <div
-                      onClick={() =>
-                        props.setEnableAutoSkipSegments(
-                          !props.enableAutoSkipSegments,
-                        )
-                      }
-                      className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-                    >
-                      <Toggle enabled={props.enableAutoSkipSegments} />
-                      <p className="flex-1 text-white font-bold">
-                        {t("settings.preferences.autoSkipSegmentsLabel")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <>
+                  <ToggleRow
+                    indent
+                    title={t("settings.preferences.skipCreditsLabel")}
+                    description={t("settings.preferences.skipCreditsDescription")}
+                    enabled={props.enableSkipCredits}
+                    onChange={(v) => props.setEnableSkipCredits(v)}
+                  />
+                  <ToggleRow
+                    indent
+                    title={t("settings.preferences.autoSkipSegmentsLabel")}
+                    description={t(
+                      "settings.preferences.autoSkipSegmentsDescription",
+                    )}
+                    enabled={props.enableAutoSkipSegments}
+                    onChange={(v) => props.setEnableAutoSkipSegments(v)}
+                  />
+                </>
               )}
-          </div>
-          {/* Low Performance Mode */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.preferences.lowPerformanceMode")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.preferences.lowPerformanceModeDescription")}
-            </p>
-            <div
-              onClick={handleLowPerformanceModeToggle}
-              className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-            >
-              <Toggle enabled={props.enableLowPerformanceMode} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.preferences.lowPerformanceModeLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Hold to Boost Preference */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.preferences.holdToBoost")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.preferences.holdToBoostDescription")}
-            </p>
-            <div
-              onClick={() =>
-                props.setEnableHoldToBoost(!props.enableHoldToBoost)
-              }
-              className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-            >
-              <Toggle enabled={props.enableHoldToBoost} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.preferences.holdToBoostLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Double Click to Seek Preference */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.preferences.doubleClickToSeek")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.preferences.doubleClickToSeekDescription")}
-            </p>
-            <div
-              onClick={() =>
-                props.setEnableDoubleClickToSeek(!props.enableDoubleClickToSeek)
-              }
-              className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-            >
-              <Toggle enabled={props.enableDoubleClickToSeek} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.preferences.doubleClickToSeekLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Keyboard Shortcuts Preference */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.preferences.keyboardShortcuts")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.preferences.keyboardShortcutsDescription")}
-            </p>
-          </div>
-          <div className="flex gap-3 max-w-[25rem]">
-            <Button
-              theme="secondary"
-              onClick={() => showModal("keyboard-commands-edit")}
-              className="flex-1"
-            >
-              {t("settings.preferences.keyboardShortcutsLabel")}
-            </Button>
-            <Button
-              theme="secondary"
-              onClick={() => showModal("gamepad-controls-edit")}
-              className="flex-1"
-            >
-              {" "}
-              {t(
-                "settings.preferences.gamepadControlsLabel",
-                "Customizze Controller Keybinds",
+            <ToggleRow
+              title={t("settings.preferences.lowPerformanceModeLabel")}
+              description={t(
+                "settings.preferences.lowPerformanceModeDescription",
               )}
-            </Button>
-          </div>
+              enabled={props.enableLowPerformanceMode}
+              onChange={(v) => props.setEnableLowPerformanceMode(v)}
+            />
+          </Section>
 
-          {/* Gamepad Enable Toggle */}
-          <div
-            onClick={() => setEnableGamepadControls(!enableGamepadControls)}
-            className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-          >
-            <Toggle enabled={enableGamepadControls} />
-            <p className="flex-1 text-white font-bold">
-              {t(
+          <Section title="Player Controls" icon={Icons.TACHOMETER}>
+            <ToggleRow
+              title={t("settings.preferences.holdToBoostLabel")}
+              description={t("settings.preferences.holdToBoostDescription")}
+              enabled={props.enableHoldToBoost}
+              onChange={(v) => props.setEnableHoldToBoost(v)}
+            />
+            <ToggleRow
+              title={t("settings.preferences.doubleClickToSeekLabel")}
+              description={t(
+                "settings.preferences.doubleClickToSeekDescription",
+              )}
+              enabled={props.enableDoubleClickToSeek}
+              onChange={(v) => props.setEnableDoubleClickToSeek(v)}
+            />
+            <ToggleRow
+              title={t(
                 "settings.preferences.enableGamepadControls",
                 "Enable controller support",
               )}
-            </p>
-          </div>
+              enabled={enableGamepadControls}
+              onChange={(v) => setEnableGamepadControls(v)}
+            />
+            <div className="px-4 py-3 space-y-2">
+              <p className="text-white font-semibold leading-snug">
+                {t("settings.preferences.keyboardShortcuts")}
+              </p>
+              <p className="text-sm text-type-secondary leading-snug">
+                {t("settings.preferences.keyboardShortcutsDescription")}
+              </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Button
+                  theme="secondary"
+                  onClick={() => showModal("keyboard-commands-edit")}
+                >
+                  {t("settings.preferences.keyboardShortcutsLabel")}
+                </Button>
+                <Button
+                  theme="secondary"
+                  onClick={() => showModal("gamepad-controls-edit")}
+                >
+                  {t(
+                    "settings.preferences.gamepadControlsLabel",
+                    "Customizze Controller Keybinds",
+                  )}
+                </Button>
+              </div>
+            </div>
+          </Section>
         </div>
 
-        {/* Column */}
         <div id="source-order" className="space-y-8">
-          <div className="flex flex-col gap-3">
-            {/* Manual Source Selection */}
-            <div>
-              <p className="text-white font-bold mb-3">
-                {t("settings.preferences.manualSource")}
-              </p>
-              <p className="max-w-[25rem] font-medium">
-                {t("settings.preferences.manualSourceDescription")}
-              </p>
-              <div
-                onClick={() =>
-                  props.setManualSourceSelection(!props.manualSourceSelection)
-                }
-                className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-              >
-                <Toggle enabled={props.manualSourceSelection} />
-                <p className="flex-1 text-white font-bold">
-                  {t("settings.preferences.manualSourceLabel")}
-                </p>
-              </div>
-            </div>
-
-            {/* Auto Resume on Playback Error */}
-            <div>
-              <p className="text-white font-bold mb-3">
-                {t("settings.preferences.autoResumeOnPlaybackError")}
-              </p>
-              <p className="max-w-[25rem] font-medium">
-                {t("settings.preferences.autoResumeOnPlaybackErrorDescription")}
-              </p>
-              <div
-                onClick={() =>
-                  props.setEnableAutoResumeOnPlaybackError(
-                    !props.enableAutoResumeOnPlaybackError,
-                  )
-                }
-                className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-              >
-                <Toggle enabled={props.enableAutoResumeOnPlaybackError} />
-                <p className="flex-1 text-white font-bold">
-                  {t("settings.preferences.autoResumeOnPlaybackErrorLabel")}
-                </p>
-              </div>
-            </div>
-
-            {/* Last Successful Source Preference */}
-            <div>
-              <p className="text-white font-bold mb-3">
-                {t("settings.preferences.lastSuccessfulSource")}
-              </p>
-              <p className="max-w-[25rem] font-medium">
-                {t("settings.preferences.lastSuccessfulSourceDescription")}
-              </p>
-              <div
-                onClick={() =>
-                  props.setEnableLastSuccessfulSource(
-                    !props.enableLastSuccessfulSource,
-                  )
-                }
-                className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-              >
-                <Toggle enabled={props.enableLastSuccessfulSource} />
-                <p className="flex-1 text-white font-bold">
-                  {t("settings.preferences.lastSuccessfulSourceEnableLabel")}
-                </p>
-              </div>
-            </div>
-
-            <p className="text-white font-bold">
-              {t("settings.preferences.sourceOrder")}
-            </p>
-            <div className="max-w-[25rem] font-medium">
-              <Trans
-                i18nKey="settings.preferences.sourceOrderDescription"
-                components={{
-                  bold: (
-                    <span
-                      className="text-type-link font-bold cursor-pointer"
-                      onClick={() => navigate("/onboarding/extension")}
-                    />
-                  ),
-                }}
-              />
-              <div
-                onClick={() =>
-                  props.setenableSourceOrder(!props.enableSourceOrder)
-                }
-                className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-              >
-                <Toggle enabled={props.enableSourceOrder} />
-                <p className="flex-1 text-white font-bold">
-                  {t("settings.preferences.sourceOrderEnableLabel")}
-                </p>
-              </div>
-            </div>
-
+          <Section title="Sources" icon={Icons.WEB}>
+            <ToggleRow
+              title={t("settings.preferences.manualSourceLabel")}
+              description={t("settings.preferences.manualSourceDescription")}
+              enabled={props.manualSourceSelection}
+              onChange={(v) => props.setManualSourceSelection(v)}
+            />
+            <ToggleRow
+              title={t("settings.preferences.autoResumeOnPlaybackErrorLabel")}
+              description={t(
+                "settings.preferences.autoResumeOnPlaybackErrorDescription",
+              )}
+              enabled={props.enableAutoResumeOnPlaybackError}
+              onChange={(v) => props.setEnableAutoResumeOnPlaybackError(v)}
+            />
+            <ToggleRow
+              title={t("settings.preferences.lastSuccessfulSourceEnableLabel")}
+              description={t(
+                "settings.preferences.lastSuccessfulSourceDescription",
+              )}
+              enabled={props.enableLastSuccessfulSource}
+              onChange={(v) => props.setEnableLastSuccessfulSource(v)}
+            />
+            <ToggleRow
+              title={t("settings.preferences.sourceOrderEnableLabel")}
+              description={
+                <Trans
+                  i18nKey="settings.preferences.sourceOrderDescription"
+                  components={{
+                    bold: (
+                      <span
+                        className="text-type-link font-bold cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate("/onboarding/extension");
+                        }}
+                      />
+                    ),
+                  }}
+                />
+              }
+              enabled={props.enableSourceOrder}
+              onChange={(v) => props.setenableSourceOrder(v)}
+            />
             {props.enableSourceOrder && (
-              <div className="w-full flex flex-col gap-4">
+              <div className="px-4 py-3 space-y-3">
                 <div
                   className={classNames(
                     "overflow-hidden transition-all duration-300",
@@ -436,38 +341,38 @@ export function PreferencesPart(props: {
                     }
                   />
                 </div>
-                {sourceItems.length > 10 && (
+                <div className="flex flex-wrap gap-2">
+                  {sourceItems.length > 10 && (
+                    <Button
+                      theme="secondary"
+                      onClick={() =>
+                        setIsSourceListExpanded(!isSourceListExpanded)
+                      }
+                    >
+                      {isSourceListExpanded
+                        ? t("settings.preferences.showLess")
+                        : t("settings.preferences.showMore")}
+                      <Icon
+                        icon={
+                          isSourceListExpanded
+                            ? Icons.CHEVRON_UP
+                            : Icons.CHEVRON_DOWN
+                        }
+                      />
+                    </Button>
+                  )}
                   <Button
-                    className="max-w-[25rem]"
                     theme="secondary"
                     onClick={() =>
-                      setIsSourceListExpanded(!isSourceListExpanded)
+                      props.setSourceOrder(allSources.map((s) => s.id))
                     }
                   >
-                    {isSourceListExpanded
-                      ? t("settings.preferences.showLess")
-                      : t("settings.preferences.showMore")}
-                    <Icon
-                      icon={
-                        isSourceListExpanded
-                          ? Icons.CHEVRON_UP
-                          : Icons.CHEVRON_DOWN
-                      }
-                    />
+                    {t("settings.reset")}
                   </Button>
-                )}
-                <Button
-                  className="max-w-[25rem]"
-                  theme="secondary"
-                  onClick={() =>
-                    props.setSourceOrder(allSources.map((s) => s.id))
-                  }
-                >
-                  {t("settings.reset")}
-                </Button>
+                </div>
               </div>
             )}
-          </div>
+          </Section>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/buttons/Button";
@@ -15,6 +15,82 @@ import { useAuthStore } from "@/stores/auth";
 import { useBookmarkStore } from "@/stores/bookmarks";
 import { useGroupOrderStore } from "@/stores/groupOrder";
 import { SavedCustomTheme } from "@/stores/theme";
+
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: Icons;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 px-1">
+        <Icon icon={icon} className="text-base text-type-secondary" />
+        <h3 className="text-xs font-bold uppercase tracking-wider text-type-secondary">
+          {title}
+        </h3>
+      </div>
+      <div className="rounded-xl bg-dropdown-background/30 ring-1 ring-white/5 divide-y divide-white/5 overflow-hidden">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ToggleRow({
+  title,
+  description,
+  enabled,
+  onChange,
+  disabled,
+  notice,
+  indent,
+}: {
+  title: string;
+  description?: ReactNode;
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+  notice?: ReactNode;
+  indent?: boolean;
+}) {
+  return (
+    <div
+      onClick={() => !disabled && onChange(!enabled)}
+      className={classNames(
+        "px-4 py-3 select-none flex items-start gap-4 transition-colors",
+        indent && "pl-8",
+        disabled
+          ? "cursor-not-allowed opacity-50 pointer-events-none"
+          : "cursor-pointer hover:bg-white/[0.03]",
+      )}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold leading-snug">{title}</p>
+        {description ? (
+          <p className="text-sm text-type-secondary mt-1 leading-snug">
+            {description}
+          </p>
+        ) : null}
+        {notice ? (
+          <div className="mt-1.5 flex items-start gap-2 text-xs text-type-secondary">
+            <Icon
+              icon={Icons.CIRCLE_EXCLAMATION}
+              className="mt-0.5 shrink-0"
+            />
+            <span>{notice}</span>
+          </div>
+        ) : null}
+      </div>
+      <div className="shrink-0 pt-0.5">
+        <Toggle enabled={enabled} />
+      </div>
+    </div>
+  );
+}
 
 const availableThemes = [
   {
@@ -426,248 +502,107 @@ export function AppearancePart(props: {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* First Column - Preferences */}
         <div className="space-y-8">
-          {/* Discover */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.discover")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.appearance.options.discoverDescription")}
-            </p>
-            <div
-              onClick={() => {
-                if (!props.enableLowPerformanceMode) {
-                  const newDiscoverValue = !props.enableDiscover;
-                  props.setEnableDiscover(newDiscoverValue);
-                  if (!newDiscoverValue) {
-                    props.setEnableFeatured(false);
-                  }
-                }
+          <Section title="Home Page" icon={Icons.LAYOUT}>
+            <ToggleRow
+              title={t("settings.appearance.options.discoverLabel")}
+              description={t("settings.appearance.options.discoverDescription")}
+              enabled={props.enableDiscover}
+              onChange={(v) => {
+                props.setEnableDiscover(v);
+                if (!v) props.setEnableFeatured(false);
               }}
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                props.enableLowPerformanceMode
-                  ? "cursor-not-allowed opacity-50 pointer-events-none"
-                  : "cursor-pointer opacity-100 pointer-events-auto",
+              disabled={props.enableLowPerformanceMode}
+            />
+            {props.enableDiscover && !props.enableLowPerformanceMode && (
+              <ToggleRow
+                indent
+                title={t("settings.appearance.options.featuredLabel")}
+                description={t(
+                  "settings.appearance.options.featuredDescription",
+                )}
+                enabled={props.enableFeatured}
+                onChange={(v) => props.setEnableFeatured(v)}
+              />
+            )}
+            <ToggleRow
+              title={t("settings.appearance.options.modalLabel")}
+              description={t("settings.appearance.options.modalDescription")}
+              enabled={props.enableDetailsModal}
+              onChange={(v) => props.setEnableDetailsModal(v)}
+              disabled={props.enableLowPerformanceMode}
+            />
+            <ToggleRow
+              title={t("settings.appearance.options.logosLabel")}
+              description={t("settings.appearance.options.logosDescription")}
+              notice={t("settings.appearance.options.logosNotice")}
+              enabled={props.enableImageLogos}
+              onChange={(v) => props.setEnableImageLogos(v)}
+              disabled={props.enableLowPerformanceMode}
+            />
+            <ToggleRow
+              title={t("settings.appearance.options.carouselViewLabel")}
+              description={t(
+                "settings.appearance.options.carouselViewDescription",
               )}
-            >
-              <Toggle enabled={props.enableDiscover} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.discoverLabel")}
+              enabled={props.enableCarouselView}
+              onChange={(v) => props.setEnableCarouselView(v)}
+            />
+            <ToggleRow
+              title={t("settings.appearance.options.minimalCardsLabel")}
+              description={t(
+                "settings.appearance.options.minimalCardsDescription",
+              )}
+              enabled={props.enableMinimalCards}
+              onChange={(v) => props.setEnableMinimalCards(v)}
+            />
+            <div className="px-4 py-3 space-y-2">
+              <p className="text-white font-semibold leading-snug">
+                {t("settings.appearance.options.homeSectionOrder")}
               </p>
-            </div>
-          </div>
-          {/* Featured Carousel */}
-          {props.enableDiscover && !props.enableLowPerformanceMode && (
-            <div className="pt-4 pl-4 border-l-8 border-dropdown-background">
-              <p className="text-white font-bold mb-3">
-                {t("settings.appearance.options.featured")}
+              <p className="text-sm text-type-secondary leading-snug">
+                {t("settings.appearance.options.homeSectionOrderDescription")}
               </p>
-              <p className="max-w-[25rem] font-medium">
-                {t("settings.appearance.options.featuredDescription")}
-              </p>
-              <div
-                onClick={() => props.setEnableFeatured(!props.enableFeatured)}
-                className="bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg"
-              >
-                <Toggle enabled={props.enableFeatured} />
-                <p className="flex-1 text-white font-bold">
-                  {t("settings.appearance.options.featuredLabel")}
-                </p>
+              <div className="pt-2">
+                <SortableList
+                  items={props.homeSectionOrder.map((section) => ({
+                    id: section,
+                    name: t(`settings.appearance.sections.${section}`),
+                  }))}
+                  setItems={(items) => {
+                    const newOrder = items.map((item) => item.id);
+                    props.setHomeSectionOrder(newOrder);
+                  }}
+                />
               </div>
-            </div>
-          )}
-          {/* Detials Modal */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.modal")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.appearance.options.modalDescription")}
-            </p>
-            <div
-              onClick={() =>
-                !props.enableLowPerformanceMode &&
-                props.setEnableDetailsModal(!props.enableDetailsModal)
-              }
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                props.enableLowPerformanceMode
-                  ? "cursor-not-allowed opacity-50 pointer-events-none"
-                  : "cursor-pointer opacity-100 pointer-events-auto",
+              {hasGroups && (
+                <div className="pt-2">
+                  <Button theme="secondary" onClick={handleEditGroupOrder}>
+                    {t("settings.appearance.options.homeSectionOrderGroups")}
+                  </Button>
+                </div>
               )}
-            >
-              <Toggle enabled={props.enableDetailsModal} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.modalLabel")}
-              </p>
             </div>
-          </div>
-          {/* Image Logos */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.logos")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.appearance.options.logosDescription")}
-            </p>
-            <p className="max-w-[25rem] font-medium pt-2 items-center flex gap-4">
-              <Icon icon={Icons.CIRCLE_EXCLAMATION} className="" />
+          </Section>
 
-              {t("settings.appearance.options.logosNotice")}
-            </p>
-            <div
-              onClick={() =>
-                !props.enableLowPerformanceMode &&
-                props.setEnableImageLogos(!props.enableImageLogos)
-              }
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                props.enableLowPerformanceMode
-                  ? "cursor-not-allowed opacity-50 pointer-events-none"
-                  : "cursor-pointer opacity-100 pointer-events-auto",
+          <Section title="Player UI" icon={Icons.CLAPPER_BOARD}>
+            <ToggleRow
+              title={t("settings.appearance.options.pauseOverlayLabel")}
+              enabled={props.enablePauseOverlay}
+              onChange={(v) => props.setEnablePauseOverlay(v)}
+              disabled={props.enableLowPerformanceMode}
+            />
+            <ToggleRow
+              title={t(
+                "settings.appearance.options.forceCompactEpisodeViewLabel",
               )}
-            >
-              <Toggle enabled={props.enableImageLogos} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.logosLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Pause Overlay */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.pauseOverlay")}
-            </p>
-            <div
-              onClick={() =>
-                !props.enableLowPerformanceMode &&
-                props.setEnablePauseOverlay(!props.enablePauseOverlay)
-              }
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                props.enableLowPerformanceMode
-                  ? "cursor-not-allowed opacity-50 pointer-events-none"
-                  : "cursor-pointer opacity-100 pointer-events-auto",
-              )}
-            >
-              <Toggle enabled={props.enablePauseOverlay} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.pauseOverlayLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Carousel View */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.carouselView")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.appearance.options.carouselViewDescription")}
-            </p>
-            <div
-              onClick={() =>
-                props.setEnableCarouselView(!props.enableCarouselView)
-              }
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                "cursor-pointer opacity-100 pointer-events-auto",
-              )}
-            >
-              <Toggle enabled={props.enableCarouselView} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.carouselViewLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Minimal Cards */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.minimalCards")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.appearance.options.minimalCardsDescription")}
-            </p>
-            <div
-              onClick={() =>
-                props.setEnableMinimalCards(!props.enableMinimalCards)
-              }
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                "cursor-pointer opacity-100 pointer-events-auto",
-              )}
-            >
-              <Toggle enabled={props.enableMinimalCards} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.minimalCardsLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Force Compact Episode View */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.forceCompactEpisodeView")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t(
+              description={t(
                 "settings.appearance.options.forceCompactEpisodeViewDescription",
               )}
-            </p>
-            <div
-              onClick={() =>
-                !props.enableLowPerformanceMode &&
-                props.setForceCompactEpisodeView(!props.forceCompactEpisodeView)
-              }
-              className={classNames(
-                "bg-dropdown-background hover:bg-dropdown-hoverBackground select-none my-4 cursor-pointer space-x-3 flex items-center max-w-[25rem] py-3 px-4 rounded-lg",
-                props.enableLowPerformanceMode
-                  ? "cursor-not-allowed opacity-50 pointer-events-none"
-                  : "cursor-pointer opacity-100 pointer-events-auto",
-              )}
-            >
-              <Toggle enabled={props.forceCompactEpisodeView} />
-              <p className="flex-1 text-white font-bold">
-                {t("settings.appearance.options.forceCompactEpisodeViewLabel")}
-              </p>
-            </div>
-          </div>
-
-          {/* Home Section Order */}
-          <div>
-            <p className="text-white font-bold mb-3">
-              {t("settings.appearance.options.homeSectionOrder")}
-            </p>
-            <p className="max-w-[25rem] font-medium">
-              {t("settings.appearance.options.homeSectionOrderDescription")}
-            </p>
-            <div className="my-4 max-w-[25rem]">
-              <SortableList
-                items={props.homeSectionOrder.map((section) => ({
-                  id: section,
-                  name: t(`settings.appearance.sections.${section}`),
-                }))}
-                setItems={(items) => {
-                  const newOrder = items.map((item) => item.id);
-                  props.setHomeSectionOrder(newOrder);
-                }}
-              />
-            </div>
-            {hasGroups && (
-              <div className="mt-4 max-w-[25rem]">
-                <Button
-                  theme="secondary"
-                  onClick={handleEditGroupOrder}
-                  className="w-full"
-                >
-                  {t("settings.appearance.options.homeSectionOrderGroups")}
-                </Button>
-              </div>
-            )}
-          </div>
+              enabled={props.forceCompactEpisodeView}
+              onChange={(v) => props.setForceCompactEpisodeView(v)}
+              disabled={props.enableLowPerformanceMode}
+            />
+          </Section>
         </div>
 
         {/* Second Column - Themes */}
