@@ -1,8 +1,11 @@
 import { useCallback, useState } from "react";
 
 import {
+  ArtemisFileVariant,
   FileVariant,
+  getArtemisVariantMeta,
   getVariantMeta,
+  resolveArtemisVariant,
   resolveVariant,
 } from "@p-stream/providers";
 
@@ -11,11 +14,20 @@ import { Menu } from "@/components/player/internals/ContextMenu";
 import { useOverlayRouter } from "@/hooks/useOverlayRouter";
 import { usePlayerStore } from "@/stores/player/store";
 
-function formatVariantLabel(v: FileVariant): string {
+
+type AnyVariant = FileVariant | ArtemisFileVariant;
+
+
+type VariantMode = "artemis" | "aurora" | null;
+
+function formatVariantLabel(v: AnyVariant): string {
   const parts: string[] = [];
   if (v.quality) parts.push(v.quality);
   if (v.codec) parts.push(v.codec);
   if (v.tag === "bw") parts.push("B&W");
+  else if (v.tag === "dv") parts.push("Dolby Vision");
+  else if (v.tag === "hdr") parts.push("HDR");
+  else if (v.tag === "remux") parts.push("REMUX");
   return parts.length > 0 ? parts.join(" · ") : v.name;
 }
 
@@ -39,9 +51,27 @@ export function VariantView({ id }: { id: string }) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const meta = getVariantMeta();
-  const variants = meta?.variants ?? [];
-  const shareKey = meta?.shareKey ?? "";
+
+  const artemisMeta = getArtemisVariantMeta();
+  const auroraMeta = getVariantMeta();
+
+  let mode: VariantMode = null;
+  if (artemisMeta?.variants && artemisMeta.variants.length > 0) {
+    mode = "artemis";
+  } else if (
+    auroraMeta?.variants &&
+    auroraMeta.variants.length > 0 &&
+    auroraMeta.shareKey
+  ) {
+    mode = "aurora";
+  }
+
+  const variants: AnyVariant[] =
+    mode === "artemis"
+      ? (artemisMeta?.variants ?? [])
+      : mode === "aurora"
+      ? (auroraMeta?.variants ?? [])
+      : [];
 
   const hasBW = variants.some((v) => v.tag === "bw");
   const hasColor = variants.some((v) => v.tag !== "bw");
@@ -52,78 +82,105 @@ export function VariantView({ id }: { id: string }) {
     : variants;
 
   const switchToVariant = useCallback(
-    async (variant: FileVariant) => {
-      const token = getUserToken();
-      if (!token || !shareKey) return;
-
+    async (variant: AnyVariant) => {
       setLoading(variant.fid);
       setError(null);
       try {
-        const result = await resolveVariant(variant.fid, shareKey, token);
-        if (!result?.streams || Object.keys(result.streams).length === 0) {
-          setError(variant.fid);
+        if (mode === "artemis") {
+          
+          const res = resolveArtemisVariant(variant.fid);
+          if (!res?.url) {
+            setError(variant.fid);
+            return;
+          }
+          setSource({ type: "hls", url: res.url }, [], progressTime);
+          setCaption(null);
+          router.close();
           return;
         }
 
-        const captions = result.subtitles
-          ? Object.entries(result.subtitles).map(([key, sub]) => ({
-              id: sub.subtitle_link,
-              language:
-                key.split("_")[0].charAt(0).toUpperCase() +
-                key.split("_")[0].slice(1),
-              url: sub.subtitle_link,
-              needsProxy: false,
-              type: sub.subtitle_link.toLowerCase().endsWith(".vtt")
-                ? "vtt"
-                : "srt",
-            }))
-          : [];
+        if (mode === "aurora") {
+          const token = getUserToken();
+          const shareKey = auroraMeta?.shareKey ?? "";
+          if (!token || !shareKey) return;
 
-        const parsed: Record<string, { url: string; type: "hls" | "mp4" }> =
-          {};
-        for (const [quality, entry] of Object.entries(result.streams)) {
-          if (quality === "AUTO") {
-            parsed.auto = { url: entry.url, type: entry.type };
-          } else if (quality === "4K") {
-            parsed["2160"] = { url: entry.url, type: entry.type };
-          } else if (quality === "ORG") {
-            parsed.unknown = { url: entry.url, type: entry.type };
-          } else {
-            const num = parseInt(quality.replace("P", ""), 10);
-            if (!Number.isNaN(num)) parsed[String(num)] = { url: entry.url, type: entry.type };
+          const result = await resolveVariant(variant.fid, shareKey, token);
+          if (!result?.streams || Object.keys(result.streams).length === 0) {
+            setError(variant.fid);
+            return;
           }
-        }
 
-        const hlsStream =
-          parsed.auto ??
-          parsed["2160"] ??
-          parsed["1080"] ??
-          parsed["720"] ??
-          parsed["480"] ??
-          parsed["360"] ??
-          parsed.unknown;
+          const captions = result.subtitles
+            ? Object.entries(result.subtitles).map(([key, sub]) => ({
+                id: sub.subtitle_link,
+                language:
+                  key.split("_")[0].charAt(0).toUpperCase() +
+                  key.split("_")[0].slice(1),
+                url: sub.subtitle_link,
+                needsProxy: false,
+                type: sub.subtitle_link.toLowerCase().endsWith(".vtt")
+                  ? "vtt"
+                  : "srt",
+              }))
+            : [];
 
-        if (hlsStream?.type === "hls") {
-          setSource({ type: "hls", url: hlsStream.url }, captions, progressTime);
-        } else {
-          const qualities: Record<string, { type: "mp4"; url: string }> = {};
-          if (parsed["2160"]) qualities["4k"] = { type: "mp4", url: parsed["2160"].url };
-          if (parsed["1080"]) qualities["1080"] = { type: "mp4", url: parsed["1080"].url };
-          if (parsed["720"]) qualities["720"] = { type: "mp4", url: parsed["720"].url };
-          if (parsed["480"]) qualities["480"] = { type: "mp4", url: parsed["480"].url };
-          if (parsed["360"]) qualities["360"] = { type: "mp4", url: parsed["360"].url };
-          if (parsed.unknown) qualities.unknown = { type: "mp4", url: parsed.unknown.url };
-          setSource({ type: "file", qualities }, captions, progressTime);
+          const parsed: Record<string, { url: string; type: "hls" | "mp4" }> =
+            {};
+          for (const [quality, entry] of Object.entries(result.streams)) {
+            if (quality === "AUTO") {
+              parsed.auto = { url: entry.url, type: entry.type };
+            } else if (quality === "4K") {
+              parsed["2160"] = { url: entry.url, type: entry.type };
+            } else if (quality === "ORG") {
+              parsed.unknown = { url: entry.url, type: entry.type };
+            } else {
+              const num = parseInt(quality.replace("P", ""), 10);
+              if (!Number.isNaN(num))
+                parsed[String(num)] = { url: entry.url, type: entry.type };
+            }
+          }
+
+          const hlsStream =
+            parsed.auto ??
+            parsed["2160"] ??
+            parsed["1080"] ??
+            parsed["720"] ??
+            parsed["480"] ??
+            parsed["360"] ??
+            parsed.unknown;
+
+          if (hlsStream?.type === "hls") {
+            setSource(
+              { type: "hls", url: hlsStream.url },
+              captions,
+              progressTime,
+            );
+          } else {
+            const qualities: Record<string, { type: "mp4"; url: string }> = {};
+            if (parsed["2160"])
+              qualities["4k"] = { type: "mp4", url: parsed["2160"].url };
+            if (parsed["1080"])
+              qualities["1080"] = { type: "mp4", url: parsed["1080"].url };
+            if (parsed["720"])
+              qualities["720"] = { type: "mp4", url: parsed["720"].url };
+            if (parsed["480"])
+              qualities["480"] = { type: "mp4", url: parsed["480"].url };
+            if (parsed["360"])
+              qualities["360"] = { type: "mp4", url: parsed["360"].url };
+            if (parsed.unknown)
+              qualities.unknown = { type: "mp4", url: parsed.unknown.url };
+            setSource({ type: "file", qualities }, captions, progressTime);
+          }
+          setCaption(null);
+          router.close();
         }
-        setCaption(null);
-        router.close();
       } catch {
         setError(variant.fid);
       } finally {
         setLoading(null);
       }
     },
-    [shareKey, setSource, setCaption, progressTime, router],
+    [mode, auroraMeta, setSource, setCaption, progressTime, router],
   );
 
   return (
@@ -154,7 +211,9 @@ export function VariantView({ id }: { id: string }) {
           >
             <div className="flex flex-col gap-0.5">
               <span>{formatVariantLabel(v)}</span>
-              <span className="text-type-secondary text-xs">{v.size}</span>
+              {v.size ? (
+                <span className="text-type-secondary text-xs">{v.size}</span>
+              ) : null}
             </div>
           </Menu.SelectableLink>
         ))}

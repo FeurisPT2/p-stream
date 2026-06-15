@@ -7,6 +7,7 @@ import { IconPatch } from "@/components/buttons/IconPatch";
 import { Icon, Icons } from "@/components/Icon";
 import { LinksDropdown } from "@/components/LinksDropdown";
 import { useNotifications } from "@/components/overlays/notificationsModal";
+import { useTipJar } from "@/components/overlays/tipJarModal";
 import { Lightbar } from "@/components/utils/Lightbar";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { BlurEllipsis } from "@/pages/layouts/SubPageLayout";
@@ -68,6 +69,7 @@ export function Navigation(props: NavigationProps) {
   const { loggedIn } = useAuth();
   const [scrollPosition, setScrollPosition] = useState(0);
   const { openNotifications, getUnreadCount } = useNotifications();
+  const { openTipJar } = useTipJar();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,10 +85,9 @@ export function Navigation(props: NavigationProps) {
     navigate(path);
   };
 
-  // Calculate mask length based on scroll position
+
   const getMaskLength = () => {
-    // When at top (0), use longer mask (200px)
-    // When scrolled down (300px+), use shorter mask (100px)
+    
     const maxScroll = 300;
     const minLength = 100;
     const maxLength = 180;
@@ -212,6 +213,14 @@ export function Navigation(props: NavigationProps) {
                     </span>
                   ) : null;
                 })()}
+              </a>
+              <a
+                onClick={() => openTipJar()}
+                rel="noreferrer"
+                className="text-xl text-white tabbable rounded-full backdrop-blur-lg"
+                title="Tip Jar"
+              >
+                <IconPatch icon={Icons.TIP_JAR} clickable downsized navigation />
               </a>
             </div>
             <div className="relative pointer-events-auto flex items-center gap-3">
