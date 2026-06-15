@@ -336,10 +336,10 @@ export function BookmarksGrid({
                           >
                             -
                           </button>
-                          <span className="w-3 text-center">{bookmarkRowsToShow}</span>
+                          <span className="w-5 text-center tabular-nums">{bookmarkRowsToShow}</span>
                           <button
                             type="button"
-                            disabled={bookmarkRowsToShow === 4}
+                            disabled={bookmarkRowsToShow === 10}
                             onClick={() => setBookmarkRowsToShow(bookmarkRowsToShow + 1)}
                             className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                           >

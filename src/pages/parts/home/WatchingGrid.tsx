@@ -156,10 +156,10 @@ export function WatchingGrid({
                           >
                             -
                           </button>
-                          <span className="w-3 text-center">{watchingRowsToShow}</span>
+                          <span className="w-5 text-center tabular-nums">{watchingRowsToShow}</span>
                           <button
                             type="button"
-                            disabled={watchingRowsToShow === 4}
+                            disabled={watchingRowsToShow === 10}
                             onClick={() => setWatchingRowsToShow(watchingRowsToShow + 1)}
                             className="flex h-6 w-6 items-center justify-center rounded-md bg-white/10 transition-colors hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                           >
