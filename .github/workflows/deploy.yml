@@ -37,7 +37,6 @@ jobs:
         run: |
           git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/xp-technologies-dev/private-providers.git /tmp/private-providers
           ls /tmp/private-providers/lib/
-
       - name: Force private providers
         run: |
           node -e "
@@ -48,7 +47,6 @@ jobs:
           "
           grep providers package.json
           rm -f pnpm-lock.yaml
-
       - name: Install dependencies
         run: pnpm install --force
 
@@ -62,7 +60,11 @@ jobs:
           VITE_TRAKT_CLIENT_SECRET: ${{ secrets.VITE_TRAKT_CLIENT_SECRET }}
           VITE_TRAKT_REDIRECT_URI: ${{ secrets.VITE_TRAKT_REDIRECT_URI }}
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
-
+          VITE_ENABLE_HOME_AD: "true"
+          VITE_HOME_AD_SCRIPT_URL: "https://a.klico.link/ad-provider.js"
+          VITE_HOME_AD_CLASS: "eask0h9c6i62"
+          VITE_HOME_AD_ZONE_ID: "622"
+          VITE_HOME_AD_SUB: "123450000"
 
       - name: Clean credentials
         if: always()
