@@ -40,16 +40,16 @@ export function GenreChips() {
   const visible = expanded ? genres : genres.slice(0, TOP_GENRES);
 
   return (
-    <div className="w-full mt-3 px-2">
+    <div
+      className="relative left-1/2 -translate-x-1/2 w-screen max-w-screen-xl mt-3 px-6"
+    >
       <div
         className={classNames(
           "flex gap-2 mx-auto opacity-0 animate-fade-in",
-          
-          "transition-[max-height] duration-500 ease-out overflow-hidden",
+          "transition-[max-height] duration-700 ease-in-out overflow-hidden",
           expanded
             ? "flex-wrap justify-center max-h-[40rem]"
-            : 
-              "flex-nowrap justify-center max-h-12 overflow-x-auto scrollbar-none",
+            : "flex-nowrap justify-center max-h-12 overflow-x-auto scrollbar-none",
         )}
         style={{ animationDelay: "0.1s", animationFillMode: "forwards" }}
       >
