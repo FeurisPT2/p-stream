@@ -271,7 +271,7 @@ export function PreferencesPart(props: {
                 >
                   {t(
                     "settings.preferences.gamepadControlsLabel",
-                    "Customizze Controller Keybinds",
+                    "Customize Controller Keybinds",
                   )}
                 </Button>
               </div>
