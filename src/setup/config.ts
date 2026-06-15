@@ -28,6 +28,11 @@ interface Config {
   ALLOW_DEBRID_KEY: boolean;
   SHOW_AD: boolean;
   AD_CONTENT_URL: string;
+  ENABLE_HOME_AD: boolean;
+  HOME_AD_SCRIPT_URL: string;
+  HOME_AD_CLASS: string;
+  HOME_AD_ZONE_ID: string;
+  HOME_AD_SUB: string;
   TRACK_SCRIPT: string; // like <script src="https://umami.com/script.js"></script>
   BANNER_MESSAGE: string;
   BANNER_ID: string;
@@ -63,6 +68,11 @@ export interface RuntimeConfig {
   ALLOW_FEBBOX_KEY: boolean;
   SHOW_AD: boolean;
   AD_CONTENT_URL: string[];
+  ENABLE_HOME_AD: boolean;
+  HOME_AD_SCRIPT_URL: string | null;
+  HOME_AD_CLASS: string | null;
+  HOME_AD_ZONE_ID: string | null;
+  HOME_AD_SUB: string | null;
   TRACK_SCRIPT: string | null;
   BANNER_MESSAGE: string | null;
   BANNER_ID: string | null;
@@ -100,6 +110,11 @@ const env: Record<keyof Config, undefined | string> = {
   ALLOW_DEBRID_KEY: import.meta.env.VITE_ALLOW_DEBRID_KEY,
   SHOW_AD: import.meta.env.VITE_SHOW_AD,
   AD_CONTENT_URL: import.meta.env.VITE_AD_CONTENT_URL,
+  ENABLE_HOME_AD: import.meta.env.VITE_ENABLE_HOME_AD,
+  HOME_AD_SCRIPT_URL: import.meta.env.VITE_HOME_AD_SCRIPT_URL,
+  HOME_AD_CLASS: import.meta.env.VITE_HOME_AD_CLASS,
+  HOME_AD_ZONE_ID: import.meta.env.VITE_HOME_AD_ZONE_ID,
+  HOME_AD_SUB: import.meta.env.VITE_HOME_AD_SUB,
   TRACK_SCRIPT: import.meta.env.VITE_TRACK_SCRIPT,
   BANNER_MESSAGE: import.meta.env.VITE_BANNER_MESSAGE,
   BANNER_ID: import.meta.env.VITE_BANNER_ID,
@@ -197,6 +212,11 @@ export function conf(): RuntimeConfig {
       .split(",")
       .map((v) => v.trim())
       .filter((v) => v.length > 0),
+    ENABLE_HOME_AD: getKey("ENABLE_HOME_AD", "false") === "true",
+    HOME_AD_SCRIPT_URL: getKey("HOME_AD_SCRIPT_URL"),
+    HOME_AD_CLASS: getKey("HOME_AD_CLASS"),
+    HOME_AD_ZONE_ID: getKey("HOME_AD_ZONE_ID"),
+    HOME_AD_SUB: getKey("HOME_AD_SUB"),
     TRACK_SCRIPT: getKey("TRACK_SCRIPT"),
     BANNER_MESSAGE: getKey("BANNER_MESSAGE"),
     BANNER_ID: getKey("BANNER_ID"),

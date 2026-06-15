@@ -1,6 +1,10 @@
-// do not fuck with this its literally just anonymous presence pings cuz i dont wanna use rybbit
+const ENDPOINTS = [
+  "/api/v1/state",
+  "https://api.fontaine.lol/api/v1/state",
+  "https://api.fontaine.lol/sync",
+];
 
-const ENDPOINT = "https://api.fontaine.lol/sync";
+const ENDPOINT_CACHE_KEY = "_xs_ep";
 
 const K = new Uint8Array([
   0x4d, 0x2f, 0xa8, 0xb1, 0x7c, 0xe9, 0x35, 0x06,
@@ -13,9 +17,17 @@ const SID_KEY = "_xs_id";
 const PULSE_MS = 15_000;
 const MIN_DWELL_MS = 500;
 
-type Zone = "home" | "search";
+type Zone = "home" | "search" | "media" | "watch" | "other";
 
 const OK_HOSTS = new Set(["zstream.mov", "www.zstream.mov"]);
+
+const SKIP_PREFIXES = [
+  "/login",
+  "/register",
+  "/onboarding",
+  "/migration",
+  "/legal",
+];
 
 let kp: Promise<CryptoKey> | null = null;
 function loadKey(): Promise<CryptoKey> {
@@ -66,9 +78,23 @@ function sid(): string {
 }
 
 function zoneOf(path: string): Zone | null {
-  if (path === "/" || path === "") return "home";
-  if (path === "/discover") return "search";
-  return null;
+  if (!path) return null;
+  for (const p of SKIP_PREFIXES) {
+    if (path === p || path.startsWith(`${p}/`)) return null;
+  }
+  if (path === "/" || path === "" || path.startsWith("/browse")) return "home";
+  if (
+    path.startsWith("/discover") ||
+    path.startsWith("/s/") ||
+    path.startsWith("/search")
+  ) {
+    return "search";
+  }
+  if (path.startsWith("/media/")) {
+    const segs = path.split("/").filter(Boolean);
+    return segs.length >= 4 ? "watch" : "media";
+  }
+  return "other";
 }
 
 function originHost(): string {
@@ -82,9 +108,67 @@ function originHost(): string {
   }
 }
 
-async function emit(kind: "pv" | "hb" | "lv", zone: Zone, durMs: number) {
+function getCachedEndpointIdx(): number {
   try {
-    const body = await seal({
+    const v = sessionStorage.getItem(ENDPOINT_CACHE_KEY);
+    if (!v) return 0;
+    const n = parseInt(v, 10);
+    if (Number.isNaN(n) || n < 0 || n >= ENDPOINTS.length) return 0;
+    return n;
+  } catch {
+    return 0;
+  }
+}
+
+function setCachedEndpointIdx(idx: number) {
+  try {
+    sessionStorage.setItem(ENDPOINT_CACHE_KEY, String(idx));
+  } catch {
+    /* noop */
+  }
+}
+
+function imageBeacon(url: string, body: string): boolean {
+  try {
+    const sep = url.indexOf("?") >= 0 ? "&" : "?";
+    const img = new Image(1, 1);
+    img.referrerPolicy = "no-referrer";
+    img.src = `${url}${sep}d=${encodeURIComponent(body)}&_=${Date.now()}`;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function tryPost(url: string, body: string, beacon: boolean): Promise<boolean> {
+  if (beacon && typeof navigator.sendBeacon === "function") {
+    try {
+      const blob = new Blob([body], { type: "text/plain" });
+      const ok = navigator.sendBeacon(url, blob);
+      if (ok) return true;
+    } catch {
+      /* fall through */
+    }
+  }
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      body,
+      keepalive: true,
+      credentials: "omit",
+      mode: "cors",
+      headers: { "Content-Type": "text/plain" },
+    });
+    return res.ok || res.status === 204;
+  } catch {
+    return false;
+  }
+}
+
+async function emit(kind: "pv" | "hb" | "lv", zone: Zone, durMs: number) {
+  let body: string;
+  try {
+    body = await seal({
       v: 1,
       k: kind,
       p: zone,
@@ -94,22 +178,25 @@ async function emit(kind: "pv" | "hb" | "lv", zone: Zone, durMs: number) {
       n: Date.now(),
       l: (navigator.language || "").slice(0, 16),
     });
+  } catch {
+    return;
+  }
 
-    if (kind === "lv" && typeof navigator.sendBeacon === "function") {
-      const blob = new Blob([body], { type: "text/plain" });
-      navigator.sendBeacon(ENDPOINT, blob);
+  const startIdx = getCachedEndpointIdx();
+  const beacon = kind === "lv";
+
+  for (let i = 0; i < ENDPOINTS.length; i++) {
+    const idx = (startIdx + i) % ENDPOINTS.length;
+    const url = ENDPOINTS[idx];
+    const ok = await tryPost(url, body, beacon);
+    if (ok) {
+      if (idx !== startIdx) setCachedEndpointIdx(idx);
       return;
     }
-    await fetch(ENDPOINT, {
-      method: "POST",
-      body,
-      keepalive: true,
-      credentials: "omit",
-      mode: "cors",
-      headers: { "Content-Type": "text/plain" },
-    });
-  } catch {
+  }
 
+  for (const url of ENDPOINTS) {
+    if (imageBeacon(url, body)) return;
   }
 }
 
@@ -194,6 +281,10 @@ export function mark(path: string) {
   if (!zone) {
     close();
     frame = null;
+    return;
+  }
+
+  if (frame && frame.zone === zone) {
     return;
   }
 
