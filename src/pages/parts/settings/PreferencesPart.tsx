@@ -34,7 +34,7 @@ function Section({
           {title}
         </h3>
       </div>
-      <div className="rounded-xl bg-dropdown-background/30 ring-1 ring-white/5 divide-y divide-white/5 overflow-hidden">
+      <div className="rounded-xl bg-dropdown-background/30 ring-1 ring-white/5 divide-y divide-white/5">
         {children}
       </div>
     </div>
