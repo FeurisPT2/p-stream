@@ -147,7 +147,6 @@ export const useWatchHistoryStore = create(
             action: "update",
           });
 
-          // update item
           existingItem.progress = { ...progress };
           existingItem.watchedAt = Date.now();
           existingItem.completed = completed;
@@ -156,8 +155,6 @@ export const useWatchHistoryStore = create(
       removeItem(id) {
         set((s) => {
           updateId += 1;
-
-          // Parse the key to extract TMDB ID and episode ID for episodes
           const isEpisode = id.includes("-");
           const tmdbId = isEpisode ? id.split("-")[0] : id;
           const episodeId = isEpisode ? id.split("-")[1] : undefined;

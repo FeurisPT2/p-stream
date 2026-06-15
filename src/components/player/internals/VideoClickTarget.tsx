@@ -145,18 +145,13 @@ export function VideoClickTarget(props: { showingControls: boolean }) {
         singleTapTimeout.current = null;
         handleDoubleClick(e);
       } else {
-        if (!enableDoubleClickToSeek) {
-          togglePause(e);
-        }
         singleTapTimeout.current = setTimeout(() => {
-          if (enableDoubleClickToSeek) {
-            togglePause(e);
-          }
+          togglePause(e);
           singleTapTimeout.current = null;
         }, 250);
       }
     },
-    [handleDoubleClick, togglePause, enableDoubleClickToSeek],
+    [handleDoubleClick, togglePause],
   );
 
   const handlePointerDown = useCallback(

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { To, useNavigate } from "react-router-dom";
@@ -12,10 +13,10 @@ import type { FeaturedMedia } from "@/pages/discover/components/FeaturedCarousel
 import DiscoverContent from "@/pages/discover/discoverContent";
 import { HomeLayout } from "@/pages/layouts/HomeLayout";
 import { BookmarksCarousel } from "@/pages/parts/home/BookmarksCarousel";
-import { BookmarksPart } from "@/pages/parts/home/BookmarksPart";
+import { BookmarksGrid } from "@/pages/parts/home/BookmarksGrid";
 import { HeroPart } from "@/pages/parts/home/HeroPart";
 import { WatchingCarousel } from "@/pages/parts/home/WatchingCarousel";
-import { WatchingPart } from "@/pages/parts/home/WatchingPart";
+import { WatchingGrid } from "@/pages/parts/home/WatchingGrid";
 import { SearchListPart } from "@/pages/parts/search/SearchListPart";
 import { SearchLoadingPart } from "@/pages/parts/search/SearchLoadingPart";
 import { conf } from "@/setup/config";
@@ -77,6 +78,9 @@ export function HomePage() {
     (state) => state.homeSectionOrder,
   );
 
+  const [carouselContainerRef] = useAutoAnimate<HTMLDivElement>();
+  const [listContainerRef] = useAutoAnimate<HTMLDivElement>();
+
   const handleClick = (path: To) => {
     window.scrollTo(0, 0);
     navigate(path);
@@ -100,7 +104,7 @@ export function HomePage() {
               onShowDetails={handleShowDetails}
             />
           ) : (
-            <WatchingPart
+            <WatchingGrid
               key="watching"
               onItemsChange={setShowWatching}
               onShowDetails={handleShowDetails}
@@ -114,7 +118,7 @@ export function HomePage() {
               onShowDetails={handleShowDetails}
             />
           ) : (
-            <BookmarksPart
+            <BookmarksGrid
               key="bookmarks"
               onItemsChange={setShowBookmarks}
               onShowDetails={handleShowDetails}
@@ -128,13 +132,15 @@ export function HomePage() {
     if (enableCarouselView) {
       return (
         <WideContainer ultraWide classNames="!px-3 md:!px-9">
-          {sections}
+          <div ref={carouselContainerRef} className="flex flex-col gap-8">
+            {sections}
+          </div>
         </WideContainer>
       );
     }
     return (
       <WideContainer>
-        <div className="flex flex-col gap-8">{sections}</div>
+        <div ref={listContainerRef} className="flex flex-col gap-8">{sections}</div>
       </WideContainer>
     );
   };
@@ -150,8 +156,6 @@ export function HomePage() {
           `}</style>
           <title>{t("global.name")}</title>
         </Helmet>
-
-        {/* Page Header */}
         {enableFeatured ? (
           <FeaturedCarousel
             forcedCategory="movies"

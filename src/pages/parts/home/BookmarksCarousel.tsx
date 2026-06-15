@@ -94,7 +94,14 @@ export function BookmarksCarousel({
   const { t } = useTranslation();
   const browser = !!window.chrome;
   let isScrolling = false;
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(() => {
+    return localStorage.getItem("__MW::bookmarksEditing") === "true";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("__MW::bookmarksEditing", editing.toString());
+  }, [editing]);
+
   const [sortBy, setSortBy] = useState<SortOption>(() => {
     const saved = localStorage.getItem("__MW::bookmarksSort");
     return (saved as SortOption) || "date";

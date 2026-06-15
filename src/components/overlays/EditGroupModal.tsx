@@ -89,8 +89,6 @@ export function EditGroupModal({
         <Paragraph className="mt-4">
           {t("home.bookmarks.groups.editGroup.description")}
         </Paragraph>
-
-        {/* Current Group Info */}
         <div className="mt-4 p-3 bg-background-main rounded">
           <div className="flex items-center gap-2 mb-2">
             <UserIcon icon={currentIconComponent} className="w-5 h-5" />
@@ -102,9 +100,7 @@ export function EditGroupModal({
             })}
           </p>
         </div>
-
         <div className="space-y-4 mt-6">
-          {/* New Group Name */}
           <div>
             <label className="block text-sm font-medium mb-1">
               {t("home.bookmarks.groups.editGroup.nameLabel")}

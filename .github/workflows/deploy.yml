@@ -9,26 +9,67 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH and deploy
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.14.4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
           key: ${{ secrets.SSH_KEY }}
-          script: |
-            set -e
-            cd ~/p-stream
-            git pull origin production
-            ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
-            PROVIDERS_SHA=$(git ls-remote git@github.com:xp-technologies-dev/private-providers.git main | awk '{print $1}')
-            echo "[deploy] Pinning providers to $PROVIDERS_SHA"
-            node -e "
-              const fs = require('fs');
-              const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-              pkg.dependencies['@p-stream/providers'] = 'github:xp-technologies-dev/private-providers#' + '$PROVIDERS_SHA';
-              fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-            "
-            rm -rf node_modules/@p-stream node_modules/.pnpm/@p-stream*
-            pnpm install --no-frozen-lockfile
-            pnpm build || { echo "[deploy] BUILD FAILED, aborting"; exit 1; }
-            pm2 restart pstream
+          known_hosts: unnecessary
+
+      - name: Add known hosts
+        run: ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Clone private providers
+        run: |
+          git clone --depth 1 https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/xp-technologies-dev/private-providers.git /tmp/private-providers
+          ls /tmp/private-providers/lib/
+
+      - name: Force private providers
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.dependencies['@p-stream/providers'] = 'file:/tmp/private-providers';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+          grep providers package.json
+          rm -f pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --force
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_TMDB_READ_API_KEY: ${{ secrets.VITE_TMDB_READ_API_KEY }}
+          VITE_SHOW_SUPPORT_BAR: "true"
+          VITE_ALLOW_FEBBOX_KEY: "true"
+          VITE_TRAKT_CLIENT_ID: ${{ secrets.VITE_TRAKT_CLIENT_ID }}
+          VITE_TRAKT_CLIENT_SECRET: ${{ secrets.VITE_TRAKT_CLIENT_SECRET }}
+          VITE_TRAKT_REDIRECT_URI: ${{ secrets.VITE_TRAKT_REDIRECT_URI }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+
+
+      - name: Clean credentials
+        if: always()
+        run: rm -rf /tmp/private-providers
+
+      - name: Deploy to VPS
+        run: |
+          tar -czf /tmp/dist.tar.gz -C dist .
+          scp /tmp/dist.tar.gz ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/p-stream/dist.tar.gz
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ~/p-stream && rm -rf dist && mkdir dist && tar -xzf dist.tar.gz -C dist && rm dist.tar.gz"

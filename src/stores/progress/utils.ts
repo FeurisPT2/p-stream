@@ -18,6 +18,9 @@ const defaultProgress = {
 };
 
 function progressIsCompleted(duration: number, watched: number): boolean {
+  // 90% completion or higher
+  if (duration > 0 && watched / duration > 0.9) return true;
+
   const timeFromEnd = duration - watched;
 
   // too close to the end, is completed
