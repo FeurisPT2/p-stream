@@ -27,15 +27,23 @@ const ENC: Array<{
   referer: string;
   origin: string;
   poster?: string;
-}> = [
+}> =[
   {
     id: "ch1",
-    name: "Channel 1",
-    url: "PFVSTF9CQVNFNjRfSEVSRT4=",
-    referer: "PFJFRkVSRVJfQkFTRTY0X0hFUkU+",
-    origin: "PE9SSUdJTl9CQVNFNjRfSEVSRT4=",
+    name: "FOX",
+    url: "aHR0cHM6Ly9sYjEzLnN0cm1kLnN0L3NlY3VyZS9pWFB0TXRqQWV6UnNsdkpNRnJ1Rkd1VnZuSUlXY0JSZy9lY2hvL3N0cmVhbS9mcmFuY2UtdnMtc2VuZWdhbC1mb290YmFsbC0xNDg5MzgzLzEvcGxheWxpc3QubTN1OA==",
+    referer: "aHR0cHM6Ly9lbWJlZC5zdC8=",
+    origin: "aHR0cHM6Ly9lbWJlZC5zdA==",
+  },
+  {
+    id: "ch2",
+    name: "BBC",
+    url: "aHR0cHM6Ly9sYjIwLnN0cm1kLnN0L3NlY3VyZS94R29xV1FJblN3eHVzV0dhcGhkR01iQnJRR3NueE5jRy9ydG1wL3N0cmVhbS85Y2VvUzhWbFZULVd5eVdNb1otaGhmV0pxRWY3RnRKZXRVVHQ4eVRhNGhVQ183OW00X2RNc3lZMUJZWVRmR0Vxc3FuMW83TEMxQ2cvMS9wbGF5bGlzdC5tM3U4",
+     referer: "aHR0cHM6Ly9lbWJlZC5zdC8=",
+    origin: "aHR0cHM6Ly9lbWJlZC5zdA==",
   },
 ];
+
 
 function decodeChannel(c: (typeof ENC)[number]): ChannelDef {
   const dec = (s: string) => {
