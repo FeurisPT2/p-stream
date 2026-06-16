@@ -185,6 +185,7 @@ export function HomePage() {
       </div>
 
       {!search && <HomeAd />}
+      {!search && <HomeAd slot="secondary" />}
 
       {/* Search */}
       {search && (
@@ -244,8 +245,6 @@ export function HomePage() {
           </div>
         )}
       </WideContainer>
-
-      {!search && <HomeAd slot="secondary" />}
     </HomeLayout>
   );
 }
