@@ -1,71 +1,71 @@
-import classNames from "classnames";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Button } from "@/components/buttons/Button";
-import { Icon, Icons } from "@/components/Icon";
 import { useInitializePlayer } from "@/components/player/hooks/useInitializePlayer";
 import { PlayerPart } from "@/pages/parts/player/PlayerPart";
 import { useLastNonPlayerLink } from "@/stores/history";
 import { PlayerMeta, playerStatus } from "@/stores/player/slices/source";
 import { usePlayerStore } from "@/stores/player/store";
-import { getExtensionState } from "@/utils/extension";
 
-interface ChannelDef {
-  id: string;
-  name: string;
-  url: string;
-  referer: string;
-  origin: string;
-  poster?: string;
+// oopsie doopsie :) 
+
+const ENC = {
+  endpoint: "aHR0cHM6Ly92aWxlZC5odXgtZ2lhbnRzLnNob3AvZmV0Y2g=",
+  referer: "aHR0cHM6Ly9qdW5raWVlbWJlZHMucGFnZXMuZGV2Lw==",
+  password: "OHBhV0AjMVVnT3c0PUE4aVQqNXdl",
+  streamId: "Zm94NGstdXNh",
+  title: "Rm94IDRLIFVTQQ==",
+};
+
+const dec = (s: string) => {
+  try {
+    return atob(s);
+  } catch {
+    return "";
+  }
+};
+
+const ENDPOINT = dec(ENC.endpoint);
+const REFERRER = dec(ENC.referer);
+const PASSWORD = dec(ENC.password);
+const STREAM_ID = dec(ENC.streamId);
+const TITLE = dec(ENC.title);
+
+async function decryptCipher(b64: string): Promise<string> {
+  const keyBytes = new TextEncoder().encode(PASSWORD).slice(0, 16);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "AES-GCM" },
+    false,
+    ["decrypt"],
+  );
+  const bin = atob(b64);
+  const blob = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) blob[i] = bin.charCodeAt(i);
+  const iv = blob.slice(0, 12);
+  const ct = blob.slice(12);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+  return new TextDecoder().decode(pt);
 }
 
-const ENC: Array<{
-  id: string;
-  name: string;
-  url: string;
-  referer: string;
-  origin: string;
-  poster?: string;
-}> =[
-  {
-    id: "ch1",
-    name: "FOX",
-    url: "aHR0cHM6Ly9sYjIwLnN0cm1kLnN0L3NlY3VyZS9HVFBsU1BoWEJMa0NxbUNvRHhWUkNYZ1pjRVBBYWxWbS9ydG1wL3N0cmVhbS8yWEhTUC1nMzJYa0ZKYzVQazNycDVONmNtd2N5ZnkzSFFsRVZaQUVIUE5GRGFaZ2FZM055NktJS09ORUVWOVBSa2dneFFwdy8xL3BsYXlsaXN0Lm0zdTg=",
-    referer: "aHR0cHM6Ly9lbWJlZC5zdC8=",
-    origin: "aHR0cHM6Ly9lbWJlZC5zdA==",
-  },
-  {
-    id: "ch2",
-    name: "BBC",
-    url: "aHR0cHM6Ly9sYjIwLnN0cm1kLnN0L3NlY3VyZS94R29xV1FJblN3eHVzV0dhcGhkR01iQnJRR3NueE5jRy9ydG1wL3N0cmVhbS85Y2VvUzhWbFZULVd5eVdNb1otaGhmV0pxRWY3RnRKZXRVVHQ4eVRhNGhVQ183OW00X2RNc3lZMUJZWVRmR0Vxc3FuMW83TEMxQ2cvMS9wbGF5bGlzdC5tM3U4",
-     referer: "aHR0cHM6Ly9lbWJlZC5zdC8=",
-    origin: "aHR0cHM6Ly9lbWJlZC5zdA==",
-  },
-];
-
-
-function decodeChannel(c: (typeof ENC)[number]): ChannelDef {
-  const dec = (s: string) => {
-    try {
-      return atob(s);
-    } catch {
-      return "";
-    }
-  };
-  return {
-    id: c.id,
-    name: c.name,
-    url: dec(c.url),
-    referer: dec(c.referer),
-    origin: dec(c.origin),
-    poster: c.poster,
-  };
+async function resolveStream(): Promise<string> {
+  const resp = await fetch(ENDPOINT, {
+    method: "POST",
+    credentials: "omit",
+    mode: "cors",
+    referrer: REFERRER,
+    referrerPolicy: "unsafe-url",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id: STREAM_ID }),
+  });
+  if (!resp.ok) throw new Error(`upstream ${resp.status}`);
+  const data: { success?: boolean; url?: string } = await resp.json();
+  if (!data?.success || !data?.url) {
+    throw new Error("upstream returned no url");
+  }
+  return decryptCipher(data.url);
 }
-
-const CHANNELS: ChannelDef[] = ENC.map(decodeChannel).filter((c) =>
-  c.url.startsWith("http"),
-);
 
 export function WcupView() {
   const navigate = useNavigate();
@@ -78,79 +78,61 @@ export function WcupView() {
   const setStatus = usePlayerStore((s) => s.setStatus);
   const reset = usePlayerStore((s) => s.reset);
   const { init } = useInitializePlayer();
-
   const initRef = useRef(init);
   initRef.current = init;
 
-  const [extState, setExtState] = useState<"checking" | "ok" | "missing">(
-    "checking",
-  );
-  const [activeId, setActiveId] = useState<string>(
-    () => CHANNELS[0]?.id ?? "",
-  );
-
-  const activeChannel = useMemo(
-    () => CHANNELS.find((c) => c.id === activeId) ?? null,
-    [activeId],
-  );
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [streamUrl, setStreamUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    getExtensionState().then((state) => {
-      if (cancelled) return;
-      setExtState(state === "success" ? "ok" : "missing");
-    });
+    setState("loading");
+    resolveStream()
+      .then((url) => {
+        if (cancelled) return;
+        setStreamUrl(url);
+        setState("ready");
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setErrorMsg(err?.message ? String(err.message) : "Failed to load stream");
+        setState("error");
+      });
     return () => {
       cancelled = true;
     };
   }, []);
 
   useEffect(() => {
-    if (extState !== "ok" || !activeChannel) return;
+    if (state !== "ready" || !streamUrl) return;
 
     const meta: PlayerMeta = {
       type: "movie",
-      tmdbId: `wcup-${activeChannel.id}`,
-      title: activeChannel.name,
+      tmdbId: `wcup-${STREAM_ID}`,
+      title: TITLE,
       releaseYear: new Date().getFullYear(),
-      poster: activeChannel.poster,
     };
     setMeta(meta);
-
-    const headers: Record<string, string> = {};
-    if (activeChannel.referer) headers.Referer = activeChannel.referer;
-    if (activeChannel.origin) headers.Origin = activeChannel.origin;
-
     setCaption(null);
     setSource(
       {
         type: "hls",
-        url: activeChannel.url,
-        headers,
+        url: streamUrl,
+        headers: {},
         preferredHeaders: {},
       },
       [],
       0,
     );
-    setSourceId(`wcup-${activeChannel.id}`);
+    setSourceId(`wcup-${STREAM_ID}`);
     setStatus(playerStatus.PLAYING);
 
     const timer = setTimeout(() => {
       initRef.current();
     }, 0);
-
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [
-    extState,
-    activeChannel,
-    setMeta,
-    setSource,
-    setCaption,
-    setSourceId,
-    setStatus,
-  ]);
+    return () => clearTimeout(timer);
+  }, [state, streamUrl, setMeta, setSource, setCaption, setSourceId, setStatus]);
 
   useEffect(() => {
     return () => {
@@ -158,70 +140,31 @@ export function WcupView() {
     };
   }, [reset]);
 
-  if (CHANNELS.length === 0) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-type-secondary">No channels configured.</p>
-      </div>
-    );
-  }
-
-  if (extState === "checking") {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <p className="text-type-secondary">Loading…</p>
-      </div>
-    );
-  }
-
-  if (extState === "missing") {
+  if (state === "loading") {
     return (
       <div className="flex h-screen items-center justify-center px-4">
-        <div className="bg-dropdown-background border border-dropdown-altBackground rounded-xl p-8 max-w-md text-center">
-          <Icon
-            icon={Icons.UNPLUG}
-            className="text-4xl text-type-secondary mb-4 mx-auto"
-          />
-          <h1 className="text-xl text-white font-bold mb-3">
-            Extension required
-          </h1>
-          <p className="text-type-secondary mb-6">
-            This stream needs the browser extension to bypass referer
-            restrictions. Install the extension, then come back to this page.
-          </p>
-          <Button
-            theme="purple"
-            onClick={() => navigate("/onboarding/extension")}
-          >
-            Install extension
-          </Button>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          <p className="text-type-secondary text-sm">Loading stream…</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="relative">
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex flex-wrap gap-2 px-3 max-w-[calc(100vw-1rem)] justify-center pointer-events-auto">
-        {CHANNELS.map((c) => (
-          <button
-            key={c.id}
-            type="button"
-            onClick={() => setActiveId(c.id)}
-            className={classNames(
-              "px-3 py-1.5 text-xs font-semibold rounded-full transition-colors backdrop-blur-md",
-              c.id === activeId
-                ? "bg-white/90 text-black"
-                : "bg-black/50 text-white/90 hover:bg-black/70",
-            )}
-          >
-            {c.name}
-          </button>
-        ))}
+  if (state === "error") {
+    return (
+      <div className="flex h-screen items-center justify-center px-4">
+        <div className="bg-dropdown-background border border-dropdown-altBackground rounded-xl p-8 max-w-md text-center">
+          <h1 className="text-xl text-white font-bold mb-3">
+            Stream unavailable
+          </h1>
+          <p className="text-type-secondary text-sm">{errorMsg}</p>
+        </div>
       </div>
-      <PlayerPart backUrl={backUrl} onMetaChange={() => navigate("/")} />
-    </div>
-  );
+    );
+  }
+
+  return <PlayerPart backUrl={backUrl} onMetaChange={() => navigate("/")} />;
 }
 
 export default WcupView;
