@@ -46,6 +46,7 @@ import { PasPage } from "@/pages/Pas";
 import { RegisterPage } from "@/pages/Register";
 import { SupportPage } from "@/pages/Support";
 import { WatchHistory } from "@/pages/watchHistory/WatchHistory";
+import { WcupView } from "@/pages/WcupView";
 import { Layout } from "@/setup/Layout";
 import { useHistoryListener } from "@/stores/history";
 import { useClearModalsOnNavigation } from "@/stores/interface/overlayStack";
@@ -203,6 +204,7 @@ function App() {
           <Route path="/support" element={<SupportPage />} />
           <Route path="/cel" element={<CelPage />} />
           <Route path="/pas" element={<PasPage />} />
+          <Route path="/wcup" element={<WcupView />} />
           {/* Discover pages */}
           <Route path="/discover" element={<Discover />} />
           <Route
