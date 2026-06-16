@@ -33,6 +33,10 @@ interface Config {
   HOME_AD_CLASS: string;
   HOME_AD_ZONE_ID: string;
   HOME_AD_SUB: string;
+  ENABLE_SECONDARY_AD: boolean;
+  SECONDARY_AD_CLASS: string;
+  SECONDARY_AD_ZONE_ID: string;
+  SECONDARY_AD_SUB: string;
   TRACK_SCRIPT: string; // like <script src="https://umami.com/script.js"></script>
   BANNER_MESSAGE: string;
   BANNER_ID: string;
@@ -73,6 +77,10 @@ export interface RuntimeConfig {
   HOME_AD_CLASS: string | null;
   HOME_AD_ZONE_ID: string | null;
   HOME_AD_SUB: string | null;
+  ENABLE_SECONDARY_AD: boolean;
+  SECONDARY_AD_CLASS: string | null;
+  SECONDARY_AD_ZONE_ID: string | null;
+  SECONDARY_AD_SUB: string | null;
   TRACK_SCRIPT: string | null;
   BANNER_MESSAGE: string | null;
   BANNER_ID: string | null;
@@ -115,6 +123,10 @@ const env: Record<keyof Config, undefined | string> = {
   HOME_AD_CLASS: import.meta.env.VITE_HOME_AD_CLASS,
   HOME_AD_ZONE_ID: import.meta.env.VITE_HOME_AD_ZONE_ID,
   HOME_AD_SUB: import.meta.env.VITE_HOME_AD_SUB,
+  ENABLE_SECONDARY_AD: import.meta.env.VITE_ENABLE_SECONDARY_AD,
+  SECONDARY_AD_CLASS: import.meta.env.VITE_SECONDARY_AD_CLASS,
+  SECONDARY_AD_ZONE_ID: import.meta.env.VITE_SECONDARY_AD_ZONE_ID,
+  SECONDARY_AD_SUB: import.meta.env.VITE_SECONDARY_AD_SUB,
   TRACK_SCRIPT: import.meta.env.VITE_TRACK_SCRIPT,
   BANNER_MESSAGE: import.meta.env.VITE_BANNER_MESSAGE,
   BANNER_ID: import.meta.env.VITE_BANNER_ID,
@@ -217,6 +229,10 @@ export function conf(): RuntimeConfig {
     HOME_AD_CLASS: getKey("HOME_AD_CLASS"),
     HOME_AD_ZONE_ID: getKey("HOME_AD_ZONE_ID"),
     HOME_AD_SUB: getKey("HOME_AD_SUB"),
+    ENABLE_SECONDARY_AD: getKey("ENABLE_SECONDARY_AD", "false") === "true",
+    SECONDARY_AD_CLASS: getKey("SECONDARY_AD_CLASS"),
+    SECONDARY_AD_ZONE_ID: getKey("SECONDARY_AD_ZONE_ID"),
+    SECONDARY_AD_SUB: getKey("SECONDARY_AD_SUB"),
     TRACK_SCRIPT: getKey("TRACK_SCRIPT"),
     BANNER_MESSAGE: getKey("BANNER_MESSAGE"),
     BANNER_ID: getKey("BANNER_ID"),
