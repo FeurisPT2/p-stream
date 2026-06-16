@@ -31,7 +31,7 @@ const ENC: Array<{
   {
     id: "ch1",
     name: "FOX",
-    url: "aHR0cHM6Ly9sYjEzLnN0cm1kLnN0L3NlY3VyZS9pWFB0TXRqQWV6UnNsdkpNRnJ1Rkd1VnZuSUlXY0JSZy9lY2hvL3N0cmVhbS9mcmFuY2UtdnMtc2VuZWdhbC1mb290YmFsbC0xNDg5MzgzLzEvcGxheWxpc3QubTN1OA==",
+    url: "aHR0cHM6Ly9sYjIwLnN0cm1kLnN0L3NlY3VyZS9HVFBsU1BoWEJMa0NxbUNvRHhWUkNYZ1pjRVBBYWxWbS9ydG1wL3N0cmVhbS8yWEhTUC1nMzJYa0ZKYzVQazNycDVONmNtd2N5ZnkzSFFsRVZaQUVIUE5GRGFaZ2FZM055NktJS09ORUVWOVBSa2dneFFwdy8xL3BsYXlsaXN0Lm0zdTg=",
     referer: "aHR0cHM6Ly9lbWJlZC5zdC8=",
     origin: "aHR0cHM6Ly9lbWJlZC5zdA==",
   },
