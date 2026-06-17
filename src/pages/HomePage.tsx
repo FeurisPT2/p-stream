@@ -26,7 +26,6 @@ import { MediaItem } from "@/utils/mediaTypes";
 
 import { Button } from "./About";
 import { AdsPart } from "./parts/home/AdsPart";
-import { HomeAd } from "./parts/home/HomeAd";
 import { RevivalAnnouncementModal } from "./parts/home/RevivalAnnouncementModal";
 import { SupportBar } from "./parts/home/SupportBar";
 
@@ -183,9 +182,6 @@ export function HomePage() {
 
         {conf().SHOW_AD ? <AdsPart /> : null}
       </div>
-
-      {!search && <HomeAd />}
-      {!search && <HomeAd slot="secondary" />}
 
       {/* Search */}
       {search && (
