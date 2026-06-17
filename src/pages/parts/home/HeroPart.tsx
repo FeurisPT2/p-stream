@@ -118,7 +118,7 @@ export function HeroPart({
                     to="/discover"
                     className="group relative flex items-center justify-center h-14 rounded-[28px] bg-search-background/50 hover:bg-search-background backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden"
                   >
-                    <div className="absolute inset-0 rounded-[28px] bg-[linear-gradient(90deg,#a855f7,#ec4899,#f97316,#fbbf24,#a855f7,#ec4899,#f97316,#fbbf24)] bg-[length:300%_100%] opacity-70 group-hover:opacity-100 transition-opacity duration-500 animate-gradient-flow" />
+                    <div className="absolute inset-0 rounded-[28px] bg-[linear-gradient(90deg,#a855f7,#ec4899,#d946ef,#c084fc,#a855f7,#ec4899,#d946ef,#c084fc,#a855f7)] bg-[length:300%_100%] opacity-70 group-hover:opacity-100 transition-opacity duration-500 animate-gradient-flow" />
                     <div className="absolute inset-[2px] rounded-[26px] bg-search-background transition-colors duration-300" />
 
                     <div className="relative flex items-center justify-center px-4 sm:px-5 gap-2 h-full">
@@ -126,7 +126,7 @@ export function HeroPart({
                         icon={Icons.RISING_STAR}
                         className="text-search-icon group-hover:text-pink-400 transition-colors duration-300 text-xl group-hover:rotate-12"
                       />
-                      <span className="max-w-0 opacity-0 group-hover:max-w-[80px] group-hover:opacity-100 group-hover:ml-1 text-white font-bold text-sm tracking-wide bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text group-hover:text-transparent transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
+                      <span className="max-w-0 opacity-0 group-hover:max-w-[80px] group-hover:opacity-100 group-hover:ml-1 text-white font-bold text-sm tracking-wide bg-gradient-to-r from-pink-400 to-fuchsia-400 bg-clip-text group-hover:text-transparent transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden hidden sm:block">
                         Discover
                       </span>
                     </div>

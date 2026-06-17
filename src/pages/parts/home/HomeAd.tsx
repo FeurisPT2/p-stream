@@ -83,7 +83,7 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
 
   return (
     <div
-      className="relative p-[1.5px] rounded-2xl bg-gradient-to-br from-purple-400/70 via-pink-400/40 to-amber-300/60 transition-opacity duration-500 shadow-lg shadow-purple-500/10"
+      className="relative p-[1.5px] rounded-2xl bg-gradient-to-br from-purple-400/60 via-fuchsia-400/55 to-purple-500/60 transition-opacity duration-500 shadow-lg shadow-purple-500/15"
       style={{
         maxWidth: `${wrapperMaxWidth}px`,
         width: "100%",
@@ -95,7 +95,7 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
           <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-purple-200/70 select-none">
             Advertisement
           </span>
-          <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 opacity-70" />
+          <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-purple-400 to-fuchsia-400 opacity-70" />
         </div>
 
         <div className="px-3 pb-3 pt-1 md:px-4 md:pb-4">
