@@ -69,6 +69,7 @@ function VideoElement() {
   const enableNativeSubtitles = usePreferencesStore(
     (s) => s.enableNativeSubtitles,
   );
+  const captionAsTrack = usePlayerStore((s) => s.caption.asTrack);
   const videoBrightness = usePreferencesStore((s) => s.videoBrightness);
   const videoContrast   = usePreferencesStore((s) => s.videoContrast);
   const videoSaturation = usePreferencesStore((s) => s.videoSaturation);
@@ -127,7 +128,7 @@ function VideoElement() {
   );
 
 
-  const shouldUseNativeTrack = enableNativeSubtitles && source !== null;
+  const shouldUseNativeTrack = (enableNativeSubtitles || captionAsTrack) && source !== null;
 
 
   useEffect(() => {
