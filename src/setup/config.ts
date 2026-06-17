@@ -47,6 +47,9 @@ interface Config {
   HIDE_PROXY_ONBOARDING: boolean;
   SHOW_SUPPORT_BAR: boolean;
   SUPPORT_BAR_VALUE: string;
+  ENABLE_RYBBIT: boolean;
+  RYBBIT_SCRIPT_URL: string;
+  RYBBIT_SITE_ID: string;
 }
 
 export interface RuntimeConfig {
@@ -91,6 +94,9 @@ export interface RuntimeConfig {
   HIDE_PROXY_ONBOARDING: boolean;
   SHOW_SUPPORT_BAR: boolean;
   SUPPORT_BAR_VALUE: string;
+  ENABLE_RYBBIT: boolean;
+  RYBBIT_SCRIPT_URL: string | null;
+  RYBBIT_SITE_ID: string | null;
 }
 
 const env: Record<keyof Config, undefined | string> = {
@@ -137,6 +143,9 @@ const env: Record<keyof Config, undefined | string> = {
   HIDE_PROXY_ONBOARDING: import.meta.env.VITE_HIDE_PROXY_ONBOARDING,
   SHOW_SUPPORT_BAR: import.meta.env.VITE_SHOW_SUPPORT_BAR,
   SUPPORT_BAR_VALUE: import.meta.env.VITE_SUPPORT_BAR_VALUE,
+  ENABLE_RYBBIT: import.meta.env.VITE_ENABLE_RYBBIT,
+  RYBBIT_SCRIPT_URL: import.meta.env.VITE_RYBBIT_SCRIPT_URL,
+  RYBBIT_SITE_ID: import.meta.env.VITE_RYBBIT_SITE_ID,
 };
 
 function coerceUndefined(value: string | null | undefined): string | undefined {
@@ -243,5 +252,8 @@ export function conf(): RuntimeConfig {
     HIDE_PROXY_ONBOARDING: getKey("HIDE_PROXY_ONBOARDING", "false") === "true",
     SHOW_SUPPORT_BAR: getKey("SHOW_SUPPORT_BAR", "false") === "true",
     SUPPORT_BAR_VALUE: getKey("SUPPORT_BAR_VALUE") ?? "",
+    ENABLE_RYBBIT: getKey("ENABLE_RYBBIT", "false") === "true",
+    RYBBIT_SCRIPT_URL: getKey("RYBBIT_SCRIPT_URL"),
+    RYBBIT_SITE_ID: getKey("RYBBIT_SITE_ID"),
   };
 }

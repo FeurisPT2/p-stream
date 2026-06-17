@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { conf } from "@/setup/config";
-
+// dont use this obviously
 const ACLIB_URL = "https://acscdn.com/script/aclib.js";
 const SCRIPT_ID = "aclib";
 const SHIELD_FLAG = "__ad_shield_installed";
@@ -17,17 +17,7 @@ declare global {
 
 export type AdSlot = "primary" | "secondary";
 
-// installAdShield — installed once, globally. Two layers:
-//
-//   1. window.open: shielded ONLY during clicks not inside an ad wrapper.
-//      Real ad clicks (which fire from inside the ad container) pass through.
-//
-//   2. HTMLElement.prototype.click: permanently filters programmatic .click()
-//      calls on <a target="_blank"> anchors that aren't inside an ad wrapper.
-//      This is how aclib's popunder hijacks usually fire (synthetic anchor +
-//      .click()). User clicks on real outbound links go through the browser's
-//      native navigation handling — they don't call .click() on the element,
-//      so they're not affected.
+
 function installAdShield() {
   if (typeof window === "undefined") return;
   if (window[SHIELD_FLAG]) return;

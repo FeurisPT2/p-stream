@@ -50,7 +50,7 @@ import { Layout } from "@/setup/Layout";
 import { useHistoryListener } from "@/stores/history";
 import { useClearModalsOnNavigation } from "@/stores/interface/overlayStack";
 import { LanguageProvider } from "@/stores/language";
-import { mark } from "@/utils/presence";
+import { conf } from "@/setup/config";
 
 const DeveloperPage = lazy(() => import("@/pages/DeveloperPage"));
 const TestView = lazy(() => import("@/pages/developer/TestView"));
@@ -117,10 +117,19 @@ function App() {
   useClearModalsOnNavigation();
   const maintenance = false; // Shows maintance page
   const [showDowntime, setShowDowntime] = useState(maintenance);
-  const appLocation = useLocation();
+
   useEffect(() => {
-    mark(appLocation.pathname);
-  }, [appLocation.pathname]);
+    const cfg = conf();
+    if (!cfg.ENABLE_RYBBIT || !cfg.RYBBIT_SCRIPT_URL || !cfg.RYBBIT_SITE_ID) return;
+    if (typeof document === "undefined") return;
+    if (document.querySelector("script[data-rybbit]")) return;
+    const s = document.createElement("script");
+    s.src = cfg.RYBBIT_SCRIPT_URL;
+    s.defer = true;
+    s.dataset.siteId = cfg.RYBBIT_SITE_ID;
+    s.dataset.rybbit = "1";
+    document.head.appendChild(s);
+  }, []);
 
   const handleButtonClick = () => {
     setShowDowntime(false);
