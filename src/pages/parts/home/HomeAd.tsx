@@ -1,122 +1,107 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Icon, Icons } from "@/components/Icon";
 import { conf } from "@/setup/config";
 
-const LOADED_FLAG = "__home_ad_provider_loaded";
+const ACLIB_URL = "https://acscdn.com/script/aclib.js";
+const LOADED_FLAG = "__adcash_aclib_loaded";
+const LOAD_TIMEOUT_MS = 10000;
 
 declare global {
   interface Window {
-    AdProvider?: Array<Record<string, unknown>>;
-    __home_ad_provider_loaded?: boolean;
+    aclib?: { runBanner: (opts: { zoneId: string }) => void };
+    __adcash_aclib_loaded?: boolean;
   }
 }
 
 export type AdSlot = "primary" | "secondary";
 
-function loadProviderScript(scriptUrl: string) {
+function loadAclib() {
   if (typeof window === "undefined") return;
   if (window[LOADED_FLAG]) return;
   window[LOADED_FLAG] = true;
-  const existing = document.querySelector(
-    `script[src="${scriptUrl}"]`,
-  ) as HTMLScriptElement | null;
-  if (existing) return;
+  if (document.getElementById("aclib")) return;
   const s = document.createElement("script");
-  s.src = scriptUrl;
+  s.id = "aclib";
+  s.type = "text/javascript";
+  s.src = ACLIB_URL;
   s.async = true;
-  s.type = "application/javascript";
   document.head.appendChild(s);
 }
 
 interface SlotConfig {
-  scriptUrl: string;
-  className: string;
   zoneId: string;
-  sub?: string;
-  dismissKey: string;
-  minHeightPx: number;
+  width: number;
+  height: number;
 }
 
 function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
-  const insRef = useRef<HTMLModElement | null>(null);
-  const [hasAdContent, setHasAdContent] = useState(false);
-  const [dismissed, setDismissed] = useState(() => {
-    try {
-      return localStorage.getItem(cfg.dismissKey) === "true";
-    } catch {
-      return false;
-    }
-  });
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [adState, setAdState] = useState<"loading" | "loaded" | "failed">(
+    "loading",
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    loadProviderScript(cfg.scriptUrl);
-    window.AdProvider = window.AdProvider || [];
-    window.AdProvider.push({ serve: {} });
+    loadAclib();
 
-    const ins = insRef.current;
-    if (!ins) return;
-    const update = () => setHasAdContent(ins.children.length > 0);
+    const container = containerRef.current;
+    if (!container) return;
+
+    let cancelled = false;
+    const tryRender = () => {
+      if (cancelled) return;
+      if (typeof window.aclib?.runBanner === "function") {
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.text = `try { aclib.runBanner({ zoneId: '${cfg.zoneId}' }); } catch (e) {}`;
+        container.appendChild(script);
+      } else {
+        setTimeout(tryRender, 150);
+      }
+    };
+    tryRender();
+
+    const update = () => {
+      if (container.querySelector("iframe, img")) {
+        setAdState("loaded");
+      }
+    };
     update();
     const observer = new MutationObserver(update);
-    observer.observe(ins, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, [cfg.scriptUrl]);
+    observer.observe(container, { childList: true, subtree: true });
 
-  const showPlaceholder = !hasAdContent && !dismissed;
-  const hideWrapper = dismissed && !hasAdContent;
+    const timeout = setTimeout(() => {
+      setAdState((prev) => (prev === "loading" ? "failed" : prev));
+    }, LOAD_TIMEOUT_MS);
 
-  const dismiss = () => {
-    try {
-      localStorage.setItem(cfg.dismissKey, "true");
-    } catch {
-      /* noop */
-    }
-    setDismissed(true);
-  };
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+      clearTimeout(timeout);
+    };
+  }, [cfg.zoneId]);
 
-  const insExtraProps: Record<string, string> = {};
-  if (cfg.sub) insExtraProps["data-sub"] = cfg.sub;
+  if (adState === "failed") return null;
 
-  if (hideWrapper) {
-    return (
-      <div style={{ display: "none" }}>
-        <ins
-          ref={insRef}
-          className={cfg.className}
-          data-zoneid={cfg.zoneId}
-          {...insExtraProps}
-        />
-      </div>
-    );
-  }
+  const wrapperMaxWidth = cfg.width + 32;
 
   return (
     <div className="w-full flex justify-center my-6 px-4">
       <div
-        className="relative w-full max-w-2xl"
-        style={{ minHeight: `${cfg.minHeightPx}px` }}
+        className="relative rounded-2xl bg-gradient-to-br from-dropdown-background/60 via-dropdown-altBackground/40 to-mediaCard-hoverBackground/30 ring-1 ring-white/10 p-3 md:p-4 transition-opacity duration-500"
+        style={{
+          maxWidth: `${wrapperMaxWidth}px`,
+          width: "100%",
+          opacity: adState === "loaded" ? 1 : 0.6,
+        }}
       >
-        {showPlaceholder && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-xl border border-dropdown-altBackground bg-dropdown-background/30 px-6 py-4">
-            <p className="text-sm font-semibold text-type-secondary">test</p>
-            <button
-              type="button"
-              onClick={dismiss}
-              aria-label="Dismiss"
-              className="absolute top-2 right-2 w-6 h-6 rounded-full bg-mediaCard-hoverBackground flex items-center justify-center text-type-secondary hover:text-white transition-colors"
-            >
-              <Icon icon={Icons.X} className="text-xs" />
-            </button>
-          </div>
-        )}
-        <ins
-          ref={insRef}
-          className={cfg.className}
-          data-zoneid={cfg.zoneId}
-          {...insExtraProps}
-          style={{ display: "block", minHeight: `${cfg.minHeightPx}px` }}
+        <div
+          ref={containerRef}
+          className="flex items-center justify-center mx-auto"
+          style={{
+            minHeight: `${cfg.height}px`,
+            minWidth: 0,
+          }}
         />
       </div>
     </div>
@@ -125,45 +110,27 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
 
 export function HomeAd({ slot = "primary" }: { slot?: AdSlot } = {}) {
   const cfg = conf();
-  const scriptUrl = cfg.HOME_AD_SCRIPT_URL;
 
   if (slot === "primary") {
-    const enabled =
-      cfg.ENABLE_HOME_AD &&
-      !!scriptUrl &&
-      !!cfg.HOME_AD_CLASS &&
-      !!cfg.HOME_AD_ZONE_ID &&
-      !!cfg.HOME_AD_SUB;
-    if (!enabled) return null;
+    if (!cfg.ENABLE_HOME_AD || !cfg.HOME_AD_ZONE_ID) return null;
     return (
       <AdSlotInner
         cfg={{
-          scriptUrl: scriptUrl!,
-          className: cfg.HOME_AD_CLASS!,
-          zoneId: cfg.HOME_AD_ZONE_ID!,
-          sub: cfg.HOME_AD_SUB!,
-          dismissKey: "home_ad_placeholder_dismissed",
-          minHeightPx: 120,
+          zoneId: cfg.HOME_AD_ZONE_ID,
+          width: 728,
+          height: 90,
         }}
       />
     );
   }
 
-  const enabled =
-    cfg.ENABLE_SECONDARY_AD &&
-    !!scriptUrl &&
-    !!cfg.SECONDARY_AD_CLASS &&
-    !!cfg.SECONDARY_AD_ZONE_ID;
-  if (!enabled) return null;
+  if (!cfg.ENABLE_SECONDARY_AD || !cfg.SECONDARY_AD_ZONE_ID) return null;
   return (
     <AdSlotInner
       cfg={{
-        scriptUrl: scriptUrl!,
-        className: cfg.SECONDARY_AD_CLASS!,
-        zoneId: cfg.SECONDARY_AD_ZONE_ID!,
-        sub: cfg.SECONDARY_AD_SUB || undefined,
-        dismissKey: "secondary_ad_placeholder_dismissed",
-        minHeightPx: 90,
+        zoneId: cfg.SECONDARY_AD_ZONE_ID,
+        width: 300,
+        height: 250,
       }}
     />
   );
