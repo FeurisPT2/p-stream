@@ -746,9 +746,9 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
           containerElement.style.background = "";
           document.body.style.overflow = "";
           document.documentElement.style.overflow = "";
-          if ((screen.orientation as any)?.unlock) {
+          if ((window.screen.orientation as any)?.unlock) {
             try {
-              (screen.orientation as any).unlock();
+              (window.screen.orientation as any).unlock();
             } catch (e) {
               /* noop */
             }
@@ -775,9 +775,9 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
         containerElement.style.background = "#000";
         document.body.style.overflow = "hidden";
         document.documentElement.style.overflow = "hidden";
-        if ((screen.orientation as any)?.lock) {
+        if ((window.screen.orientation as any)?.lock) {
           try {
-            (screen.orientation as any).lock("landscape").catch(() => {});
+            (window.screen.orientation as any).lock("landscape").catch(() => {});
           } catch (e) {
             /* noop */
           }
