@@ -4,62 +4,63 @@ import { conf } from "@/setup/config";
 
 const ACLIB_URL = "https://acscdn.com/script/aclib.js";
 const SCRIPT_ID = "aclib";
-const SHIELD_FLAG = "__ad_click_shield_active";
-const SHIELD_DURATION_MS = 12000;
+const SHIELD_FLAG = "__ad_open_shield_installed";
 const LOAD_TIMEOUT_MS = 8000;
-
-const BLOCKED_EVENTS = new Set([
-  "click",
-  "auxclick",
-  "mousedown",
-  "mouseup",
-  "pointerdown",
-  "pointerup",
-  "touchstart",
-  "touchend",
-]);
+const AD_MARKER = "data-pstream-ad";
 
 declare global {
   interface Window {
     aclib?: { runBanner: (opts: { zoneId: string }) => void };
-    __ad_click_shield_active?: boolean;
+    __ad_open_shield_installed?: boolean;
   }
 }
 
 export type AdSlot = "primary" | "secondary";
 
-// shieldClickHijack: temporarily wrap addEventListener so any document /
-// window / body level click handler that aclib tries to register during its
-// init window is silently dropped. Auto-restores after SHIELD_DURATION_MS so
-// legitimate page handlers added later are unaffected.
-function shieldClickHijack() {
+// installOpenShield: install a single global click listener that suppresses
+// window.open / anchor-click navigation when the click did NOT originate from
+// inside one of our ad containers. This kills popunder hijacks (which depend
+// on capturing any click + opening a new tab) while leaving real ad clicks
+// (inside the banner iframe) and all page UI untouched.
+function installOpenShield() {
   if (typeof window === "undefined") return;
   if (window[SHIELD_FLAG]) return;
   window[SHIELD_FLAG] = true;
 
-  const proto = EventTarget.prototype;
-  const orig = proto.addEventListener;
+  const origOpen = window.open.bind(window);
 
-  function isGlobalTarget(t: unknown) {
-    return t === document || t === window || t === document.body;
-  }
+  const onClickCapture = (e: Event) => {
+    const target = e.target as HTMLElement | null;
+    const insideAd = !!target?.closest?.(`[${AD_MARKER}="true"]`);
+    if (insideAd) return;
 
-  proto.addEventListener = function patched(
-    this: EventTarget,
-    type: string,
-    listener: EventListenerOrEventListenerObject | null,
-    opts?: boolean | AddEventListenerOptions,
-  ) {
-    if (window[SHIELD_FLAG] && isGlobalTarget(this) && BLOCKED_EVENTS.has(type)) {
-      return;
+    // Temporarily neutralize window.open + anchor-target hijack for the
+    // duration of this click. The legit ad container is exempt above.
+    (window as { open: typeof window.open }).open = function blocked() {
+      return null;
+    };
+
+    // Also suppress synthetic anchor-target=_blank clicks that aren't from
+    // a real link in our DOM. If the click target ends up being an anchor
+    // we didn't render (i.e. injected by aclib outside our container),
+    // prevent its default navigation.
+    const a = target?.closest?.("a");
+    if (a && a instanceof HTMLAnchorElement && a.target === "_blank") {
+      const ourLink = a.closest?.(`[${AD_MARKER}="true"]`);
+      if (!ourLink) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }
-    return orig.call(this, type, listener as EventListener, opts);
-  } as typeof proto.addEventListener;
 
-  setTimeout(() => {
-    proto.addEventListener = orig;
-    window[SHIELD_FLAG] = false;
-  }, SHIELD_DURATION_MS);
+    setTimeout(() => {
+      (window as { open: typeof window.open }).open = origOpen;
+    }, 100);
+  };
+
+  document.addEventListener("click", onClickCapture, true);
+  document.addEventListener("auxclick", onClickCapture, true);
+  document.addEventListener("mousedown", onClickCapture, true);
 }
 
 function loadAclibScript() {
@@ -86,7 +87,7 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
   );
 
   useEffect(() => {
-    shieldClickHijack();
+    installOpenShield();
     loadAclibScript();
 
     const container = containerRef.current;
@@ -129,9 +130,10 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
   if (adState === "failed") return null;
 
   const wrapperMaxWidth = cfg.width + 32;
+  const markerProp = { [AD_MARKER]: "true" };
 
   return (
-    <div className="w-full flex justify-center my-6 px-4">
+    <div className="w-full flex justify-center my-6 px-4" {...markerProp}>
       <div
         className="relative rounded-2xl bg-gradient-to-br from-dropdown-background/60 via-dropdown-altBackground/40 to-mediaCard-hoverBackground/30 ring-1 ring-white/10 p-3 md:p-4 transition-opacity duration-500"
         style={{
