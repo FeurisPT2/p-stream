@@ -106,7 +106,7 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
       >
         <iframe
           ref={iframeRef}
-          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
           referrerPolicy="no-referrer"
           title=""
           style={{
