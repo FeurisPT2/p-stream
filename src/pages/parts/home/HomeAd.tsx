@@ -4,55 +4,59 @@ import { conf } from "@/setup/config";
 
 const ACLIB_URL = "https://acscdn.com/script/aclib.js";
 const SCRIPT_ID = "aclib";
-const SHIELD_FLAG = "__ad_open_shield_installed";
+const SHIELD_FLAG = "__ad_shield_installed";
 const LOAD_TIMEOUT_MS = 8000;
 const AD_MARKER = "data-pstream-ad";
 
 declare global {
   interface Window {
     aclib?: { runBanner: (opts: { zoneId: string }) => void };
-    __ad_open_shield_installed?: boolean;
+    __ad_shield_installed?: boolean;
   }
 }
 
 export type AdSlot = "primary" | "secondary";
 
-// installOpenShield: install a single global click listener that suppresses
-// window.open / anchor-click navigation when the click did NOT originate from
-// inside one of our ad containers. This kills popunder hijacks (which depend
-// on capturing any click + opening a new tab) while leaving real ad clicks
-// (inside the banner iframe) and all page UI untouched.
-function installOpenShield() {
+// installAdShield — installed once, globally. Two layers:
+//
+//   1. window.open: shielded ONLY during clicks not inside an ad wrapper.
+//      Real ad clicks (which fire from inside the ad container) pass through.
+//
+//   2. HTMLElement.prototype.click: permanently filters programmatic .click()
+//      calls on <a target="_blank"> anchors that aren't inside an ad wrapper.
+//      This is how aclib's popunder hijacks usually fire (synthetic anchor +
+//      .click()). User clicks on real outbound links go through the browser's
+//      native navigation handling — they don't call .click() on the element,
+//      so they're not affected.
+function installAdShield() {
   if (typeof window === "undefined") return;
   if (window[SHIELD_FLAG]) return;
   window[SHIELD_FLAG] = true;
 
   const origOpen = window.open.bind(window);
+  const origClick = HTMLElement.prototype.click;
+
+  HTMLElement.prototype.click = function patchedClick(this: HTMLElement) {
+    if (
+      this instanceof HTMLAnchorElement &&
+      (this.target === "_blank" || this.target === "_top")
+    ) {
+      const insideAd = this.closest?.(`[${AD_MARKER}="true"]`);
+      if (!insideAd) {
+        return;
+      }
+    }
+    return origClick.apply(this);
+  };
 
   const onClickCapture = (e: Event) => {
     const target = e.target as HTMLElement | null;
     const insideAd = !!target?.closest?.(`[${AD_MARKER}="true"]`);
     if (insideAd) return;
 
-    // Temporarily neutralize window.open + anchor-target hijack for the
-    // duration of this click. The legit ad container is exempt above.
     (window as { open: typeof window.open }).open = function blocked() {
       return null;
     };
-
-    // Also suppress synthetic anchor-target=_blank clicks that aren't from
-    // a real link in our DOM. If the click target ends up being an anchor
-    // we didn't render (i.e. injected by aclib outside our container),
-    // prevent its default navigation.
-    const a = target?.closest?.("a");
-    if (a && a instanceof HTMLAnchorElement && a.target === "_blank") {
-      const ourLink = a.closest?.(`[${AD_MARKER}="true"]`);
-      if (!ourLink) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    }
-
     setTimeout(() => {
       (window as { open: typeof window.open }).open = origOpen;
     }, 100);
@@ -87,7 +91,7 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
   );
 
   useEffect(() => {
-    installOpenShield();
+    installAdShield();
     loadAclibScript();
 
     const container = containerRef.current;
