@@ -116,6 +116,7 @@ module.exports = {
     "react/no-unescaped-entities": "off",
     "import/no-unresolved": "off",
     "import/extensions": "off",
+        "react/no-restricted-globals": "off",
     "react/no-unused-prop-types": "off",
     ...a11yOff,
   },
