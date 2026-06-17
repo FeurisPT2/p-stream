@@ -3,9 +3,75 @@ import { useEffect, useRef, useState } from "react";
 import { conf } from "@/setup/config";
 
 const ACLIB_URL = "https://acscdn.com/script/aclib.js";
-const LOAD_TIMEOUT_MS = 7000;
+const SCRIPT_ID = "aclib";
+const SHIELD_FLAG = "__ad_click_shield_active";
+const SHIELD_DURATION_MS = 12000;
+const LOAD_TIMEOUT_MS = 8000;
+
+const BLOCKED_EVENTS = new Set([
+  "click",
+  "auxclick",
+  "mousedown",
+  "mouseup",
+  "pointerdown",
+  "pointerup",
+  "touchstart",
+  "touchend",
+]);
+
+declare global {
+  interface Window {
+    aclib?: { runBanner: (opts: { zoneId: string }) => void };
+    __ad_click_shield_active?: boolean;
+  }
+}
 
 export type AdSlot = "primary" | "secondary";
+
+// shieldClickHijack: temporarily wrap addEventListener so any document /
+// window / body level click handler that aclib tries to register during its
+// init window is silently dropped. Auto-restores after SHIELD_DURATION_MS so
+// legitimate page handlers added later are unaffected.
+function shieldClickHijack() {
+  if (typeof window === "undefined") return;
+  if (window[SHIELD_FLAG]) return;
+  window[SHIELD_FLAG] = true;
+
+  const proto = EventTarget.prototype;
+  const orig = proto.addEventListener;
+
+  function isGlobalTarget(t: unknown) {
+    return t === document || t === window || t === document.body;
+  }
+
+  proto.addEventListener = function patched(
+    this: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    opts?: boolean | AddEventListenerOptions,
+  ) {
+    if (window[SHIELD_FLAG] && isGlobalTarget(this) && BLOCKED_EVENTS.has(type)) {
+      return;
+    }
+    return orig.call(this, type, listener as EventListener, opts);
+  } as typeof proto.addEventListener;
+
+  setTimeout(() => {
+    proto.addEventListener = orig;
+    window[SHIELD_FLAG] = false;
+  }, SHIELD_DURATION_MS);
+}
+
+function loadAclibScript() {
+  if (typeof window === "undefined") return;
+  if (document.getElementById(SCRIPT_ID)) return;
+  const s = document.createElement("script");
+  s.id = SCRIPT_ID;
+  s.type = "text/javascript";
+  s.src = ACLIB_URL;
+  s.async = true;
+  document.head.appendChild(s);
+}
 
 interface SlotConfig {
   zoneId: string;
@@ -13,79 +79,49 @@ interface SlotConfig {
   height: number;
 }
 
-function buildIframeContent(zoneId: string): string {
-  return `<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
-  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-  body > div { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-</style>
-</head>
-<body>
-<div>
-<script id="aclib" type="text/javascript" src="${ACLIB_URL}"></script>
-<script type="text/javascript">
-  (function() {
-    var notified = false;
-    function tryRender() {
-      if (typeof aclib !== 'undefined' && aclib.runBanner) {
-        try { aclib.runBanner({ zoneId: '${zoneId}' }); } catch (e) {}
-        setTimeout(check, 600);
-      } else {
-        setTimeout(tryRender, 150);
-      }
-    }
-    function check() {
-      if (notified) return;
-      var el = document.querySelector('iframe, img');
-      if (el) {
-        notified = true;
-        try { parent.postMessage({ t: 'adcash-ok', z: '${zoneId}' }, '*'); } catch (e) {}
-      } else {
-        setTimeout(check, 400);
-      }
-    }
-    tryRender();
-  })();
-</script>
-</div>
-</body>
-</html>`;
-}
-
 function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const [adState, setAdState] = useState<"loading" | "loaded" | "failed">(
     "loading",
   );
 
   useEffect(() => {
-    const iframe = iframeRef.current;
-    if (!iframe) return;
+    shieldClickHijack();
+    loadAclibScript();
 
-    iframe.srcdoc = buildIframeContent(cfg.zoneId);
+    const container = containerRef.current;
+    if (!container) return;
 
-    const onMessage = (e: MessageEvent) => {
-      if (
-        e.data &&
-        typeof e.data === "object" &&
-        e.data.t === "adcash-ok" &&
-        e.data.z === cfg.zoneId
-      ) {
+    let cancelled = false;
+    const tryRun = () => {
+      if (cancelled) return;
+      if (typeof window.aclib?.runBanner === "function") {
+        const s = document.createElement("script");
+        s.type = "text/javascript";
+        s.text = `try { aclib.runBanner({ zoneId: '${cfg.zoneId}' }); } catch (e) {}`;
+        container.appendChild(s);
+      } else {
+        setTimeout(tryRun, 150);
+      }
+    };
+    tryRun();
+
+    const update = () => {
+      if (container.querySelector("iframe, img")) {
         setAdState("loaded");
       }
     };
-    window.addEventListener("message", onMessage);
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(container, { childList: true, subtree: true });
 
     const timeout = setTimeout(() => {
       setAdState((s) => (s === "loading" ? "failed" : s));
     }, LOAD_TIMEOUT_MS);
 
     return () => {
-      window.removeEventListener("message", onMessage);
+      cancelled = true;
+      observer.disconnect();
       clearTimeout(timeout);
     };
   }, [cfg.zoneId]);
@@ -104,22 +140,13 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
           opacity: adState === "loaded" ? 1 : 0.6,
         }}
       >
-        <iframe
-          ref={iframeRef}
-          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
-          referrerPolicy="no-referrer"
-          title=""
+        <div
+          ref={containerRef}
+          className="flex items-center justify-center mx-auto"
           style={{
-            border: 0,
-            display: "block",
-            margin: "0 auto",
-            width: "100%",
-            maxWidth: `${cfg.width}px`,
-            height: `${cfg.height}px`,
-            background: "transparent",
+            minHeight: `${cfg.height}px`,
+            minWidth: 0,
           }}
-          width={cfg.width}
-          height={cfg.height}
         />
       </div>
     </div>
