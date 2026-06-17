@@ -184,8 +184,11 @@ export function HomePage() {
         {conf().SHOW_AD ? <AdsPart /> : null}
       </div>
 
-      {!search && <HomeAd />}
-      {!search && <HomeAd slot="secondary" />}
+      {!search && (
+        <div className="w-full flex justify-center px-4 my-6">
+          <HomeAd />
+        </div>
+      )}
 
       {/* Search */}
       {search && (
@@ -205,6 +208,12 @@ export function HomePage() {
 
       {/* User Content */}
       {!search && renderHomeSections()}
+
+      {!search && (
+        <div className="w-full flex justify-center my-6 px-4 xl:fixed xl:right-4 xl:top-1/2 xl:-translate-y-1/2 xl:z-20 xl:my-0 xl:px-0 xl:w-auto xl:block">
+          <HomeAd slot="secondary" />
+        </div>
+      )}
 
       {/* Under user content */}
       <WideContainer ultraWide classNames="!px-3 md:!px-9">

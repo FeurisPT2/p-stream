@@ -82,23 +82,32 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
   const wrapperMaxWidth = cfg.width + 32;
 
   return (
-    <div className="w-full flex justify-center my-6 px-4">
-      <div
-        className="relative rounded-2xl bg-gradient-to-br from-dropdown-background/60 via-dropdown-altBackground/40 to-mediaCard-hoverBackground/30 ring-1 ring-white/10 p-3 md:p-4 transition-opacity duration-500"
-        style={{
-          maxWidth: `${wrapperMaxWidth}px`,
-          width: "100%",
-          opacity: adState === "loaded" ? 1 : 0.6,
-        }}
-      >
-        <div
-          ref={containerRef}
-          className="flex items-center justify-center mx-auto"
-          style={{
-            minHeight: `${cfg.height}px`,
-            minWidth: 0,
-          }}
-        />
+    <div
+      className="relative p-[1.5px] rounded-2xl bg-gradient-to-br from-purple-400/70 via-pink-400/40 to-amber-300/60 transition-opacity duration-500 shadow-lg shadow-purple-500/10"
+      style={{
+        maxWidth: `${wrapperMaxWidth}px`,
+        width: "100%",
+        opacity: adState === "loaded" ? 1 : 0.6,
+      }}
+    >
+      <div className="rounded-[14px] overflow-hidden bg-gradient-to-br from-[#1d1632] via-[#171125] to-[#1a1530]">
+        <div className="flex items-center justify-between px-3 pt-2.5 pb-1">
+          <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-purple-200/70 select-none">
+            Advertisement
+          </span>
+          <span className="h-1.5 w-1.5 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 opacity-70" />
+        </div>
+
+        <div className="px-3 pb-3 pt-1 md:px-4 md:pb-4">
+          <div
+            ref={containerRef}
+            className="flex items-center justify-center mx-auto"
+            style={{
+              minHeight: `${cfg.height}px`,
+              minWidth: 0,
+            }}
+          />
+        </div>
       </div>
     </div>
   );
