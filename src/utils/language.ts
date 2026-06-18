@@ -172,9 +172,10 @@ export function getCountryCodeForLocale(locale: string): string | null {
 
   if (priority) {
     const prioritizedCountry = output.countries.find(
-      (v) => v.code_2.toLowerCase() === priority,
+      (v) => v.code_2?.toLowerCase() === priority,
     );
-    if (prioritizedCountry) return prioritizedCountry.code_2.toLowerCase();
+    if (prioritizedCountry?.code_2)
+      return prioritizedCountry.code_2.toLowerCase();
   }
 
   // If the language contains a region, check that against the countries and
@@ -183,12 +184,14 @@ export function getCountryCodeForLocale(locale: string): string | null {
   if (regionSubtag) {
     const regionCode = output.countries.find(
       (c) =>
-        c.code_2.toLowerCase() === regionSubtag ||
-        c.code_3.toLowerCase() === regionSubtag,
+        c.code_2?.toLowerCase() === regionSubtag ||
+        c.code_3?.toLowerCase() === regionSubtag,
     );
-    if (regionCode) return regionCode.code_2.toLowerCase();
+    if (regionCode?.code_2) return regionCode.code_2.toLowerCase();
   }
-  return output.countries[0].code_2.toLowerCase();
+
+  const firstWithCode = output.countries.find((c) => !!c.code_2);
+  return firstWithCode?.code_2 ? firstWithCode.code_2.toLowerCase() : null;
 }
 
 /**

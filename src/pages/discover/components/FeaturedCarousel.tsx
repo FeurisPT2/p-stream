@@ -21,6 +21,7 @@ import { useLanguageStore } from "@/stores/language";
 import { usePreferencesStore } from "@/stores/preferences";
 import { scrapeIMDb } from "@/utils/imdbScraper";
 import { getTmdbLanguageCode } from "@/utils/language";
+import { detectUserRegion } from "@/utils/userRegion";
 
 import { RandomMovieButton } from "./RandomMovieButton";
 import {
@@ -261,6 +262,7 @@ export function FeaturedCarousel({
               const listData = await get<any>("/movie/popular", {
                 api_key: conf().TMDB_READ_API_KEY,
                 language: formattedLanguage,
+                region: detectUserRegion(),
               });
 
               // Then fetch full details for each movie to get external_ids
@@ -290,6 +292,7 @@ export function FeaturedCarousel({
               const listData = await get<any>("/tv/popular", {
                 api_key: conf().TMDB_READ_API_KEY,
                 language: formattedLanguage,
+                region: detectUserRegion(),
               });
 
               // Then fetch full details for each show to get external_ids
