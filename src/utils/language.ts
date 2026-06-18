@@ -164,7 +164,8 @@ export function getCountryCodeForLocale(locale: string): string | null {
   });
 
   if (!output) return null;
-  const priority = countryPriority[output.iso639_1.toLowerCase()];
+  const iso = output.iso639_1?.toLowerCase();
+  const priority = iso ? countryPriority[iso] : undefined;
   if (output.countries.length === 0) {
     return priority ?? null;
   }
