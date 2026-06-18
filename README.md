@@ -1,59 +1,18 @@
-# P-Stream
+# Z-Stream
 
-[![P-Stream Image](.github/P-Stream.png)](https://p-stream.github.io/docs/)
-
-## Quick Deploy
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fp-stream%2Fp-stream)
-
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/p-stream/p-stream)
-
-**NOTE: To self-host, more setup is required. Check the [docs](https://p-stream.github.io/docs/) to properly set up!!!!**
-
-## Links And Resources
-
-| Service   | Link                                                    | Source Code                                                    |
-| --------- | ------------------------------------------------------- | -------------------------------------------------------------- |
-| P-Stream Docs | [docs](https://docs.pstream.net/)                   |                                                                |
-| Extension | [extension](https://docs.pstream.net/extension)         | [source code](https://github.com/xp-technologies-dev/browser-ext) |
-| Proxy     | [simple-proxy](https://docs.pstream.net/proxy)          | [source code](https://github.com/xp-technologies-dev/simple-proxy) |
-| Backend   | [backend](https://github.com/xp-technologies-dev/backend) | [source code](https://github.com/xp-technologies-dev/backend) |
-| Frontend  | [P-Stream](https://docs.pstream.net/instances)          | [source code](https://github.com/xp-technologies-dev/p-stream) |
+[![Z-Stream Image](.github/P-Stream.png)](https://zstream.mov)
 
 
 ## Referrers
 
-- [FMHY (Voted as #1 streaming site of 2024, 2025)](https://fmhy.net)
+- [FMHY (Voted as #1 streaming site of 2024, 2025 - on Pstream)](https://fmhy.net)
 
-## Running Locally
+## Open-source status
 
-Type the following commands into your terminal / command line to run P-Stream locally
+The code except Providers are open-source. But because it's heavily worked on without the intention to keep the code clean - I will not be able to provide instructions / help on how to host the instance yourself. For a reliable version of the open-source repository to get started with hosting an instance refer to the [Original Repo](https://github.com/p-stream/p-stream) - Celeste
 
-```bash
-git clone https://github.com/p-stream/p-stream.git
-cd smov
-git pull
-pnpm install
-pnpm run dev
-```
 
-Then you can visit the local instance [here](http://localhost:5173) or, at local host on port 5173.
 
-## Updating a P-Stream Instance
-
-To update a P-Stream instance you can type the below commands into a terminal at the root of your project.
-
-```bash
-git remote add upstream https://github.com/p-stream/p-stream.git
-git fetch upstream # Grab the contents of the new remote source
-git checkout <YOUR_MAIN_BRANCH>  # Most likely this would be `origin/production`
-git merge upstream/production
-# * Fix any conflicts present during merge *
-git add .  # Add all changes made during merge and conflict fixing
-git commit -m "Update p-stream instance (merge upstream/production)"
-git push  # Push to YOUR repository
-```
-
-## Contact Me / Discord
+## Discord
 
 [Discord](https://discord.gg/rVa8jzGR)
