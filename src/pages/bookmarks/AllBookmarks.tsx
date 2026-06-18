@@ -1,11 +1,15 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
-import { useMemo, useState } from "react";
+import { Popover, Transition } from "@headlessui/react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
+import { getMediaDetails } from "@/backend/metadata/tmdb";
+import { TMDBContentTypes } from "@/backend/metadata/types/tmdb";
 import { Button } from "@/components/buttons/Button";
 import { EditButton } from "@/components/buttons/EditButton";
 import { EditButtonWithText } from "@/components/buttons/EditButtonWithText";
+import { OptionItem } from "@/components/form/Dropdown";
 import { Icon, Icons } from "@/components/Icon";
 import { SectionHeading } from "@/components/layout/SectionHeading";
 import { WideContainer } from "@/components/layout/WideContainer";
@@ -18,11 +22,13 @@ import { Heading1 } from "@/components/utils/Text";
 import { useBackendUrl } from "@/hooks/auth/useBackendUrl";
 import { useRandomTranslation } from "@/hooks/useRandomTranslation";
 import { SubPageLayout } from "@/pages/layouts/SubPageLayout";
+import { HomeAd } from "@/pages/parts/home/HomeAd";
 import { useAuthStore } from "@/stores/auth";
 import { useBookmarkStore } from "@/stores/bookmarks";
 import { useGroupOrderStore } from "@/stores/groupOrder";
 import { useOverlayStack } from "@/stores/interface/overlayStack";
 import { useProgressStore } from "@/stores/progress";
+import { SortOption, sortMediaItems } from "@/utils/mediaSorting";
 import { MediaItem } from "@/utils/mediaTypes";
 
 function parseGroupString(group: string): { icon: UserIcons; name: string } {
@@ -57,6 +63,60 @@ export function AllBookmarks({ onShowDetails }: AllBookmarksProps) {
   const account = useAuthStore((s) => s.account);
   const { showModal } = useOverlayStack();
 
+  const [sortBy, setSortBy] = useState<SortOption>(() => {
+    const saved = localStorage.getItem("__MW::bookmarksSort");
+    return (saved as SortOption) || "date";
+  });
+  const [runtimeData, setRuntimeData] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    localStorage.setItem("__MW::bookmarksSort", sortBy);
+  }, [sortBy]);
+
+  useEffect(() => {
+    if (sortBy !== "length-asc" && sortBy !== "length-desc") return;
+    const ids = Object.keys(bookmarks);
+    const missing = ids.filter((id) => !(id in runtimeData));
+    if (missing.length === 0) return;
+
+    Promise.all(
+      missing.map(async (id) => {
+        const type =
+          bookmarks[id].type === "movie"
+            ? TMDBContentTypes.MOVIE
+            : TMDBContentTypes.TV;
+        try {
+          const data = await getMediaDetails(id, type, false);
+          const value =
+            type === TMDBContentTypes.MOVIE
+              ? ((data as any).runtime ?? 0)
+              : ((data as any).number_of_episodes ?? 0);
+          return [id, value] as [string, number];
+        } catch {
+          return [id, 0] as [string, number];
+        }
+      }),
+    ).then((results) => {
+      setRuntimeData((prev) => {
+        const next = { ...prev };
+        results.forEach(([id, val]) => {
+          next[id] = val;
+        });
+        return next;
+      });
+    });
+  }, [sortBy, bookmarks, runtimeData]);
+
+  const sortOptions: OptionItem[] = [
+    { id: "date", name: t("home.bookmarks.sorting.options.date") },
+    { id: "title-asc", name: t("home.bookmarks.sorting.options.titleAsc") },
+    { id: "title-desc", name: t("home.bookmarks.sorting.options.titleDesc") },
+    { id: "year-asc", name: t("home.bookmarks.sorting.options.yearAsc") },
+    { id: "year-desc", name: t("home.bookmarks.sorting.options.yearDesc") },
+    { id: "length-asc", name: t("home.bookmarks.sorting.options.lengthAsc") },
+    { id: "length-desc", name: t("home.bookmarks.sorting.options.lengthDesc") },
+  ];
+
   const handleShowDetails = async (media: MediaItem) => {
     if (onShowDetails) {
       onShowDetails(media);
@@ -69,26 +129,15 @@ export function AllBookmarks({ onShowDetails }: AllBookmarksProps) {
   };
 
   const items = useMemo(() => {
-    let output: MediaItem[] = [];
+    const output: MediaItem[] = [];
     Object.entries(bookmarks).forEach((entry) => {
       output.push({
         id: entry[0],
         ...entry[1],
       });
     });
-    output = output.sort((a, b) => {
-      const bookmarkA = bookmarks[a.id];
-      const bookmarkB = bookmarks[b.id];
-      const progressA = progressItems[a.id];
-      const progressB = progressItems[b.id];
-
-      const dateA = Math.max(bookmarkA.updatedAt, progressA?.updatedAt ?? 0);
-      const dateB = Math.max(bookmarkB.updatedAt, progressB?.updatedAt ?? 0);
-
-      return dateB - dateA;
-    });
-    return output;
-  }, [bookmarks, progressItems]);
+    return sortMediaItems(output, sortBy, bookmarks, progressItems, runtimeData);
+  }, [bookmarks, progressItems, sortBy, runtimeData]);
 
   const { groupedItems, regularItems } = useMemo(() => {
     const grouped: Record<string, MediaItem[]> = {};
@@ -108,23 +157,19 @@ export function AllBookmarks({ onShowDetails }: AllBookmarksProps) {
       }
     });
 
-    // Sort items within each group by date
+    // Sort items within each group using the active sort option
     Object.keys(grouped).forEach((group) => {
-      grouped[group].sort((a, b) => {
-        const bookmarkA = bookmarks[a.id];
-        const bookmarkB = bookmarks[b.id];
-        const progressA = progressItems[a.id];
-        const progressB = progressItems[b.id];
-
-        const dateA = Math.max(bookmarkA.updatedAt, progressA?.updatedAt ?? 0);
-        const dateB = Math.max(bookmarkB.updatedAt, progressB?.updatedAt ?? 0);
-
-        return dateB - dateA;
-      });
+      grouped[group] = sortMediaItems(
+        grouped[group],
+        sortBy,
+        bookmarks,
+        progressItems,
+        runtimeData,
+      );
     });
 
     return { groupedItems: grouped, regularItems: regular };
-  }, [items, bookmarks, progressItems]);
+  }, [items, bookmarks, progressItems, sortBy, runtimeData]);
 
   // group sorting
   const allGroups = useMemo(() => {
@@ -246,6 +291,61 @@ export function AllBookmarks({ onShowDetails }: AllBookmarksProps) {
             {t("home.bookmarks.sectionTitle")}
           </Heading1>
           <div className="flex items-center gap-2">
+            <Popover className="relative">
+              {({ open }) => (
+                <>
+                  <Popover.Button
+                    className={`p-2 rounded-full transition-colors outline-none focus:ring-2 focus:ring-type-link ${open ? "bg-white/20 text-white" : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"}`}
+                  >
+                    <Icon icon={Icons.SETTINGS} className="text-xl" />
+                  </Popover.Button>
+                  <Transition
+                    as={Fragment}
+                    enter="transition ease-out duration-200"
+                    enterFrom="opacity-0 translate-y-1"
+                    enterTo="opacity-100 translate-y-0"
+                    leave="transition ease-in duration-150"
+                    leaveFrom="opacity-100 translate-y-0"
+                    leaveTo="opacity-0 translate-y-1"
+                  >
+                    <Popover.Panel className="absolute right-0 top-full mt-2 w-64 z-50 rounded-xl bg-dropdown-background p-4 shadow-lg ring-1 ring-white/10 select-none">
+                      <label className="block text-sm font-medium text-white mb-2">
+                        {t("home.bookmarks.sorting.label", "Sort By")}
+                      </label>
+                      <div className="bg-background-secondaryHover rounded-lg overflow-hidden flex flex-col">
+                        {sortOptions.map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => {
+                              const newSort = opt.id as SortOption;
+                              setSortBy(newSort);
+                              localStorage.setItem(
+                                "__MW::bookmarksSort",
+                                newSort,
+                              );
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center justify-between ${
+                              sortBy === opt.id
+                                ? "text-type-emphasis"
+                                : "text-type-text hover:bg-white/5 hover:text-type-emphasis"
+                            }`}
+                          >
+                            <span>{opt.name}</span>
+                            {sortBy === opt.id && (
+                              <Icon
+                                icon={Icons.CHECKMARK}
+                                className="text-type-link"
+                              />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </Popover.Panel>
+                  </Transition>
+                </>
+              )}
+            </Popover>
             {editing && allGroups.length > 1 && (
               <EditButtonWithText
                 editing={editing}
@@ -379,6 +479,10 @@ export function AllBookmarks({ onShowDetails }: AllBookmarksProps) {
           onCancel={handleCancelOrder}
           onSave={handleSaveOrderClick}
         />
+
+        <div className="w-full flex justify-center my-10 px-4">
+          <HomeAd slot="bookmarks" />
+        </div>
       </WideContainer>
     </SubPageLayout>
   );
