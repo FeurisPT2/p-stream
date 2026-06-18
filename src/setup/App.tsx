@@ -31,6 +31,7 @@ import { MoreContent } from "@/pages/discover/MoreContent";
 import MaintenancePage from "@/pages/errors/MaintenancePage";
 import { NotFoundPage } from "@/pages/errors/NotFoundPage";
 import { HomePage } from "@/pages/HomePage";
+import { PersonView } from "@/pages/PersonView";
 import { CelPage } from "@/pages/Cel";
 import { LegalPage, shouldHaveLegalPage } from "@/pages/Legal";
 import { LoginPage } from "@/pages/Login";
@@ -226,6 +227,7 @@ function App() {
           <Route path="/discover/all" element={<DiscoverMore />} />
           {/* Bookmarks page */}
           <Route path="/bookmarks" element={<AllBookmarks />} />
+          <Route path="/person/:id" element={<PersonView />} />
           {/* Watch History page */}
           <Route path="/watch-history" element={<WatchHistory />} />
           {/* Settings page */}
