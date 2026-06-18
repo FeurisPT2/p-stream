@@ -79,25 +79,25 @@ function AdSlotInner({ cfg }: { cfg: SlotConfig }) {
 
   if (adState === "failed") return null;
 
-  const wrapperMaxWidth = cfg.width + 32;
+  const wrapperMaxWidth = cfg.width + 16;
 
   return (
     <div
-      className="relative rounded-xl ring-1 ring-white/10 bg-black/30 transition-opacity duration-500"
+      className="relative rounded-lg ring-1 ring-white/20 bg-black/30 transition-opacity duration-500"
       style={{
         maxWidth: `${wrapperMaxWidth}px`,
         width: "100%",
         opacity: adState === "loaded" ? 1 : 0.6,
       }}
     >
-      <div className="rounded-xl overflow-hidden">
-        <div className="px-3 pt-2 pb-1">
-          <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-white/35 select-none">
+      <div className="rounded-lg overflow-hidden">
+        <div className="px-2.5 pt-1.5 pb-0.5">
+          <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-white/60 select-none">
             Advertisement
           </span>
         </div>
 
-        <div className="px-3 pb-3 pt-1 md:px-4 md:pb-4">
+        <div className="px-2 pb-2 pt-0.5">
           <div
             ref={containerRef}
             className="flex items-center justify-center mx-auto"
