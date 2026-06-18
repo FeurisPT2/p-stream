@@ -90,7 +90,7 @@ export function CaptionCue({
 
   return (
     <p
-      className="mb-1 rounded px-4 py-1 text-center leading-normal"
+      className="mb-1 rounded px-4 py-1 text-center"
       style={{
         color: styling.color,
         fontSize: `${(1.5 * styling.size).toFixed(2)}em`,
@@ -100,6 +100,7 @@ export function CaptionCue({
             ? `blur(${Math.floor(styling.backgroundBlur * 64)}px)`
             : "none",
         fontWeight: styling.bold ? "bold" : "normal",
+        lineHeight: styling.lineHeight ?? 1.5,
         ...textEffectStyles,
       }}
     >
