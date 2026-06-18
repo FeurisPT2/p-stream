@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 
@@ -12,7 +12,6 @@ import {
   ColorOption,
   colors,
 } from "@/components/player/atoms/settings/CaptionSettingsView";
-import { Menu } from "@/components/player/internals/ContextMenu";
 import { CaptionCue } from "@/components/player/Player";
 import { Heading1 } from "@/components/utils/Text";
 import { Transition } from "@/components/utils/Transition";
@@ -20,6 +19,168 @@ import { usePlayerStore } from "@/stores/player/store";
 import { usePreferencesStore } from "@/stores/preferences";
 import { SubtitleStyling, useSubtitleStore } from "@/stores/subtitles";
 import { isFirefox } from "@/utils/detectFeatures";
+
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: Icons;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 px-1">
+        <Icon icon={icon} className="text-base text-type-secondary" />
+        <h3 className="text-xs font-bold uppercase tracking-wider text-type-secondary">
+          {title}
+        </h3>
+      </div>
+      <div className="rounded-xl bg-dropdown-background/30 ring-1 ring-white/5 divide-y divide-white/5">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ToggleRow({
+  title,
+  description,
+  enabled,
+  onChange,
+  disabled,
+}: {
+  title: string;
+  description?: ReactNode;
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div
+      onClick={() => !disabled && onChange(!enabled)}
+      className={classNames(
+        "px-4 py-3 select-none flex items-start gap-4 transition-colors",
+        disabled
+          ? "cursor-not-allowed opacity-50 pointer-events-none"
+          : "cursor-pointer hover:bg-white/[0.03]",
+      )}
+    >
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold leading-snug">{title}</p>
+        {description ? (
+          <p className="text-sm text-type-secondary mt-1 leading-snug">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      <div className="shrink-0 pt-0.5">
+        <Toggle enabled={enabled} />
+      </div>
+    </div>
+  );
+}
+
+function SliderRow({
+  label,
+  value,
+  min,
+  max,
+  decimalsAllowed,
+  textTransformer,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  decimalsAllowed?: number;
+  textTransformer?: (s: string) => string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="px-4 py-3">
+      <CaptionSetting
+        label={label}
+        value={value}
+        min={min}
+        max={max}
+        decimalsAllowed={decimalsAllowed}
+        textTransformer={textTransformer}
+        onChange={onChange}
+      />
+    </div>
+  );
+}
+
+function DropdownRow({
+  title,
+  options,
+  value,
+  onChange,
+}: {
+  title: string;
+  options: { id: string; name: string }[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const selected =
+    options.find((o) => o.id === value) ?? { id: value, name: value };
+  return (
+    <div className="px-4 py-3 flex items-center gap-4">
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold leading-snug">{title}</p>
+      </div>
+      <div className="shrink-0 w-40">
+        <Dropdown
+          options={options}
+          selectedItem={selected}
+          setSelectedItem={(item) => onChange(item.id)}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ColorRow({
+  title,
+  value,
+  onChange,
+}: {
+  title: string;
+  value: string;
+  onChange: (color: string) => void;
+}) {
+  return (
+    <div className="px-4 py-3 flex flex-wrap items-center gap-4">
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold leading-snug">{title}</p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        {colors.map((v) => (
+          <ColorOption
+            onClick={() => onChange(v)}
+            color={v}
+            active={value === v}
+            key={v}
+          />
+        ))}
+        <div className="relative">
+          <input
+            type="color"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="absolute opacity-0 cursor-pointer w-8 h-8"
+          />
+          <div style={{ color: value }}>
+            <Icon icon={Icons.BRUSH} className="text-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function CaptionPreview(props: {
   fullscreen?: boolean;
@@ -114,7 +275,6 @@ export function CaptionsPart(props: {
     subtitleStore.updateStyling(props.styling);
   }, [props.styling, subtitleStore, subtitleStore.updateStyling]);
 
-  // Sync preferences with player store
   useEffect(() => {
     setCaptionAsTrack(enableNativeSubtitles);
   }, [enableNativeSubtitles, setCaptionAsTrack]);
@@ -140,233 +300,178 @@ export function CaptionsPart(props: {
     });
   };
 
+  const styleOptions = [
+    { id: "default", name: t("settings.subtitles.textStyle.default") },
+    { id: "raised", name: t("settings.subtitles.textStyle.raised") },
+    { id: "depressed", name: t("settings.subtitles.textStyle.depressed") },
+    { id: "Border", name: t("settings.subtitles.textStyle.Border") },
+    { id: "dropShadow", name: t("settings.subtitles.textStyle.dropShadow") },
+  ];
+
   return (
     <div>
       <Heading1 border>{t("settings.subtitles.title")}</Heading1>
       <div className="grid md:grid-cols-[1fr,356px] gap-8">
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <Menu.FieldTitle>
-              {t("player.menus.subtitles.useNativeSubtitles")}
-            </Menu.FieldTitle>
-            <div className="flex justify-center items-center">
-              <Toggle
-                enabled={enableNativeSubtitles}
-                onClick={() =>
-                  preferencesStore.setEnableNativeSubtitles(
-                    !enableNativeSubtitles,
-                  )
-                }
-              />
-            </div>
-          </div>
-          <span className="text-xs text-type-secondary">
-            {t("player.menus.subtitles.useNativeSubtitlesDescription")}
-          </span>
+          <Section
+            title={t("settings.subtitles.behaviorSection", "Behavior")}
+            icon={Icons.CAPTIONS}
+          >
+            <ToggleRow
+              title={t("player.menus.subtitles.useNativeSubtitles")}
+              description={t(
+                "player.menus.subtitles.useNativeSubtitlesDescription",
+              )}
+              enabled={enableNativeSubtitles}
+              onChange={(v) => preferencesStore.setEnableNativeSubtitles(v)}
+            />
+          </Section>
+
           {!enableNativeSubtitles && (
             <>
-              <CaptionSetting
-                label={t("settings.subtitles.backgroundLabel")}
-                max={100}
-                min={0}
-                onChange={(v) =>
-                  handleStylingChange({
-                    ...props.styling,
-                    backgroundOpacity: v / 100,
-                  })
-                }
-                value={props.styling.backgroundOpacity * 100}
-                textTransformer={(s) => `${s}%`}
-              />
-              <div className="flex justify-between items-center">
-                <Menu.FieldTitle>
-                  {t("settings.subtitles.backgroundBlurEnabledLabel")}
-                </Menu.FieldTitle>
-                <div className="flex justify-center items-center">
-                  <Toggle
-                    enabled={props.styling.backgroundBlurEnabled}
-                    onClick={() =>
-                      handleStylingChange({
-                        ...props.styling,
-                        backgroundBlurEnabled:
-                          !props.styling.backgroundBlurEnabled,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <span className="text-xs text-type-secondary">
-                {t("settings.subtitles.backgroundBlurEnabledDescription")}
-              </span>
-              {props.styling.backgroundBlurEnabled && (
-                <CaptionSetting
-                  label={t("settings.subtitles.backgroundBlurLabel")}
+              <Section
+                title={t("settings.subtitles.backgroundSection", "Background")}
+                icon={Icons.BRUSH}
+              >
+                <SliderRow
+                  label={t("settings.subtitles.backgroundLabel")}
+                  value={props.styling.backgroundOpacity * 100}
+                  min={0}
                   max={100}
-                  min={0}
-                  onChange={(v) =>
-                    handleStylingChange({
-                      ...props.styling,
-                      backgroundBlur: v / 100,
-                    })
-                  }
-                  value={props.styling.backgroundBlur * 100}
                   textTransformer={(s) => `${s}%`}
-                />
-              )}
-              <CaptionSetting
-                label={t("settings.subtitles.textSizeLabel")}
-                max={200}
-                min={1}
-                textTransformer={(s) => `${s}%`}
-                onChange={(v) =>
-                  handleStylingChange({
-                    ...props.styling,
-                    size: v / 100,
-                  })
-                }
-                value={props.styling.size * 100}
-              />
-              <div className="flex justify-between items-center">
-                <Menu.FieldTitle>
-                  {t("settings.subtitles.textStyle.title")}
-                </Menu.FieldTitle>
-                <div className="w-30">
-                  <Dropdown
-                    options={[
-                      {
-                        id: "default",
-                        name: t("settings.subtitles.textStyle.default"),
-                      },
-                      {
-                        id: "raised",
-                        name: t("settings.subtitles.textStyle.raised"),
-                      },
-                      {
-                        id: "depressed",
-                        name: t("settings.subtitles.textStyle.depressed"),
-                      },
-                      {
-                        id: "Border",
-                        name: t("settings.subtitles.textStyle.Border"),
-                      },
-                      {
-                        id: "dropShadow",
-                        name: t("settings.subtitles.textStyle.dropShadow"),
-                      },
-                    ]}
-                    selectedItem={{
-                      id: props.styling.fontStyle,
-                      name:
-                        t(
-                          `settings.subtitles.textStyle.${props.styling.fontStyle}`,
-                        ) || props.styling.fontStyle,
-                    }}
-                    setSelectedItem={(item) =>
-                      handleStylingChange({
-                        ...props.styling,
-                        fontStyle: item.id,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              {props.styling.fontStyle === "Border" && (
-                <CaptionSetting
-                  label={t("settings.subtitles.BorderThicknessLabel")}
-                  max={10}
-                  min={0}
                   onChange={(v) =>
                     handleStylingChange({
                       ...props.styling,
-                      borderThickness: v,
+                      backgroundOpacity: v / 100,
                     })
                   }
-                  value={props.styling.borderThickness}
-                  textTransformer={(s) => `${s}px`}
-                  decimalsAllowed={1}
                 />
-              )}
-              <div className="flex justify-between items-center">
-                <Menu.FieldTitle>
-                  {t("settings.subtitles.textBoldLabel")}
-                </Menu.FieldTitle>
-                <div className="flex justify-center items-center">
-                  <Toggle
-                    enabled={props.styling.bold}
-                    onClick={() =>
+                <ToggleRow
+                  title={t("settings.subtitles.backgroundBlurEnabledLabel")}
+                  description={t(
+                    "settings.subtitles.backgroundBlurEnabledDescription",
+                  )}
+                  enabled={props.styling.backgroundBlurEnabled}
+                  onChange={(v) =>
+                    handleStylingChange({
+                      ...props.styling,
+                      backgroundBlurEnabled: v,
+                    })
+                  }
+                />
+                {props.styling.backgroundBlurEnabled && (
+                  <SliderRow
+                    label={t("settings.subtitles.backgroundBlurLabel")}
+                    value={props.styling.backgroundBlur * 100}
+                    min={0}
+                    max={100}
+                    textTransformer={(s) => `${s}%`}
+                    onChange={(v) =>
                       handleStylingChange({
                         ...props.styling,
-                        bold: !props.styling.bold,
+                        backgroundBlur: v / 100,
                       })
                     }
                   />
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <Menu.FieldTitle>
-                  {t("settings.subtitles.colorLabel")}
-                </Menu.FieldTitle>
-                <div className="flex justify-center items-center space-x-2">
-                  {colors.map((v) => (
-                    <ColorOption
-                      onClick={() =>
-                        handleStylingChange({
-                          ...props.styling,
-                          color: v,
-                        })
-                      }
-                      color={v}
-                      active={props.styling.color === v}
-                      key={v}
-                    />
-                  ))}
-                  <div className="relative">
-                    <input
-                      type="color"
-                      value={props.styling.color}
-                      onChange={(e) => {
-                        const color = e.target.value;
-                        handleStylingChange({ ...props.styling, color });
-                        subtitleStore.updateStyling({
-                          ...props.styling,
-                          color,
-                        });
-                      }}
-                      className="absolute opacity-0 cursor-pointer w-8 h-8"
-                    />
-                    <div style={{ color: props.styling.color }}>
-                      <Icon icon={Icons.BRUSH} className="text-2xl" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <CaptionSetting
-                label={t("settings.subtitles.verticalPositionLabel")}
-                max={30}
-                min={0}
-                decimalsAllowed={0}
-                textTransformer={(s) => `${s}rem`}
-                onChange={(v) =>
-                  handleStylingChange({
-                    ...props.styling,
-                    verticalPosition: v,
-                  })
-                }
-                value={props.styling.verticalPosition}
-              />
-              <CaptionSetting
-                label={t("settings.subtitles.lineSpacingLabel", "Line spacing")}
-                max={250}
-                min={100}
-                textTransformer={(s) => `${s}%`}
-                onChange={(v) =>
-                  handleStylingChange({
-                    ...props.styling,
-                    lineHeight: v / 100,
-                  })
-                }
-                value={(props.styling.lineHeight ?? 1.5) * 100}
-              />
+                )}
+              </Section>
+
+              <Section
+                title={t("settings.subtitles.textSection", "Text")}
+                icon={Icons.TRANSLATE}
+              >
+                <SliderRow
+                  label={t("settings.subtitles.textSizeLabel")}
+                  value={props.styling.size * 100}
+                  min={1}
+                  max={200}
+                  textTransformer={(s) => `${s}%`}
+                  onChange={(v) =>
+                    handleStylingChange({
+                      ...props.styling,
+                      size: v / 100,
+                    })
+                  }
+                />
+                <DropdownRow
+                  title={t("settings.subtitles.textStyle.title")}
+                  options={styleOptions}
+                  value={props.styling.fontStyle}
+                  onChange={(id) =>
+                    handleStylingChange({
+                      ...props.styling,
+                      fontStyle: id,
+                    })
+                  }
+                />
+                {props.styling.fontStyle === "Border" && (
+                  <SliderRow
+                    label={t("settings.subtitles.BorderThicknessLabel")}
+                    value={props.styling.borderThickness}
+                    min={0}
+                    max={10}
+                    decimalsAllowed={1}
+                    textTransformer={(s) => `${s}px`}
+                    onChange={(v) =>
+                      handleStylingChange({
+                        ...props.styling,
+                        borderThickness: v,
+                      })
+                    }
+                  />
+                )}
+                <ToggleRow
+                  title={t("settings.subtitles.textBoldLabel")}
+                  enabled={props.styling.bold}
+                  onChange={(v) =>
+                    handleStylingChange({ ...props.styling, bold: v })
+                  }
+                />
+                <ColorRow
+                  title={t("settings.subtitles.colorLabel")}
+                  value={props.styling.color}
+                  onChange={(color) =>
+                    handleStylingChange({ ...props.styling, color })
+                  }
+                />
+              </Section>
+
+              <Section
+                title={t("settings.subtitles.layoutSection", "Layout")}
+                icon={Icons.LAYOUT}
+              >
+                <SliderRow
+                  label={t("settings.subtitles.verticalPositionLabel")}
+                  value={props.styling.verticalPosition}
+                  min={0}
+                  max={30}
+                  decimalsAllowed={0}
+                  textTransformer={(s) => `${s}rem`}
+                  onChange={(v) =>
+                    handleStylingChange({
+                      ...props.styling,
+                      verticalPosition: v,
+                    })
+                  }
+                />
+                <SliderRow
+                  label={t(
+                    "settings.subtitles.lineSpacingLabel",
+                    "Line spacing",
+                  )}
+                  value={(props.styling.lineHeight ?? 1.5) * 100}
+                  min={100}
+                  max={250}
+                  textTransformer={(s) => `${s}%`}
+                  onChange={(v) =>
+                    handleStylingChange({
+                      ...props.styling,
+                      lineHeight: v / 100,
+                    })
+                  }
+                />
+              </Section>
+
               <Button
                 className="w-full md:w-auto"
                 theme="secondary"
