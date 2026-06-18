@@ -21,6 +21,7 @@ import {
   TMDBMovieSearchResult,
   TMDBPerson,
   TMDBPersonImages,
+  TMDBPersonCombinedCredits,
   TMDBSearchResult,
   TMDBSeason,
   TMDBSeasonMetaResult,
@@ -687,6 +688,12 @@ export async function getPersonDetails(id: string): Promise<TMDBPerson> {
 
 export async function getPersonImages(id: string): Promise<TMDBPersonImages> {
   return get<TMDBPersonImages>(`/person/${id}/images`);
+}
+
+export async function getPersonCombinedCredits(
+  id: string,
+): Promise<TMDBPersonCombinedCredits> {
+  return get<TMDBPersonCombinedCredits>(`/person/${id}/combined_credits`);
 }
 
 export function getPersonProfileImage(

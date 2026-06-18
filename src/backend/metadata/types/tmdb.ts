@@ -384,6 +384,32 @@ export interface TMDBPersonImages {
   profiles: TMDBPersonImage[];
 }
 
+export interface TMDBPersonCreditItem {
+  id: number;
+  title?: string;
+  name?: string;
+  original_title?: string;
+  original_name?: string;
+  poster_path: string | null;
+  backdrop_path?: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  media_type: "movie" | "tv";
+  character?: string;
+  job?: string;
+  department?: string;
+  popularity?: number;
+  vote_average?: number;
+  vote_count?: number;
+  episode_count?: number;
+}
+
+export interface TMDBPersonCombinedCredits {
+  id: number;
+  cast: TMDBPersonCreditItem[];
+  crew: TMDBPersonCreditItem[];
+}
+
 export interface TMDBVideo {
   id: string;
   key: string;
