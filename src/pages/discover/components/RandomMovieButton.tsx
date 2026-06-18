@@ -6,7 +6,7 @@ import { Movie } from "@/pages/discover/common";
 import { conf } from "@/setup/config";
 import { useLanguageStore } from "@/stores/language";
 import { getTmdbLanguageCode } from "@/utils/language";
-import { detectUserRegion } from "@/utils/userRegion";
+import { detectUserLanguage, detectUserRegion } from "@/utils/userRegion";
 
 interface TMDBMovieResponse {
   results: Movie[];
@@ -26,10 +26,13 @@ export function RandomMovieButton() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const data = await get<TMDBMovieResponse>("/movie/popular", {
+        const data = await get<TMDBMovieResponse>("/discover/movie", {
           api_key: conf().TMDB_READ_API_KEY,
           language: formattedLanguage,
           region: detectUserRegion(),
+          sort_by: "popularity.desc",
+          with_original_language: detectUserLanguage(),
+          "vote_count.gte": 50,
           page: 2,
         });
         setMovies(data.results);

@@ -78,3 +78,56 @@ export function setUserRegionOverride(region: string | null): void {
     /* ignore */
   }
 }
+
+const REGION_TO_PRIMARY_LANG: Record<string, string> = {
+  US: "en", GB: "en", CA: "en", AU: "en", NZ: "en", IE: "en",
+  DE: "de", AT: "de", CH: "de",
+  FR: "fr", BE: "fr",
+  ES: "es", MX: "es", AR: "es", CO: "es", CL: "es", PE: "es", VE: "es", EC: "es",
+  IT: "it",
+  NL: "nl",
+  PT: "pt", BR: "pt",
+  JP: "ja",
+  KR: "ko",
+  CN: "zh", TW: "zh", HK: "zh",
+  TR: "tr",
+  RU: "ru",
+  PL: "pl",
+  CZ: "cs",
+  HU: "hu",
+  GR: "el",
+  RO: "ro",
+  BG: "bg",
+  UA: "uk",
+  SE: "sv", NO: "no", DK: "da", FI: "fi",
+  IL: "he",
+  SA: "ar", AE: "ar", EG: "ar", IQ: "ar",
+  IR: "fa",
+  TH: "th",
+  VN: "vi",
+  ID: "id",
+  MY: "ms",
+  IN: "hi",
+  PK: "ur",
+  BD: "bn",
+  PH: "en",
+};
+
+function langFromNavigator(): string | null {
+  if (typeof navigator === "undefined") return null;
+  const langs: string[] = [];
+  if (Array.isArray(navigator.languages)) langs.push(...navigator.languages);
+  if (navigator.language) langs.push(navigator.language);
+  for (const l of langs) {
+    const piece = l.split(/[-_]/)[0];
+    if (piece && piece.length === 2) return piece.toLowerCase();
+  }
+  return null;
+}
+
+export function detectUserLanguage(): string {
+  const fromNav = langFromNavigator();
+  if (fromNav) return fromNav;
+  const region = detectUserRegion();
+  return REGION_TO_PRIMARY_LANG[region] ?? "en";
+}
