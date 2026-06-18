@@ -6,6 +6,7 @@ import { Movie } from "@/pages/discover/common";
 import { conf } from "@/setup/config";
 import { useLanguageStore } from "@/stores/language";
 import { getTmdbLanguageCode } from "@/utils/language";
+import { detectUserRegion } from "@/utils/userRegion";
 
 interface TMDBMovieResponse {
   results: Movie[];
@@ -28,6 +29,7 @@ export function RandomMovieButton() {
         const data = await get<TMDBMovieResponse>("/movie/popular", {
           api_key: conf().TMDB_READ_API_KEY,
           language: formattedLanguage,
+          region: detectUserRegion(),
           page: 2,
         });
         setMovies(data.results);

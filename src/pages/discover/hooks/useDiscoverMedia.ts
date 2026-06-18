@@ -43,6 +43,7 @@ import type {
 import { conf } from "@/setup/config";
 import { useLanguageStore } from "@/stores/language";
 import { getTmdbLanguageCode } from "@/utils/language";
+import { detectUserRegion } from "@/utils/userRegion";
 
 // Re-export types for backward compatibility
 export type {
@@ -150,9 +151,12 @@ export function useDiscoverMedia({
           params.page = page.toString(); // Use the requested page for "view more" pages
         }
 
+        const region = detectUserRegion();
+
         const data = await get<any>(endpoint, {
           api_key: conf().TMDB_READ_API_KEY,
           language: formattedLanguage,
+          region,
           ...params,
         });
 
@@ -430,7 +434,7 @@ export function useDiscoverMedia({
               // Fall back to TMDB
               data = await fetchTMDBMedia(`/discover/${mediaType}`, {
                 with_watch_providers: id,
-                watch_region: "US",
+                watch_region: detectUserRegion(),
               });
               setSectionTitle(
                 mediaType === "movie"
@@ -446,7 +450,7 @@ export function useDiscoverMedia({
             // Use TMDB if no Trakt endpoint exists for this provider
             data = await fetchTMDBMedia(`/discover/${mediaType}`, {
               with_watch_providers: id,
-              watch_region: "US",
+              watch_region: detectUserRegion(),
             });
             setSectionTitle(
               mediaType === "movie"
