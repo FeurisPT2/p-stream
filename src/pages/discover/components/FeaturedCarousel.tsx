@@ -21,7 +21,7 @@ import { useLanguageStore } from "@/stores/language";
 import { usePreferencesStore } from "@/stores/preferences";
 import { scrapeIMDb } from "@/utils/imdbScraper";
 import { getTmdbLanguageCode } from "@/utils/language";
-import { detectUserRegion } from "@/utils/userRegion";
+import { detectUserLanguage, detectUserRegion } from "@/utils/userRegion";
 
 import { RandomMovieButton } from "./RandomMovieButton";
 import {
@@ -259,10 +259,13 @@ export function FeaturedCarousel({
             // Fallback to TMDB method
             if (effectiveCategory === "movies") {
               // First get the list of popular movies
-              const listData = await get<any>("/movie/popular", {
+              const listData = await get<any>("/discover/movie", {
                 api_key: conf().TMDB_READ_API_KEY,
                 language: formattedLanguage,
                 region: detectUserRegion(),
+                sort_by: "popularity.desc",
+                with_original_language: detectUserLanguage(),
+                "vote_count.gte": 50,
               });
 
               // Then fetch full details for each movie to get external_ids
@@ -289,10 +292,13 @@ export function FeaturedCarousel({
               setMedia(shuffledMovies.slice(0, SLIDE_QUANTITY));
             } else if (effectiveCategory === "tvshows") {
               // First get the list of popular shows
-              const listData = await get<any>("/tv/popular", {
+              const listData = await get<any>("/discover/tv", {
                 api_key: conf().TMDB_READ_API_KEY,
                 language: formattedLanguage,
                 region: detectUserRegion(),
+                sort_by: "popularity.desc",
+                with_original_language: detectUserLanguage(),
+                "vote_count.gte": 50,
               });
 
               // Then fetch full details for each show to get external_ids

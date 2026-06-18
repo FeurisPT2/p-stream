@@ -43,7 +43,7 @@ import type {
 import { conf } from "@/setup/config";
 import { useLanguageStore } from "@/stores/language";
 import { getTmdbLanguageCode } from "@/utils/language";
-import { detectUserRegion } from "@/utils/userRegion";
+import { detectUserLanguage, detectUserRegion } from "@/utils/userRegion";
 
 // Re-export types for backward compatibility
 export type {
@@ -348,12 +348,20 @@ export function useDiscoverMedia({
       // Map content types to their endpoints and handling logic
       switch (type) {
         case "popular":
-          data = await fetchTMDBMedia(`/${mediaType}/popular`);
+          data = await fetchTMDBMedia(`/discover/${mediaType}`, {
+            sort_by: "popularity.desc",
+            with_original_language: detectUserLanguage(),
+            "vote_count.gte": 50,
+          });
           setSectionTitle(t("discover.carousel.title.popular"));
           break;
 
         case "topRated":
-          data = await fetchTMDBMedia(`/${mediaType}/top_rated`);
+          data = await fetchTMDBMedia(`/discover/${mediaType}`, {
+            sort_by: "vote_average.desc",
+            with_original_language: detectUserLanguage(),
+            "vote_count.gte": 500,
+          });
           setSectionTitle(t("discover.carousel.title.topRated"));
           break;
 
