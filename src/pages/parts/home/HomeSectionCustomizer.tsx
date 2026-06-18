@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { updateSettings } from "@/backend/accounts/settings";
 import { SortableListWithToggles, ToggleableItem } from "@/components/form/SortableListWithToggles";
 import { Icon, Icons } from "@/components/Icon";
+import { useBackendUrl } from "@/hooks/auth/useBackendUrl";
+import { useAuthStore } from "@/stores/auth";
 import { usePreferencesStore } from "@/stores/preferences";
 
 export function HomeSectionCustomizer({
@@ -14,6 +17,8 @@ export function HomeSectionCustomizer({
 }) {
   const { t } = useTranslation();
   const setHomeSectionOrder = usePreferencesStore((s) => s.setHomeSectionOrder);
+  const account = useAuthStore((s) => s.account);
+  const backendUrl = useBackendUrl();
 
   const [items, setItems] = useState<ToggleableItem[]>([]);
 
@@ -39,10 +44,19 @@ export function HomeSectionCustomizer({
     setItems([...enabledItems, ...disabledItems]);
   }, [isOpen, t]);
 
+  const persistOrder = (newOrder: string[]) => {
+    setHomeSectionOrder(newOrder);
+    if (account && backendUrl) {
+      updateSettings(backendUrl, account, { homeSectionOrder: newOrder }).catch(
+        (e) => console.error("Failed to save home section order:", e),
+      );
+    }
+  };
+
   const handleItemsChange = (newItems: ToggleableItem[]) => {
     setItems(newItems);
     const newOrder = newItems.filter(item => item.enabled).map(item => item.id);
-    setHomeSectionOrder(newOrder);
+    persistOrder(newOrder);
   };
 
   const handleToggle = (id: string) => {
@@ -51,7 +65,7 @@ export function HomeSectionCustomizer({
     );
     setItems(newItems);
     const newOrder = newItems.filter(item => item.enabled).map(item => item.id);
-    setHomeSectionOrder(newOrder);
+    persistOrder(newOrder);
   };
 
   if (!isOpen) return null;
