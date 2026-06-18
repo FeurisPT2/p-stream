@@ -211,7 +211,13 @@ export function HomePage() {
         <div className="relative">
           {renderHomeSections()}
           {!search && (
-            <div className="w-full flex justify-center my-6 px-4 xl:absolute xl:right-0 xl:top-2 xl:w-auto xl:my-0 xl:px-0 xl:block">
+            <div
+              className={`w-full flex justify-center my-6 px-4${
+                enableCarouselView
+                  ? ""
+                  : " 2xl:absolute 2xl:right-6 2xl:top-2 2xl:w-auto 2xl:my-0 2xl:px-0 2xl:block"
+              }`}
+            >
               <HomeAd slot="secondary" />
             </div>
           )}
