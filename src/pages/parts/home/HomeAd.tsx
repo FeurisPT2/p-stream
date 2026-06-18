@@ -12,7 +12,7 @@ declare global {
   }
 }
 
-export type AdSlot = "primary" | "secondary";
+export type AdSlot = "primary" | "secondary" | "bookmarks";
 
 function loadAclibScript() {
   if (typeof window === "undefined") return;
@@ -123,6 +123,19 @@ export function HomeAd({ slot = "primary" }: { slot?: AdSlot } = {}) {
           zoneId: cfg.HOME_AD_ZONE_ID,
           width: 728,
           height: 90,
+        }}
+      />
+    );
+  }
+
+  if (slot === "bookmarks") {
+    if (!cfg.ENABLE_BOOKMARKS_AD || !cfg.BOOKMARKS_AD_ZONE_ID) return null;
+    return (
+      <AdSlotInner
+        cfg={{
+          zoneId: cfg.BOOKMARKS_AD_ZONE_ID,
+          width: 336,
+          height: 280,
         }}
       />
     );
