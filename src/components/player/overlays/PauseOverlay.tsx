@@ -190,7 +190,6 @@ export function PauseOverlay() {
             "radial-gradient(ellipse at 30% 70%, transparent 30%, rgba(0,0,0,0.6) 100%)",
         }}
       />
-      <div className="absolute inset-0 backdrop-blur-[2px]" />
 
       <div className="relative flex-1 flex items-end pb-32 md:pb-44">
         <div className="ml-10 md:ml-20 lg:ml-32 max-w-xl lg:max-w-2xl">

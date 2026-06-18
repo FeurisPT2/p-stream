@@ -207,11 +207,14 @@ export function HomePage() {
       )}
 
       {/* User Content */}
-      {!search && renderHomeSections()}
-
       {!search && (
-        <div className="w-full flex justify-center my-6 px-4 xl:fixed xl:right-4 xl:top-1/2 xl:-translate-y-1/2 xl:z-20 xl:my-0 xl:px-0 xl:w-auto xl:block">
-          <HomeAd slot="secondary" />
+        <div className="relative">
+          {renderHomeSections()}
+          {!search && (
+            <div className="w-full flex justify-center my-6 px-4 xl:absolute xl:right-0 xl:top-2 xl:w-auto xl:my-0 xl:px-0 xl:block">
+              <HomeAd slot="secondary" />
+            </div>
+          )}
         </div>
       )}
 

@@ -32,7 +32,6 @@ import {
   canPlayHlsNatively,
   canWebkitFullscreen,
   canWebkitPictureInPicture,
-  isIOS,
 } from "@/utils/detectFeatures";
 import { makeEmitter } from "@/utils/events";
 
@@ -735,27 +734,6 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
         isFullscreen = false;
         emit("fullscreen", isFullscreen);
         emit("needstrack", false);
-
-        if (containerElement?.dataset.iosFullscreen === "true") {
-          delete containerElement.dataset.iosFullscreen;
-          containerElement.style.position = "";
-          containerElement.style.inset = "";
-          containerElement.style.zIndex = "";
-          containerElement.style.width = "";
-          containerElement.style.height = "";
-          containerElement.style.background = "";
-          document.body.style.overflow = "";
-          document.documentElement.style.overflow = "";
-          if ((window.screen.orientation as any)?.unlock) {
-            try {
-              (window.screen.orientation as any).unlock();
-            } catch (e) {
-              /* noop */
-            }
-          }
-          return;
-        }
-
         if (!fscreen.fullscreenElement) return;
         fscreen.exitFullscreen();
         return;
@@ -764,27 +742,6 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
       // enter fullscreen
       isFullscreen = true;
       emit("fullscreen", isFullscreen);
-
-      if (isIOS && containerElement) {
-        containerElement.dataset.iosFullscreen = "true";
-        containerElement.style.position = "fixed";
-        containerElement.style.inset = "0";
-        containerElement.style.zIndex = "9999";
-        containerElement.style.width = "100vw";
-        containerElement.style.height = "100vh";
-        containerElement.style.background = "#000";
-        document.body.style.overflow = "hidden";
-        document.documentElement.style.overflow = "hidden";
-        if ((window.screen.orientation as any)?.lock) {
-          try {
-            (window.screen.orientation as any).lock("landscape").catch(() => {});
-          } catch (e) {
-            /* noop */
-          }
-        }
-        return;
-      }
-
       if (!canFullscreen() || fscreen.fullscreenElement) return;
       if (canFullscreenAnyElement()) {
         if (containerElement) fscreen.requestFullscreen(containerElement);
