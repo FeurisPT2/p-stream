@@ -436,6 +436,7 @@ export function CaptionSettingsView({
       verticalPosition: 1,
       fontStyle: "default",
       borderThickness: 1,
+      lineHeight: 1.5,
     });
   };
 
@@ -637,47 +638,27 @@ export function CaptionSettingsView({
                 </div>
               </div>
             </div>
-            <div className="flex justify-between items-center">
-              <Menu.FieldTitle>
-                {t("settings.subtitles.verticalPositionLabel")}
-              </Menu.FieldTitle>
-              <div className="flex justify-center items-center space-x-2">
-                <button
-                  type="button"
-                  className={classNames(
-                    "px-3 py-1 rounded transition-colors duration-100",
-                    styling.verticalPosition === 1
-                      ? "bg-video-context-buttonFocus"
-                      : "bg-video-context-buttonFocus bg-opacity-0 hover:bg-opacity-50",
-                  )}
-                  onClick={() =>
-                    handleStylingChange({
-                      ...styling,
-                      verticalPosition: 1,
-                    })
-                  }
-                >
-                  {t("settings.subtitles.low")}
-                </button>
-                <button
-                  type="button"
-                  className={classNames(
-                    "px-3 py-1 rounded transition-colors duration-100",
-                    styling.verticalPosition === 3
-                      ? "bg-video-context-buttonFocus"
-                      : "bg-video-context-buttonFocus bg-opacity-0 hover:bg-opacity-50",
-                  )}
-                  onClick={() =>
-                    handleStylingChange({
-                      ...styling,
-                      verticalPosition: 3,
-                    })
-                  }
-                >
-                  {t("settings.subtitles.high")}
-                </button>
-              </div>
-            </div>
+            <CaptionSetting
+              label={t("settings.subtitles.verticalPositionLabel")}
+              max={30}
+              min={0}
+              decimalsAllowed={0}
+              textTransformer={(s) => `${s}rem`}
+              onChange={(v) =>
+                handleStylingChange({ ...styling, verticalPosition: v })
+              }
+              value={styling.verticalPosition}
+            />
+            <CaptionSetting
+              label={t("settings.subtitles.lineSpacingLabel", "Line spacing")}
+              max={250}
+              min={100}
+              textTransformer={(s) => `${s}%`}
+              onChange={(v) =>
+                handleStylingChange({ ...styling, lineHeight: v / 100 })
+              }
+              value={(styling.lineHeight ?? 1.5) * 100}
+            />
             <Button
               className="w-full md:w-auto"
               theme="secondary"

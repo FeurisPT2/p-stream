@@ -51,6 +51,11 @@ export interface SubtitleStyling {
    * border thickness for Border font style, ranges between 0 and 10
    */
   borderThickness: number;
+
+  /**
+   * line height multiplier for subtitle text, ranges between 1.0 and 2.5
+   */
+  lineHeight: number;
 }
 
 export interface SubtitleStore {
@@ -102,6 +107,7 @@ export const useSubtitleStore = create(
         verticalPosition: 1,
         fontStyle: "default",
         borderThickness: 1,
+        lineHeight: 1.5,
       },
       showDelayIndicator: false,
       resetSubtitleSpecificSettings() {
@@ -146,6 +152,11 @@ export const useSubtitleStore = create(
               10,
               Math.max(0, newStyling.borderThickness),
             );
+          if (newStyling.lineHeight !== undefined)
+            s.styling.lineHeight = Math.min(
+              2.5,
+              Math.max(1, newStyling.lineHeight),
+            );
         });
       },
       resetStyling() {
@@ -160,6 +171,7 @@ export const useSubtitleStore = create(
             verticalPosition: 1,
             fontStyle: "default",
             borderThickness: 1,
+            lineHeight: 1.5,
           };
         });
       },
