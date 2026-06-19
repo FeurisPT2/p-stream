@@ -52,6 +52,9 @@ interface Config {
   ENABLE_RYBBIT: boolean;
   RYBBIT_SCRIPT_URL: string;
   RYBBIT_SITE_ID: string;
+  ENABLE_POPUNDER: boolean;
+  POPUNDER_SCRIPT_URL: string;
+  POPUNDER_COOLDOWN_HOURS: string;
 }
 
 export interface RuntimeConfig {
@@ -101,6 +104,9 @@ export interface RuntimeConfig {
   ENABLE_RYBBIT: boolean;
   RYBBIT_SCRIPT_URL: string | null;
   RYBBIT_SITE_ID: string | null;
+  ENABLE_POPUNDER: boolean;
+  POPUNDER_SCRIPT_URL: string | null;
+  POPUNDER_COOLDOWN_HOURS: string | null;
 }
 
 const env: Record<keyof Config, undefined | string> = {
@@ -152,6 +158,9 @@ const env: Record<keyof Config, undefined | string> = {
   ENABLE_RYBBIT: import.meta.env.VITE_ENABLE_RYBBIT,
   RYBBIT_SCRIPT_URL: import.meta.env.VITE_RYBBIT_SCRIPT_URL,
   RYBBIT_SITE_ID: import.meta.env.VITE_RYBBIT_SITE_ID,
+  ENABLE_POPUNDER: import.meta.env.VITE_ENABLE_POPUNDER,
+  POPUNDER_SCRIPT_URL: import.meta.env.VITE_POPUNDER_SCRIPT_URL,
+  POPUNDER_COOLDOWN_HOURS: import.meta.env.VITE_POPUNDER_COOLDOWN_HOURS,
 };
 
 function coerceUndefined(value: string | null | undefined): string | undefined {
@@ -263,5 +272,8 @@ export function conf(): RuntimeConfig {
     ENABLE_RYBBIT: getKey("ENABLE_RYBBIT", "false") === "true",
     RYBBIT_SCRIPT_URL: getKey("RYBBIT_SCRIPT_URL"),
     RYBBIT_SITE_ID: getKey("RYBBIT_SITE_ID"),
+    ENABLE_POPUNDER: getKey("ENABLE_POPUNDER", "false") === "true",
+    POPUNDER_SCRIPT_URL: getKey("POPUNDER_SCRIPT_URL"),
+    POPUNDER_COOLDOWN_HOURS: getKey("POPUNDER_COOLDOWN_HOURS", "3"),
   };
 }

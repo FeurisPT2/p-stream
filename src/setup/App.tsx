@@ -132,6 +132,37 @@ function App() {
     document.head.appendChild(s);
   }, []);
 
+  useEffect(() => {
+    const cfg = conf();
+    if (!cfg.ENABLE_POPUNDER || !cfg.POPUNDER_SCRIPT_URL) return;
+    if (typeof document === "undefined") return;
+    if (document.querySelector("script[data-popunder]")) return;
+
+    const KEY = "__pu_last_loaded";
+    const hours = parseFloat(cfg.POPUNDER_COOLDOWN_HOURS ?? "3");
+    const cooldownMs = (Number.isFinite(hours) && hours > 0 ? hours : 3) * 60 * 60 * 1000;
+
+    try {
+      const last = parseInt(localStorage.getItem(KEY) ?? "0", 10);
+      if (Number.isFinite(last) && Date.now() - last < cooldownMs) return;
+    } catch {
+      /* ignore */
+    }
+
+    const s = document.createElement("script");
+    s.src = cfg.POPUNDER_SCRIPT_URL;
+    s.async = true;
+    s.setAttribute("data-cfasync", "false");
+    s.dataset.popunder = "1";
+    document.head.appendChild(s);
+
+    try {
+      localStorage.setItem(KEY, String(Date.now()));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const handleButtonClick = () => {
     setShowDowntime(false);
   };
