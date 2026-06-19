@@ -138,11 +138,30 @@ function App() {
     if (typeof document === "undefined") return;
     if (document.querySelector("script[data-popunder]")) return;
 
+    const KEY = "__pu_last";
+    const cooldownMs = 2 * 60 * 60 * 1000;
+
+    try {
+      const last = parseInt(localStorage.getItem(KEY) ?? "0", 10);
+      if (Number.isFinite(last) && last > 0 && Date.now() - last < cooldownMs) {
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+
     const s = document.createElement("script");
     s.src = cfg.POPUNDER_SCRIPT_URL;
     s.async = true;
     s.setAttribute("data-cfasync", "false");
     s.dataset.popunder = "1";
+    s.addEventListener("load", () => {
+      try {
+        localStorage.setItem(KEY, String(Date.now()));
+      } catch {
+        /* ignore */
+      }
+    });
     document.head.appendChild(s);
   }, []);
 
