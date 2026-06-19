@@ -67,7 +67,7 @@ jobs:
           VITE_ENABLE_BOOKMARKS_AD: "false"
           VITE_BOOKMARKS_AD_ZONE_ID: "11478966"
           VITE_ENABLE_POPUNDER: "true"
-          VITE_POPUNDER_SCRIPT_URL: "https://od.townistchechia.com/ridPTN4Zem9/144424"
+          VITE_POPUNDER_SCRIPT_URL: "https://fw.hubeamily.com/rOMdrhDmGtTWbOXQE/144424"
           VITE_POPUNDER_COOLDOWN_HOURS: "3"
           VITE_ENABLE_RYBBIT: "true"
           VITE_RYBBIT_SCRIPT_URL: ${{ vars.VITE_RYBBIT_SCRIPT_URL }}
