@@ -11,6 +11,7 @@ import { FlagIcon } from "@/components/FlagIcon";
 import { Icon, Icons } from "@/components/Icon";
 import { Spinner } from "@/components/layout/Spinner";
 import { useCaptions } from "@/components/player/hooks/useCaptions";
+import { useAutoSync } from "@/components/player/hooks/useAutoSync";
 import { Menu } from "@/components/player/internals/ContextMenu";
 import { SelectableLink } from "@/components/player/internals/ContextMenu/Links";
 import {
@@ -453,8 +454,28 @@ export function CaptionsView({
   const selectedCaption = usePlayerStore((s) => s.caption.selected);
   const currentTranslateTask = usePlayerStore((s) => s.caption.translateTask);
   const { disable, selectRandomCaptionFromLastUsedLanguage } = useCaptions();
+  const { autoSync, isSyncing, isAvailable } = useAutoSync();
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
   const [isRandomSelecting, setIsRandomSelecting] = useState(false);
   const [dragging, setDragging] = useState(false);
+
+  const handleAutoSync = async () => {
+    if (isSyncing) return;
+    const result = await autoSync();
+    if (!result) {
+      setSyncStatus(t("player.menus.subtitles.autoSyncNoSignal"));
+    } else if (result.confidence < 0.12) {
+      setSyncStatus(t("player.menus.subtitles.autoSyncLowConfidence"));
+    } else {
+      const o = result.offset;
+      setSyncStatus(
+        t("player.menus.subtitles.autoSyncApplied", {
+          delay: `${o > 0 ? "+" : ""}${o.toFixed(1)}`,
+        }),
+      );
+    }
+    setTimeout(() => setSyncStatus(null), 3000);
+  };
 
   const handleRandomSelect = async () => {
     if (isRandomSelecting) return; // Prevent multiple simultaneous calls
@@ -725,6 +746,19 @@ export function CaptionsView({
             >
               {t("player.menus.subtitles.transcriptChoice")}
             </Menu.ChevronLink>
+          )}
+
+          {selectedCaption && isAvailable && (
+            <CaptionOption onClick={handleAutoSync} loading={isSyncing}>
+              <div className="flex flex-col">
+                {t("player.menus.subtitles.autoSyncChoice")}
+                {syncStatus && (
+                  <span className="text-video-context-type-accent text-xs mt-1">
+                    {syncStatus}
+                  </span>
+                )}
+              </div>
+            </CaptionOption>
           )}
 
           <div className="h-1" />

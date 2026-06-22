@@ -50,15 +50,15 @@ export function QualityView({ id }: { id: string }) {
   const setAutomaticQuality = useQualityStore((s) => s.setAutomaticQuality);
   const setLastChosenQuality = useQualityStore((s) => s.setLastChosenQuality);
   const autoQuality = useQualityStore((s) => s.quality.automaticQuality);
+  const lastChosenQuality = useQualityStore((s) => s.quality.lastChosenQuality);
 
-  // Auto quality only makes sense for HLS sources
+
   const supportsAutoQuality = sourceType === "hls";
 
   const change = useCallback(
     (q: SourceQuality) => {
       setLastChosenQuality(q);
-      // Don't disable auto quality when manually selecting a quality
-      // Keep auto quality enabled by default unless user explicitly toggles it
+    
       switchQuality(q);
       router.close();
     },
@@ -68,8 +68,30 @@ export function QualityView({ id }: { id: string }) {
   const changeAutomatic = useCallback(() => {
     const newValue = !autoQuality;
     setAutomaticQuality(newValue);
-    if (newValue) enableAutomaticQuality();
-  }, [setAutomaticQuality, autoQuality, enableAutomaticQuality]);
+    if (newValue) {
+      enableAutomaticQuality();
+      return;
+    }
+ 
+    const target =
+      (currentQuality && currentQuality !== "unknown" ? currentQuality : null) ??
+      lastChosenQuality ??
+      availableQualities[0] ??
+      null;
+    if (target) {
+      setLastChosenQuality(target);
+      switchQuality(target);
+    }
+  }, [
+    setAutomaticQuality,
+    autoQuality,
+    enableAutomaticQuality,
+    currentQuality,
+    lastChosenQuality,
+    availableQualities,
+    setLastChosenQuality,
+    switchQuality,
+  ]);
 
   const visibleQualities = allQualities.filter((quality) => {
     if (alwaysVisibleQualities[quality]) return true;

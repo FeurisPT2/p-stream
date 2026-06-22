@@ -33,6 +33,7 @@ export interface PreferencesStore {
   tidbKey: string | null;
   enableLowPerformanceMode: boolean;
   enableNativeSubtitles: boolean;
+  enableAutoSubtitleSync: boolean;
   enableHoldToBoost: boolean;
   homeSectionOrder: string[];
   bookmarkRowsToShow: number;
@@ -76,6 +77,7 @@ export interface PreferencesStore {
   setTIDBKey(v: string | null): void;
   setEnableLowPerformanceMode(v: boolean): void;
   setEnableNativeSubtitles(v: boolean): void;
+  setEnableAutoSubtitleSync(v: boolean): void;
   setEnableHoldToBoost(v: boolean): void;
   setHomeSectionOrder(v: string[]): void;
   setBookmarkRowsToShow(v: number): void;
@@ -123,6 +125,7 @@ export const usePreferencesStore = create(
       tidbKey: null,
       enableLowPerformanceMode: false,
       enableNativeSubtitles: false,
+      enableAutoSubtitleSync: false,
       enableHoldToBoost: true,
       homeSectionOrder: ["watching"],
       bookmarkRowsToShow: 1,
@@ -268,6 +271,11 @@ export const usePreferencesStore = create(
       setEnableNativeSubtitles(v) {
         set((s) => {
           s.enableNativeSubtitles = v;
+        });
+      },
+      setEnableAutoSubtitleSync(v) {
+        set((s) => {
+          s.enableAutoSubtitleSync = v;
         });
       },
       setEnableHoldToBoost(v) {
