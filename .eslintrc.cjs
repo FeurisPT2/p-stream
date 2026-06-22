@@ -148,6 +148,7 @@ module.exports = {
       "space-infix-ops": "off",
       "no-mixed-spaces-and-tabs": "off",
       "no-tabs": "off",
+    "no-void": "off",
       "@typescript-eslint/indent": "off",
       "@typescript-eslint/quotes": "off",
       "@typescript-eslint/semi": "off",
