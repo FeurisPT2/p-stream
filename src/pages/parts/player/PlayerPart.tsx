@@ -7,6 +7,7 @@ import { SkipSegmentButton } from "@/components/player/atoms/SkipSegmentButton";
 import { ThumbsFeedback } from "@/components/player/atoms/ThumbsFeedback";
 import { WatchPartyStatus } from "@/components/player/atoms/WatchPartyStatus";
 import { useShouldShowControls } from "@/components/player/hooks/useShouldShowControls";
+import { useAutoSync } from "@/components/player/hooks/useAutoSync";
 import {
   SegmentData,
   useSkipTime,
@@ -40,6 +41,9 @@ export function PlayerPart(props: PlayerPartProps) {
   const meta = usePlayerStore((s) => s.meta);
 
   const inControl = !enabled || isHost;
+
+
+  useAutoSync();
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isPWA = window.matchMedia("(display-mode: standalone)").matches;

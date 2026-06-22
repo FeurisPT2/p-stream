@@ -133,6 +133,13 @@ export function PreferencesPart(props: {
     (s) => s.setEnableGamepadControls,
   );
 
+  const enableAutoSubtitleSync = usePreferencesStore(
+    (s) => s.enableAutoSubtitleSync,
+  );
+  const setEnableAutoSubtitleSync = usePreferencesStore(
+    (s) => s.setEnableAutoSubtitleSync,
+  );
+
   const sorted = sortLangCodes(
     appLanguageOptions.map((item) => item.code),
     props.language,
@@ -375,6 +382,18 @@ export function PreferencesPart(props: {
           </Section>
         </div>
       </div>
+
+      <Section
+        title={t("settings.preferences.experimentalSection")}
+        icon={Icons.WAND}
+      >
+        <ToggleRow
+          title={t("settings.preferences.autoSubtitleSyncLabel")}
+          description={t("settings.preferences.autoSubtitleSyncDescription")}
+          enabled={enableAutoSubtitleSync}
+          onChange={(v) => setEnableAutoSubtitleSync(v)}
+        />
+      </Section>
     </div>
   );
 }

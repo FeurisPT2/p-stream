@@ -99,4 +99,7 @@ export interface DisplayInterface extends Listener<DisplayInterfaceEvents> {
   getCaptionList(): CaptionListItem[];
   getSubtitleTracks(): MediaPlaylist[];
   setSubtitlePreference(lang: string): Promise<void>;
+  getAudioActivity?(): { t: number; e: number }[];
+
+  isAudioSyncAvailable?(): boolean;
 }

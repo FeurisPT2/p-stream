@@ -878,6 +878,10 @@
         "OpenSubtitlesChoice": "External Subtitles",
         "loadingExternal": "Loading external subtitles...",
         "transcriptChoice": "Transcript",
+        "autoSyncChoice": "Auto-sync to audio",
+        "autoSyncApplied": "Synced · {{delay}}s",
+        "autoSyncLowConfidence": "Couldn't find a confident match",
+        "autoSyncNoSignal": "Not enough audio analyzed yet",
         "settings": {
           "backlink": "Custom subtitles",
           "delay": "Subtitle delay",
@@ -1376,6 +1380,9 @@
     },
     "preferences": {
       "title": "Preferences",
+      "experimentalSection": "Experimental",
+      "autoSubtitleSyncLabel": "Auto subtitle syncing",
+      "autoSubtitleSyncDescription": "Automatically aligns subtitles to the audio by analyzing speech while you watch, correcting out-of-sync subtitles without manual adjustment. May not work on every source.",
       "language": "Application language",
       "languageDescription": "Language applied to the entire application, only English has silly stuff.",
       "thumbnail": "Generate thumbnails",

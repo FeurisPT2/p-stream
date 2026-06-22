@@ -94,6 +94,17 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
   let automaticQuality = false;
   let preferenceQuality: SourceQuality | null = null;
   let lastVolume = 1;
+
+
+  let audioCtx: AudioContext | null = null;
+  let audioAnalyser: AnalyserNode | null = null;
+  let audioStreamSource: MediaStreamAudioSourceNode | null = null;
+  let audioSampleTimer: ReturnType<typeof setInterval> | null = null;
+  let audioBuffer: { t: number; e: number }[] = [];
+  let audioSyncAvailable = false;
+  let audioInitAttempts = 0;
+  const AUDIO_BUFFER_MAX = 9000; // ~6 min at 25Hz
+  const AUDIO_INIT_MAX_ATTEMPTS = 6;
   let lastValidDuration = 0; // Store the last valid duration to prevent reset during source switches
   let lastValidTime = 0; // Store the last valid time to prevent reset during source switches
   let shouldAutoplayAfterLoad = false; // Flag to track if we should autoplay after loading completes
@@ -179,9 +190,7 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
         hls.loadLevel = -1;
       }
     }
-    // For manual quality selection, wait for LEVEL_SWITCHED to emit quality
-    // to avoid showing intermediate states when HLS switches away from unplayable levels
-    // For automatic quality, currentLevel is -1, so we wait for LEVEL_SWITCHED event
+
   }
 
   function setupSource(vid: HTMLVideoElement, src: LoadableSource) {
@@ -389,7 +398,10 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
         type: "htmlvideo",
       });
     });
-    videoElement.addEventListener("playing", () => emit("play", undefined));
+    videoElement.addEventListener("playing", () => {
+      emit("play", undefined);
+      initAudioAnalysis();
+    });
     videoElement.addEventListener("pause", () => emit("pause", undefined));
     videoElement.addEventListener("canplay", () => {
       // Check if video has enough buffered data to play smoothly (at least 5 seconds ahead)
@@ -543,12 +555,80 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
     });
   }
 
+  function teardownAudioAnalysis() {
+    if (audioSampleTimer) {
+      clearInterval(audioSampleTimer);
+      audioSampleTimer = null;
+    }
+    try {
+      audioStreamSource?.disconnect();
+    } catch {
+      // ignore
+    }
+    if (audioCtx) audioCtx.close().catch(() => {});
+    audioStreamSource = null;
+    audioAnalyser = null;
+    audioCtx = null;
+    audioBuffer = [];
+    audioSyncAvailable = false;
+    audioInitAttempts = 0;
+  }
+
+  // Wire up audio analysis off a captured MediaStream. captureStream keeps the
+  // element's own audio output intact (unlike a MediaElementSource). Tainted
+  // (cross-origin) media throws or yields a silent track here, in which case we
+  // simply never flip audioSyncAvailable and auto-sync stays unavailable.
+  function initAudioAnalysis() {
+    if (audioAnalyser || !videoElement) return; // already set up
+    if (audioInitAttempts >= AUDIO_INIT_MAX_ATTEMPTS) return;
+    audioInitAttempts += 1;
+    try {
+      const el = videoElement as any;
+      const stream: MediaStream | undefined =
+        el.captureStream?.() ?? el.mozCaptureStream?.();
+      if (!stream || stream.getAudioTracks().length === 0) return; // retry later
+
+      const Ctx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!Ctx) {
+        audioInitAttempts = AUDIO_INIT_MAX_ATTEMPTS;
+        return;
+      }
+      audioCtx = new Ctx();
+      audioStreamSource = audioCtx.createMediaStreamSource(stream);
+      audioAnalyser = audioCtx.createAnalyser();
+      audioAnalyser.fftSize = 2048;
+      // analyser only — deliberately NOT connected to destination.
+      audioStreamSource.connect(audioAnalyser);
+
+      const buf = new Float32Array(audioAnalyser.fftSize);
+      audioSampleTimer = setInterval(() => {
+        if (!videoElement || !audioAnalyser) return;
+        if (videoElement.paused || isSeeking) return;
+        audioAnalyser.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i += 1) sum += buf[i] * buf[i];
+        const rms = Math.sqrt(sum / buf.length);
+        if (rms > 1e-4) audioSyncAvailable = true;
+        audioBuffer.push({ t: videoElement.currentTime, e: rms });
+        if (audioBuffer.length > AUDIO_BUFFER_MAX) {
+          audioBuffer.splice(0, audioBuffer.length - AUDIO_BUFFER_MAX);
+        }
+      }, 40);
+    } catch {
+      // SecurityError (tainted) or unsupported — give up permanently.
+      teardownAudioAnalysis();
+      audioInitAttempts = AUDIO_INIT_MAX_ATTEMPTS;
+    }
+  }
+
   function unloadSource() {
     // Clear any pending quality change timeout
     if (qualityChangeTimeout) {
       clearTimeout(qualityChangeTimeout);
       qualityChangeTimeout = null;
     }
+
+    teardownAudioAnalysis();
 
     if (videoElement) {
       videoElement.removeAttribute("src");
@@ -685,7 +765,9 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
       videoElement?.pause();
     },
     play() {
+      if (audioCtx?.state === "suspended") audioCtx.resume().catch(() => {});
       videoElement?.play();
+      initAudioAnalysis();
     },
     setSeeking(active) {
       if (active === isSeeking) return;
@@ -898,6 +980,12 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
     },
     getSubtitleTracks() {
       return hls?.subtitleTracks ?? [];
+    },
+    getAudioActivity() {
+      return audioBuffer;
+    },
+    isAudioSyncAvailable() {
+      return audioSyncAvailable;
     },
     async setSubtitlePreference(lang) {
       // default subtitles are already loaded by hls.js
