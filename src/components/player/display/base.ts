@@ -12,12 +12,14 @@ import {
 } from "@/components/player/display/displayInterface";
 import { handleBuffered } from "@/components/player/utils/handleBuffered";
 import { getMediaErrorDetails } from "@/components/player/utils/mediaErrorDetails";
+import { SpeechCapture } from "@/components/player/utils/speechCapture";
 import {
   createM3U8ProxyUrl,
   createMP4ProxyUrl,
   isUrlAlreadyProxied,
 } from "@/components/player/utils/proxy";
 import { useLanguageStore } from "@/stores/language";
+import { usePreferencesStore } from "@/stores/preferences";
 import {
   LoadableSource,
   SourceQuality,
@@ -101,6 +103,7 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
   let audioStreamSource: MediaStreamAudioSourceNode | null = null;
   let audioSampleTimer: ReturnType<typeof setInterval> | null = null;
   let audioBuffer: { t: number; e: number }[] = [];
+  let speechCapture: SpeechCapture | null = null;
   let audioSyncAvailable = false;
   let audioInitAttempts = 0;
   const AUDIO_BUFFER_MAX = 9000; // ~6 min at 25Hz
@@ -561,6 +564,12 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
       audioSampleTimer = null;
     }
     try {
+      speechCapture?.stop();
+    } catch {
+      // ignore
+    }
+    speechCapture = null;
+    try {
       audioStreamSource?.disconnect();
     } catch {
       // ignore
@@ -597,19 +606,37 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
       audioStreamSource = audioCtx.createMediaStreamSource(stream);
       audioAnalyser = audioCtx.createAnalyser();
       audioAnalyser.fftSize = 2048;
-      // analyser only — deliberately NOT connected to destination.
+      
       audioStreamSource.connect(audioAnalyser);
 
-      const buf = new Float32Array(audioAnalyser.fftSize);
+     
+      if (usePreferencesStore.getState().enableAutoSubtitleSync) {
+        try {
+          speechCapture = new SpeechCapture(
+            audioCtx,
+            audioStreamSource,
+            () => videoElement?.currentTime ?? 0,
+          );
+          speechCapture.start();
+        } catch {
+          speechCapture = null;
+        }
+      }
+
+      const freqBuf = new Uint8Array(audioAnalyser.frequencyBinCount);
+      const res = audioCtx.sampleRate / audioAnalyser.fftSize;
+      const lowBin = Math.max(1, Math.floor(300 / res)); 
+      const highBin = Math.min(freqBuf.length - 1, Math.ceil(3400 / res));
       audioSampleTimer = setInterval(() => {
         if (!videoElement || !audioAnalyser) return;
         if (videoElement.paused || isSeeking) return;
-        audioAnalyser.getFloatTimeDomainData(buf);
+        audioAnalyser.getByteFrequencyData(freqBuf);
         let sum = 0;
-        for (let i = 0; i < buf.length; i += 1) sum += buf[i] * buf[i];
-        const rms = Math.sqrt(sum / buf.length);
-        if (rms > 1e-4) audioSyncAvailable = true;
-        audioBuffer.push({ t: videoElement.currentTime, e: rms });
+        for (let i = lowBin; i <= highBin; i += 1) sum += freqBuf[i];
+       
+        const e = sum / ((highBin - lowBin + 1) * 255);
+        if (e > 1e-3) audioSyncAvailable = true;
+        audioBuffer.push({ t: videoElement.currentTime, e });
         if (audioBuffer.length > AUDIO_BUFFER_MAX) {
           audioBuffer.splice(0, audioBuffer.length - AUDIO_BUFFER_MAX);
         }
@@ -982,10 +1009,12 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
       return hls?.subtitleTracks ?? [];
     },
     getAudioActivity() {
+      
+      if (speechCapture?.isReady()) return speechCapture.getActivitySamples();
       return audioBuffer;
     },
     isAudioSyncAvailable() {
-      return audioSyncAvailable;
+      return audioSyncAvailable || !!speechCapture?.isReady();
     },
     async setSubtitlePreference(lang) {
       // default subtitles are already loaded by hls.js
