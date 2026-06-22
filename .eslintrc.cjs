@@ -153,6 +153,8 @@ module.exports = {
       "@typescript-eslint/semi": "off",
       "@typescript-eslint/comma-dangle": "off",
       "@typescript-eslint/member-delimiter-style": "off",
+    "no-use-before-define": "off",
+      "no-bitwise": "off",
     ...a11yOff,
   },
 };
