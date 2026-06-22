@@ -76,7 +76,10 @@
     "slugify": "^1.6.6",
     "subsrt-ts": "^2.1.2",
     "wyzie-lib": "^2.5.1",
+    "@ricky0123/vad-web": "^0.0.24",
+    "onnxruntime-web": "^1.19.2",
     "zustand": "^4.5.7"
+    
   },
   "devDependencies": {
     "@babel/core": "^7.28.5",
