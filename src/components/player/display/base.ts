@@ -95,11 +95,7 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
   let preferenceQuality: SourceQuality | null = null;
   let lastVolume = 1;
 
-  // --- automatic subtitle sync: audio voice-activity capture ---
-  // We tap the element's audio via a captured MediaStream (not a
-  // MediaElementSource, which would reroute/mute playback) and sample its RMS
-  // energy into a ring buffer keyed by playback time. useAutoSync cross-
-  // correlates this against subtitle cue timings to find the right delay.
+
   let audioCtx: AudioContext | null = null;
   let audioAnalyser: AnalyserNode | null = null;
   let audioStreamSource: MediaStreamAudioSourceNode | null = null;
@@ -194,9 +190,7 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
         hls.loadLevel = -1;
       }
     }
-    // For manual quality selection, wait for LEVEL_SWITCHED to emit quality
-    // to avoid showing intermediate states when HLS switches away from unplayable levels
-    // For automatic quality, currentLevel is -1, so we wait for LEVEL_SWITCHED event
+
   }
 
   function setupSource(vid: HTMLVideoElement, src: LoadableSource) {
