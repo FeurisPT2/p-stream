@@ -119,7 +119,12 @@ export function useAutoSync() {
     const key = captionKey(selectedCaption?.id, srtData?.length);
     if (!key || cues.length === 0 || !display) return;
     if (autoSyncedKeys.has(key)) return;
-    if (!display.isAudioSyncAvailable?.()) return;
+
+    const hasEnoughAudio = (): boolean => {
+      if (!display.getAudioWindow) return !!display.isAudioSyncAvailable?.();
+      const w = display.getAudioWindow(8);
+      return !!w && w.pcm.length >= w.sampleRate * 6;
+    };
 
     let attempts = 0;
     let cancelled = false;
@@ -128,7 +133,7 @@ export function useAutoSync() {
       if (cancelled) return;
       attempts += 1;
       if (attempts > MAX_AUTO_ATTEMPTS || autoSyncedKeys.has(key)) return;
-      if (!display.isAudioSyncAvailable?.()) return;
+      if (!hasEnoughAudio()) return;
       if (inFlight.current) return;
 
       inFlight.current = true;
@@ -177,7 +182,7 @@ export function useAutoSync() {
     };
   }, []);
 
-  const isAvailable = enabled && !!display?.isAudioSyncAvailable?.();
+  const isAvailable = enabled && !!display;
 
   return { autoSync, isSyncing, isAvailable };
 }

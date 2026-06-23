@@ -22,6 +22,12 @@ async function loadPipeline(): Promise<any> {
     const { pipeline, env } = mod as any;
     env.allowLocalModels = false;
     env.useBrowserCache = true;
+    try {
+      env.backends.onnx.wasm.wasmPaths =
+        "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/dist/";
+    } catch {
+      /* env shape varies across versions; ignore */
+    }
     const asr = await pipeline(
       "automatic-speech-recognition",
       "Xenova/whisper-tiny.en",
