@@ -31,6 +31,7 @@ export interface PreferencesStore {
   debridToken: string | null;
   debridService: string;
   tidbKey: string | null;
+  wyzieKey: string | null;
   enableLowPerformanceMode: boolean;
   enableNativeSubtitles: boolean;
   enableAutoSubtitleSync: boolean;
@@ -75,6 +76,7 @@ export interface PreferencesStore {
   setdebridToken(v: string | null): void;
   setdebridService(v: string): void;
   setTIDBKey(v: string | null): void;
+  setWyzieKey(v: string | null): void;
   setEnableLowPerformanceMode(v: boolean): void;
   setEnableNativeSubtitles(v: boolean): void;
   setEnableAutoSubtitleSync(v: boolean): void;
@@ -123,6 +125,7 @@ export const usePreferencesStore = create(
       debridToken: null,
       debridService: "realdebrid",
       tidbKey: null,
+      wyzieKey: null,
       enableLowPerformanceMode: false,
       enableNativeSubtitles: false,
       enableAutoSubtitleSync: false,
@@ -256,6 +259,11 @@ export const usePreferencesStore = create(
       setTIDBKey(v) {
         set((s) => {
           s.tidbKey = v;
+        });
+      },
+      setWyzieKey(v) {
+        set((s) => {
+          s.wyzieKey = v;
         });
       },
       setEnableLowPerformanceMode(v) {
