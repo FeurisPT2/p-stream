@@ -102,4 +102,11 @@ export interface DisplayInterface extends Listener<DisplayInterfaceEvents> {
   getAudioActivity?(): { t: number; e: number }[];
 
   isAudioSyncAvailable?(): boolean;
+
+  getAudioWindow?(durationSec: number): {
+    pcm: Float32Array;
+    sampleRate: number;
+    startTime: number;
+    endTime: number;
+  } | null;
 }

@@ -1023,6 +1023,9 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
     isAudioSyncAvailable() {
       return audioSyncAvailable || !!speechCapture?.isReady();
     },
+    getAudioWindow(durationSec: number) {
+      return speechCapture?.getAudioWindow(durationSec) ?? null;
+    },
     async setSubtitlePreference(lang) {
       // default subtitles are already loaded by hls.js
       const track = hls?.subtitleTracks.find((t) => t.lang === lang);

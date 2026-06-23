@@ -5,18 +5,19 @@ import {
   SyncEstimate,
   estimateSubtitleOffset,
 } from "@/components/player/utils/subtitleSync";
+import { whisperEstimateOffset } from "@/components/player/utils/whisperSync";
 import { usePlayerStore } from "@/stores/player/store";
 import { usePreferencesStore } from "@/stores/preferences";
 import { useSubtitleStore } from "@/stores/subtitles";
 
+const WHISPER_AUTO_CONFIDENCE = 0.55;
+const WHISPER_MANUAL_CONFIDENCE = 0.4;
 
-const AUTO_CONFIDENCE = 0.45;
+const VAD_AUTO_CONFIDENCE = 0.45;
+const VAD_MANUAL_CONFIDENCE = 0.25;
 
-const MANUAL_CONFIDENCE = 0.25;
-
-const POLL_MS = 5000;
-const MAX_AUTO_ATTEMPTS = 24; 
-
+const POLL_MS = 6000;
+const MAX_AUTO_ATTEMPTS = 18;
 
 const autoSyncedKeys = new Set<string>();
 
@@ -36,6 +37,7 @@ export function useAutoSync() {
 
   const [isSyncing, setIsSyncing] = useState(false);
   const indicatorTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inFlight = useRef(false);
 
   const srtData = selectedCaption?.srtData;
   const cues = useMemo(() => {
@@ -56,63 +58,114 @@ export function useAutoSync() {
     );
   }, [setShowDelayIndicator]);
 
-
-  const estimate = useCallback((): SyncEstimate | null => {
+  const vadEstimate = useCallback((): SyncEstimate | null => {
     const samples = display?.getAudioActivity?.() ?? [];
     if (!samples.length || cues.length === 0) return null;
-    return estimateSubtitleOffset(samples, cues);
+    return estimateSubtitleOffset(samples, cues as any);
   }, [display, cues]);
 
+  const runWhisper = useCallback(async (): Promise<SyncEstimate | null> => {
+    if (!display?.getAudioWindow || cues.length === 0) return null;
+    const audio = display.getAudioWindow(20);
+    if (!audio) return null;
+    try {
+      const dec = await whisperEstimateOffset(audio, cues as any);
+      if (!dec) return null;
+      return { offset: dec.offset, confidence: dec.confidence };
+    } catch {
+      return null;
+    }
+  }, [display, cues]);
 
   const autoSync = useCallback(async (): Promise<SyncEstimate | null> => {
     if (!enabled) return null;
+    if (inFlight.current) return null;
+    inFlight.current = true;
     setIsSyncing(true);
     try {
-      const result = estimate();
-      if (result && result.confidence >= MANUAL_CONFIDENCE) {
-        setDelay(result.offset);
+      const whisper = await runWhisper();
+      if (whisper && whisper.confidence >= WHISPER_MANUAL_CONFIDENCE) {
+        setDelay(whisper.offset);
         flashIndicator();
         const key = captionKey(selectedCaption?.id, srtData?.length);
         if (key) autoSyncedKeys.add(key);
+        return whisper;
       }
-      return result;
+      const vad = vadEstimate();
+      if (vad && vad.confidence >= VAD_MANUAL_CONFIDENCE) {
+        setDelay(vad.offset);
+        flashIndicator();
+        const key = captionKey(selectedCaption?.id, srtData?.length);
+        if (key) autoSyncedKeys.add(key);
+        return vad;
+      }
+      return whisper ?? vad ?? null;
     } finally {
+      inFlight.current = false;
       setIsSyncing(false);
     }
-  }, [estimate, setDelay, flashIndicator, selectedCaption?.id, srtData?.length, enabled]);
-
+  }, [
+    enabled,
+    runWhisper,
+    vadEstimate,
+    setDelay,
+    flashIndicator,
+    selectedCaption?.id,
+    srtData?.length,
+  ]);
 
   useEffect(() => {
     if (!enabled) return;
     const key = captionKey(selectedCaption?.id, srtData?.length);
     if (!key || cues.length === 0 || !display) return;
     if (autoSyncedKeys.has(key)) return;
-    if (!display.isAudioSyncAvailable) return;
+    if (!display.isAudioSyncAvailable?.()) return;
 
     let attempts = 0;
-    const interval = setInterval(() => {
-      attempts += 1;
-      if (attempts > MAX_AUTO_ATTEMPTS || autoSyncedKeys.has(key)) {
-        clearInterval(interval);
-        return;
-      }
-      if (!display.isAudioSyncAvailable?.()) return;
-      const result = estimate();
-      if (result && result.confidence >= AUTO_CONFIDENCE) {
-        autoSyncedKeys.add(key);
-        setDelay(result.offset);
-        flashIndicator();
-        clearInterval(interval);
-      }
-    }, POLL_MS);
+    let cancelled = false;
 
-    return () => clearInterval(interval);
+    const tick = async () => {
+      if (cancelled) return;
+      attempts += 1;
+      if (attempts > MAX_AUTO_ATTEMPTS || autoSyncedKeys.has(key)) return;
+      if (!display.isAudioSyncAvailable?.()) return;
+      if (inFlight.current) return;
+
+      inFlight.current = true;
+      setIsSyncing(true);
+      try {
+        const whisper = await runWhisper();
+        if (whisper && whisper.confidence >= WHISPER_AUTO_CONFIDENCE) {
+          autoSyncedKeys.add(key);
+          setDelay(whisper.offset);
+          flashIndicator();
+          return;
+        }
+        const vad = vadEstimate();
+        if (vad && vad.confidence >= VAD_AUTO_CONFIDENCE) {
+          autoSyncedKeys.add(key);
+          setDelay(vad.offset);
+          flashIndicator();
+        }
+      } finally {
+        inFlight.current = false;
+        setIsSyncing(false);
+      }
+    };
+
+    const interval = setInterval(tick, POLL_MS);
+    tick();
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [
     selectedCaption?.id,
     srtData?.length,
     cues.length,
     display,
-    estimate,
+    runWhisper,
+    vadEstimate,
     setDelay,
     flashIndicator,
     enabled,
