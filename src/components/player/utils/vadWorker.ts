@@ -6,7 +6,8 @@ let vadPromise: Promise<NonRealTimeVAD> | null = null;
 function getVad(): Promise<NonRealTimeVAD> {
   if (!vadPromise) {
     vadPromise = NonRealTimeVAD.new({
-
+      onnxWASMBasePath: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/",
+      baseAssetPath: "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.24/dist/",
       positiveSpeechThreshold: 0.5,
       negativeSpeechThreshold: 0.35,
       minSpeechFrames: 3,
