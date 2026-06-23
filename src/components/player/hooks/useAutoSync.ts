@@ -10,9 +10,9 @@ import { usePreferencesStore } from "@/stores/preferences";
 import { useSubtitleStore } from "@/stores/subtitles";
 
 
-const AUTO_CONFIDENCE = 0.22;
+const AUTO_CONFIDENCE = 0.45;
 
-const MANUAL_CONFIDENCE = 0.12;
+const MANUAL_CONFIDENCE = 0.25;
 
 const POLL_MS = 5000;
 const MAX_AUTO_ATTEMPTS = 24; 
