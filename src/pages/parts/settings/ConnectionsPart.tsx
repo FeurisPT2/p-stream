@@ -765,6 +765,41 @@ export function TIDBEdit({ tidbKey, setTIDBKey }: TIDBKeyProps) {
   );
 }
 
+export function WyzieEdit() {
+  const wyzieKey = usePreferencesStore((s) => s.wyzieKey);
+  const setWyzieKey = usePreferencesStore((s) => s.setWyzieKey);
+  return (
+    <SettingsCard>
+      <div className="my-3">
+        <p className="text-white font-bold mb-3">Wyzie Subtitles</p>
+        <p className="max-w-[40rem] font-medium mb-3">
+          Bring your own API key for better-synced subtitles aggregated from
+          multiple sources. The key is stored only in your browser.
+        </p>
+        <p className="max-w-[40rem] font-medium mb-6">
+          Get a free key (1,000 requests/day) at{" "}
+          <MwLink url="https://store.wyzie.io/redeem">
+            store.wyzie.io/redeem
+          </MwLink>
+          .
+        </p>
+        <p className="text-white font-bold mb-3">API Key</p>
+        <div className="flex items-center w-full">
+          <AuthInputBox
+            onChange={(newKey) => {
+              setWyzieKey(newKey || null);
+            }}
+            value={wyzieKey ?? ""}
+            placeholder="wyzie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+            passwordToggleable
+            className="flex-grow"
+          />
+        </div>
+      </div>
+    </SettingsCard>
+  );
+}
+
 export function TraktEdit() {
   const { t } = useTranslation();
   const { user, status, logout, error } = useTraktStore();
@@ -874,6 +909,7 @@ export function ConnectionsPart(
           mode="settings"
         />
         <TIDBEdit tidbKey={props.tidbKey} setTIDBKey={props.setTIDBKey} />
+        <WyzieEdit />
         <TraktEdit />
       </div>
     </div>
