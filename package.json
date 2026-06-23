@@ -40,6 +40,7 @@
     "@noble/hashes": "^1.8.0",
     "@p-stream/providers": "github:xp-technologies-dev/providers#production",
     "@plasmohq/messaging": "^0.6.2",
+    "@huggingface/transformers": "^3.0.2",
     "@react-spring/web": "^9.7.5",
     "@scure/bip39": "^1.6.0",
     "@sozialhelden/ietf-language-tags": "^5.4.2",
@@ -52,6 +53,7 @@
     "focus-trap-react": "^10.3.1",
     "fscreen": "^1.2.0",
     "fuse.js": "^7.1.0",
+    
     "hls.js": "^1.6.13",
     "i18next": "^23.16.8",
     "immer": "^10.1.3",
