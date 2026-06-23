@@ -583,19 +583,21 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
     audioInitAttempts = 0;
   }
 
-  // Wire up audio analysis off a captured MediaStream. captureStream keeps the
-  // element's own audio output intact (unlike a MediaElementSource). Tainted
-  // (cross-origin) media throws or yields a silent track here, in which case we
-  // simply never flip audioSyncAvailable and auto-sync stays unavailable.
+
   function initAudioAnalysis() {
-    if (audioAnalyser || !videoElement) return; // already set up
+    if (audioAnalyser || !videoElement) return; 
     if (audioInitAttempts >= AUDIO_INIT_MAX_ATTEMPTS) return;
+  
+    if (!usePreferencesStore.getState().enableAutoSubtitleSync) {
+      audioInitAttempts = AUDIO_INIT_MAX_ATTEMPTS;
+      return;
+    }
     audioInitAttempts += 1;
     try {
       const el = videoElement as any;
       const stream: MediaStream | undefined =
         el.captureStream?.() ?? el.mozCaptureStream?.();
-      if (!stream || stream.getAudioTracks().length === 0) return; // retry later
+      if (!stream || stream.getAudioTracks().length === 0) return; 
 
       const Ctx = window.AudioContext || (window as any).webkitAudioContext;
       if (!Ctx) {
