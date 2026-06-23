@@ -1,13 +1,17 @@
-
 import { NonRealTimeVAD } from "@ricky0123/vad-web";
+
+const VAD_CDN = "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.24/dist/";
+const ORT_CDN = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/";
 
 let vadPromise: Promise<NonRealTimeVAD> | null = null;
 
 function getVad(): Promise<NonRealTimeVAD> {
   if (!vadPromise) {
     vadPromise = NonRealTimeVAD.new({
-      onnxWASMBasePath: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/",
-      baseAssetPath: "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.24/dist/",
+      modelURL: VAD_CDN + "silero_vad_legacy.onnx",
+      ortConfig: (ort) => {
+        (ort as any).env.wasm.wasmPaths = ORT_CDN;
+      },
       positiveSpeechThreshold: 0.5,
       negativeSpeechThreshold: 0.35,
       minSpeechFrames: 3,
@@ -24,13 +28,14 @@ interface ProcessMessage {
   sampleRate: number;
 }
 
-self.onmessage = async (ev: MessageEvent<ProcessMessage>) => {
+(self as unknown as DedicatedWorkerGlobalScope).onmessage = async (
+  ev: MessageEvent<ProcessMessage>,
+) => {
   const data = ev.data;
   if (!data || data.type !== "process") return;
   const { id, pcm, sampleRate } = data;
   try {
     const vad = await getVad();
-
     const segments: { start: number; end: number }[] = [];
     for await (const seg of vad.run(pcm, sampleRate)) {
       segments.push({ start: seg.start, end: seg.end });
