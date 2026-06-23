@@ -181,6 +181,23 @@ export async function whisperEstimateOffset(
     return { offset: 0, confidence: 0, matchedCount: 0, totalSegments: 0, reason: "no-chunks" };
   }
 
+  const seen = new Map<string, number>();
+  const dedupedChunks: WhisperChunk[] = [];
+  for (const c of chunks) {
+    const key = c.text.trim().toLowerCase();
+    const n = seen.get(key) ?? 0;
+    seen.set(key, n + 1);
+    if (n >= 1) continue;
+    dedupedChunks.push(c);
+  }
+  const cleanedChunks = dedupedChunks.filter((c) => {
+    const key = c.text.trim().toLowerCase();
+    return (seen.get(key) ?? 0) < 5;
+  });
+  if (cleanedChunks.length === 0) {
+    return { offset: 0, confidence: 0, matchedCount: 0, totalSegments: chunks.length, reason: "hallucinated" };
+  }
+
   const audioOffsetForChunkZero = audioStart + (trimmed.length - pcm16k.length * (audio.sampleRate / 16000)) / audio.sampleRate;
   const startPlayback = audioStart;
   const idx = buildCueIndex(cues);
@@ -188,7 +205,7 @@ export async function whisperEstimateOffset(
   type Match = { offset: number; score: number };
   const matches: Match[] = [];
 
-  for (const ch of chunks) {
+  for (const ch of cleanedChunks) {
     const text = ch.text || "";
     const toks = tokenize(text);
     if (toks.length < 2) continue;
@@ -205,7 +222,7 @@ export async function whisperEstimateOffset(
       const lenWeight = Math.min(1, ci.tokens.length / 6);
       const score = (sBigram * 1.5 + sUnigram * 0.5) * (0.5 + 0.5 * lenWeight);
       if (score < minScore) continue;
-      const candidate = { offset: ci.midSec - chMid, score, bestCueText: (ci.cue.text || "").slice(0, 60) };
+      const candidate = { offset: chMid - ci.midSec, score, bestCueText: (ci.cue.text || "").slice(0, 60) };
       if (!best || score > best.score) best = candidate;
     }
     // eslint-disable-next-line no-console
