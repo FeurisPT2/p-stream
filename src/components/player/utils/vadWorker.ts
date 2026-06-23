@@ -28,9 +28,7 @@ interface ProcessMessage {
   sampleRate: number;
 }
 
-(self as unknown as DedicatedWorkerGlobalScope).onmessage = async (
-  ev: MessageEvent<ProcessMessage>,
-) => {
+(self as unknown as Worker).onmessage = async (ev: MessageEvent<ProcessMessage>) => {
   const data = ev.data;
   if (!data || data.type !== "process") return;
   const { id, pcm, sampleRate } = data;
