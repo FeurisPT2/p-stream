@@ -77,18 +77,15 @@ function rmsEnergy(pcm: Float32Array): number {
 }
 
 const STOPWORDS = new Set([
-  "a", "an", "the", "and", "or", "but", "if", "of", "in", "on", "at", "to",
-  "for", "with", "by", "is", "am", "are", "was", "were", "be", "been", "being",
-  "have", "has", "had", "do", "does", "did", "i", "you", "he", "she", "it",
-  "we", "they", "me", "him", "her", "us", "them", "my", "your", "his", "its",
-  "our", "their", "this", "that", "these", "those", "as", "so", "not", "no",
-  "yes", "oh", "ah", "um", "uh", "hey", "hi", "hello", "ok", "okay",
+  "the", "and", "of", "in", "on", "at", "to", "for", "with", "by",
+  "a", "an", "is", "are", "was", "were", "be", "been", "being",
 ]);
 
 function tokenize(s: string): string[] {
   return s
     .toLowerCase()
     .replace(/<[^>]+>/g, " ")
+    .replace(/\[[^\]]*\]/g, " ")
     .replace(/[^a-z0-9' ]+/g, " ")
     .split(/\s+/)
     .filter((w) => w.length >= 2 && !STOPWORDS.has(w));
@@ -100,14 +97,13 @@ function bigramSet(tokens: string[]): Set<string> {
   return out;
 }
 
-function jaccard<T>(a: Set<T>, b: Set<T>): number {
+function containment<T>(a: Set<T>, b: Set<T>): number {
   if (a.size === 0 || b.size === 0) return 0;
   let inter = 0;
   const small = a.size < b.size ? a : b;
   const big = a.size < b.size ? b : a;
   for (const x of small) if (big.has(x)) inter += 1;
-  const union = a.size + b.size - inter;
-  return inter / union;
+  return inter / small.size;
 }
 
 type Cue = { start: number; end: number; text?: string };
@@ -169,9 +165,9 @@ export async function whisperEstimateOffset(
   opts: WhisperSyncOpts = {},
 ): Promise<SyncDecision | null> {
   const durationSec = Math.max(8, opts.durationSec ?? 18);
-  const maxOffsetSec = opts.maxOffsetSec ?? 25;
-  const minScore = opts.minScore ?? 0.35;
-  const minMatches = opts.minMatches ?? 2;
+  const maxOffsetSec = opts.maxOffsetSec ?? 45;
+  const minScore = opts.minScore ?? 0.5;
+  const minMatches = opts.minMatches ?? 1;
 
   if (!audio?.pcm || !cues?.length) return null;
 
@@ -208,25 +204,24 @@ export async function whisperEstimateOffset(
   for (const ch of chunks) {
     const text = ch.text || "";
     const toks = tokenize(text);
-    if (toks.length < 3) continue;
+    if (toks.length < 2) continue;
     const bigs = bigramSet(toks);
+    const tokSet = new Set(toks);
     const chMid = startPlayback + ((ch.timestamp[0]! + ch.timestamp[1]!) / 2);
 
-    let best: { offset: number; score: number } | null = null;
+    let best: { offset: number; score: number; bestCueText?: string } | null = null;
     for (const ci of idx) {
       if (Math.abs(ci.midSec - chMid) > maxOffsetSec) continue;
-      const sBigram = jaccard(bigs, ci.bigrams);
-      let sUnigram = 0;
-      if (sBigram === 0) {
-        const a = new Set(toks);
-        sUnigram = jaccard(a, new Set(ci.tokens));
-        if (sUnigram < 0.5) continue;
-      }
-      const score = Math.max(sBigram, sUnigram * 0.6);
+      const sBigram = containment(bigs, ci.bigrams);
+      const sUnigram = containment(tokSet, new Set(ci.tokens));
+      if (sBigram === 0 && sUnigram < 0.5) continue;
+      const score = sBigram + sUnigram * 0.5;
       if (score < minScore) continue;
-      const candidate = { offset: ci.midSec - chMid, score };
+      const candidate = { offset: ci.midSec - chMid, score, bestCueText: (ci.cue.text || "").slice(0, 60) };
       if (!best || score > best.score) best = candidate;
     }
+    // eslint-disable-next-line no-console
+    console.debug("[sync] chunk", { t: chMid.toFixed(2), text: text.trim(), match: best });
     if (best) matches.push(best);
   }
 
