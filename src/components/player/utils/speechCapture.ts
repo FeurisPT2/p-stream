@@ -230,6 +230,65 @@ export class SpeechCapture {
     return out;
   }
 
+  getAudioWindow(durationSec: number): {
+    pcm: Float32Array;
+    sampleRate: number;
+    startTime: number;
+    endTime: number;
+  } | null {
+    if (this.chunks.length === 0 || this.map.length === 0) return null;
+    const baseOffset = this.map[0].offset;
+    const totalSamples = this.totalSamples;
+    if (totalSamples <= 0) return null;
+    const wanted = Math.min(
+      totalSamples,
+      Math.ceil(durationSec * this.sampleRate),
+    );
+    const buf = new Float32Array(wanted);
+    let pos = 0;
+    let drop = totalSamples - wanted;
+    for (const c of this.chunks) {
+      let chunk = c;
+      if (drop >= chunk.length) {
+        drop -= chunk.length;
+        continue;
+      }
+      if (drop > 0) {
+        chunk = chunk.subarray(drop);
+        drop = 0;
+      }
+      const space = buf.length - pos;
+      if (chunk.length <= space) {
+        buf.set(chunk, pos);
+        pos += chunk.length;
+      } else {
+        buf.set(chunk.subarray(0, space), pos);
+        pos = buf.length;
+        break;
+      }
+    }
+    const startSample = baseOffset + (totalSamples - wanted);
+    const toPlaybackTime = (sampleIdx: number): number => {
+      let lo = 0;
+      let hi = this.map.length - 1;
+      let idx = 0;
+      while (lo <= hi) {
+        const m = (lo + hi) >> 1;
+        if (this.map[m].offset <= sampleIdx) {
+          idx = m;
+          lo = m + 1;
+        } else {
+          hi = m - 1;
+        }
+      }
+      const entry = this.map[idx];
+      return entry.t + (sampleIdx - entry.offset) / this.sampleRate;
+    };
+    const startTime = toPlaybackTime(startSample);
+    const endTime = startTime + wanted / this.sampleRate;
+    return { pcm: buf, sampleRate: this.sampleRate, startTime, endTime };
+  }
+
   stop() {
     this.stopped = true;
     if (this.pollTimer) {
