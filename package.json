@@ -40,6 +40,7 @@
     "@noble/hashes": "^1.8.0",
     "@p-stream/providers": "github:xp-technologies-dev/providers#production",
     "@plasmohq/messaging": "^0.6.2",
+     "@ricky0123/vad-web": "^0.0.24",
     "@huggingface/transformers": "^3.0.2",
     "@react-spring/web": "^9.7.5",
     "@scure/bip39": "^1.6.0",
@@ -78,7 +79,7 @@
     "slugify": "^1.6.6",
     "subsrt-ts": "^2.1.2",
     "wyzie-lib": "^2.5.1",
-    "@ricky0123/vad-web": "^0.0.24",
+    
     "onnxruntime-web": "^1.19.2",
     "zustand": "^4.5.7"
     
