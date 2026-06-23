@@ -3,13 +3,17 @@ import { AudioActivitySample } from "@/components/player/utils/subtitleSync";
 
 
 interface TimeMapEntry {
-  offset: number; // sample index (native rate) where this block starts
-  t: number; // playback time (s) at that sample
+  /** sample index, native rate, since capture start */
+  offset: number;
+  /** playback time at that sample */
+  t: number;
 }
 
+const POLL_MS = 50; // 20 Hz
+const FFT_SIZE = 8192; // analyser window; max 32768 in WebAudio spec
 const GRID_STEP = 0.2; // activity sampling resolution (s)
-const RUN_INTERVAL_MS = 8000; // how often to (re)run VAD over the buffer
-const MIN_SPAN_S = 25; // need this much audio before the first run
+const RUN_INTERVAL_MS = 8000; // how often to (re)run VAD
+const MIN_SPAN_S = 25; // need this much audio buffered before first run
 const MAX_SPAN_S = 120; // ring-buffer cap
 
 export class SpeechCapture {
@@ -18,26 +22,32 @@ export class SpeechCapture {
   private getCurrentTime: () => number;
   private sampleRate: number;
 
-  private processor: ScriptProcessorNode | null = null;
-  private sink: GainNode | null = null;
+  private analyser: AnalyserNode | null = null;
   private worker: Worker | null = null;
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   private chunks: Float32Array[] = [];
   private totalSamples = 0;
   private map: TimeMapEntry[] = [];
-  private droppedSamples = 0; // samples evicted from the front of the ring
+  private droppedSamples = 0;
 
-  private segments: { start: number; end: number }[] = []; // playback-time (s)
+  private segments: { start: number; end: number }[] = [];
   private coveredFrom = Infinity;
   private coveredTo = -Infinity;
 
   private busy = false;
   private lastRunAt = 0;
+  private lastSampleTime = -1;
   private reqId = 0;
-  private expectedNextTime = -1;
   private stopped = false;
+  private pendingMap: TimeMapEntry[] = [];
+  private pendingId = 0;
 
-  constructor(ctx: AudioContext, source: AudioNode, getCurrentTime: () => number) {
+  constructor(
+    ctx: AudioContext,
+    source: AudioNode,
+    getCurrentTime: () => number,
+  ) {
     this.ctx = ctx;
     this.source = source;
     this.getCurrentTime = getCurrentTime;
@@ -46,50 +56,58 @@ export class SpeechCapture {
 
   start() {
     try {
-      this.worker = new Worker(
-        new URL("./vadWorker.ts", import.meta.url),
-        { type: "module" },
-      );
+      this.worker = new Worker(new URL("./vadWorker.ts", import.meta.url), {
+        type: "module",
+      });
       this.worker.onmessage = (ev) => this.onWorkerMessage(ev);
       this.worker.onerror = () => this.stop();
 
-      const bufferSize = 4096;
-      this.processor = this.ctx.createScriptProcessor(bufferSize, 1, 1);
-    
-      this.sink = this.ctx.createGain();
-      this.sink.gain.value = 0;
-      this.source.connect(this.processor);
-      this.processor.connect(this.sink);
-      this.sink.connect(this.ctx.destination);
+      this.analyser = this.ctx.createAnalyser();
+   
+      this.analyser.fftSize = FFT_SIZE;
+      this.analyser.smoothingTimeConstant = 0;
 
-      this.processor.onaudioprocess = (e) => this.onAudio(e);
+   
+      this.source.connect(this.analyser);
+
+      this.pollTimer = setInterval(() => this.poll(), POLL_MS);
     } catch {
       this.stop();
     }
   }
 
-  private onAudio(e: AudioProcessingEvent) {
-    if (this.stopped) return;
-    const input = e.inputBuffer.getChannelData(0);
+  private poll() {
+    if (this.stopped || !this.analyser) return;
     const now = this.getCurrentTime();
-
   
     if (
-      this.expectedNextTime >= 0 &&
-      Math.abs(now - this.expectedNextTime) > 0.5
+      this.lastSampleTime >= 0 &&
+      Math.abs(now - this.lastSampleTime) > 0.5
     ) {
       this.resetBuffer();
     }
+    const win = new Float32Array(this.analyser.fftSize);
+    this.analyser.getFloatTimeDomainData(win);
 
-    const copy = new Float32Array(input.length);
-    copy.set(input);
-    this.map.push({ offset: this.droppedSamples + this.totalSamples, t: now });
-    this.chunks.push(copy);
-    this.totalSamples += copy.length;
-    this.expectedNextTime = now + copy.length / this.sampleRate;
+
+    const sliceLen = Math.min(
+      win.length,
+      Math.ceil((POLL_MS / 1000) * this.sampleRate),
+    );
+    const start = win.length - sliceLen;
+    const chunk = new Float32Array(sliceLen);
+    chunk.set(win.subarray(start));
+
+    this.map.push({
+      offset: this.droppedSamples + this.totalSamples,
+      t: now - sliceLen / this.sampleRate,
+    });
+    this.chunks.push(chunk);
+    this.totalSamples += sliceLen;
+    this.lastSampleTime = now;
 
     this.trim();
-    this.maybeRun(now);
+    this.maybeRun();
   }
 
   private resetBuffer() {
@@ -112,19 +130,20 @@ export class SpeechCapture {
     }
   }
 
-  private maybeRun(now: number) {
+  private maybeRun() {
     if (this.busy || !this.worker) return;
     if (this.totalSamples < this.sampleRate * MIN_SPAN_S) return;
     if (performance.now() - this.lastRunAt < RUN_INTERVAL_MS) return;
 
-    // Flatten the ring buffer into one contiguous PCM array for the worker.
     const pcm = new Float32Array(this.totalSamples);
     let off = 0;
     for (const c of this.chunks) {
       pcm.set(c, off);
       off += c.length;
     }
-    const baseOffset = this.map.length ? this.map[0].offset : this.droppedSamples;
+    const baseOffset = this.map.length
+      ? this.map[0].offset
+      : this.droppedSamples;
     const mapSnapshot = this.map.map((m) => ({
       offset: m.offset - baseOffset,
       t: m.t,
@@ -135,12 +154,13 @@ export class SpeechCapture {
     const id = ++this.reqId;
     this.pendingMap = mapSnapshot;
     this.pendingId = id;
-    this.worker.postMessage({ type: "process", id, pcm, sampleRate: this.sampleRate });
-    void now;
+    this.worker.postMessage({
+      type: "process",
+      id,
+      pcm,
+      sampleRate: this.sampleRate,
+    });
   }
-
-  private pendingMap: TimeMapEntry[] = [];
-  private pendingId = 0;
 
   private onWorkerMessage(ev: MessageEvent) {
     const data = ev.data;
@@ -159,7 +179,6 @@ export class SpeechCapture {
     if (!map.length) return;
 
     const toPlaybackTime = (sampleIdx: number): number => {
- 
       let lo = 0;
       let hi = map.length - 1;
       let idx = 0;
@@ -177,8 +196,6 @@ export class SpeechCapture {
     };
 
     const segs: { start: number; end: number }[] = [];
-    let from = Infinity;
-    let to = -Infinity;
     for (const s of data.segments as { start: number; end: number }[]) {
       const startSample = (s.start / 1000) * this.sampleRate;
       const endSample = (s.end / 1000) * this.sampleRate;
@@ -186,20 +203,18 @@ export class SpeechCapture {
       const b = toPlaybackTime(endSample);
       if (b > a) segs.push({ start: a, end: b });
     }
-   
-    from = map[0].t;
-    const lastEntry = map[map.length - 1];
-    to = lastEntry.t; 
     this.segments = segs;
-    this.coveredFrom = from;
-    this.coveredTo = Math.max(to, segs.length ? segs[segs.length - 1].end : to);
+    this.coveredFrom = map[0].t;
+    const lastEntry = map[map.length - 1];
+    this.coveredTo = Math.max(
+      lastEntry.t,
+      segs.length ? segs[segs.length - 1].end : lastEntry.t,
+    );
   }
-
 
   isReady(): boolean {
     return this.segments.length > 0 && this.coveredTo > this.coveredFrom;
   }
-
 
   getActivitySamples(): AudioActivitySample[] {
     if (!this.isReady()) return [];
@@ -217,20 +232,18 @@ export class SpeechCapture {
 
   stop() {
     this.stopped = true;
-    try {
-      if (this.processor) {
-        this.processor.onaudioprocess = null;
-        this.processor.disconnect();
-      }
-      this.sink?.disconnect();
-      this.source?.disconnect?.(this.processor as AudioNode);
-    } catch {
-
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
     }
+    try {
+      this.source?.disconnect?.(this.analyser as AudioNode);
+    } catch {
+      // ignore
+    }
+    this.analyser = null;
     this.worker?.terminate();
     this.worker = null;
-    this.processor = null;
-    this.sink = null;
     this.resetBuffer();
   }
 }
