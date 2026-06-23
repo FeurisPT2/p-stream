@@ -178,7 +178,7 @@ export async function whisperEstimateOffset(
   const audioStart = audio.startTime;
   const wanted = Math.min(audio.pcm.length, Math.floor(durationSec * audio.sampleRate));
   const trimmed = audio.pcm.subarray(audio.pcm.length - wanted);
-  if (rmsEnergy(trimmed) < 0.005) {
+  if (rmsEnergy(trimmed) < 0.0005) {
     return { offset: 0, confidence: 0, matchedCount: 0, totalSegments: 0, reason: "silent" };
   }
 
@@ -189,8 +189,6 @@ export async function whisperEstimateOffset(
     chunk_length_s: 30,
     stride_length_s: 5,
     return_timestamps: true,
-    language: "english",
-    task: "transcribe",
   });
 
   const chunks = (result.chunks ?? []).filter(

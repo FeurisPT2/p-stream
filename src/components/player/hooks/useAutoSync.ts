@@ -71,8 +71,12 @@ export function useAutoSync() {
     try {
       const dec = await whisperEstimateOffset(audio, cues as any);
       if (!dec) return null;
+      // eslint-disable-next-line no-console
+      console.debug("[sync] whisper", dec);
       return { offset: dec.offset, confidence: dec.confidence };
-    } catch {
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn("[sync] whisper failed:", err);
       return null;
     }
   }, [display, cues]);
