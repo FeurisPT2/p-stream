@@ -610,6 +610,7 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
         return;
       }
       audioCtx = new Ctx();
+      audioCtx.resume?.().catch(() => {});
       audioStreamSource = audioCtx.createMediaStreamSource(stream);
       audioAnalyser = audioCtx.createAnalyser();
       audioAnalyser.fftSize = 2048;
@@ -1024,6 +1025,9 @@ export function makeVideoElementDisplayInterface(): DisplayInterface {
       return audioSyncAvailable || !!speechCapture?.isReady();
     },
     getAudioWindow(durationSec: number) {
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume().catch(() => {});
+      }
       return speechCapture?.getAudioWindow(durationSec) ?? null;
     },
     async setSubtitlePreference(lang) {
