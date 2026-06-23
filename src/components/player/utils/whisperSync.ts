@@ -139,19 +139,6 @@ type SyncDecision = {
   reason?: string;
 };
 
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-function mad(values: number[], med: number): number {
-  if (values.length === 0) return 0;
-  const dev = values.map((v) => Math.abs(v - med)).sort((a, b) => a - b);
-  return dev[dev.length >> 1];
-}
-
 export type WhisperSyncOpts = {
   durationSec?: number;
   maxOffsetSec?: number;
@@ -164,10 +151,10 @@ export async function whisperEstimateOffset(
   cues: Cue[],
   opts: WhisperSyncOpts = {},
 ): Promise<SyncDecision | null> {
-  const durationSec = Math.max(8, opts.durationSec ?? 18);
+  const durationSec = Math.max(8, opts.durationSec ?? 25);
   const maxOffsetSec = opts.maxOffsetSec ?? 45;
-  const minScore = opts.minScore ?? 0.5;
-  const minMatches = opts.minMatches ?? 1;
+  const minScore = opts.minScore ?? 0.6;
+  const minMatches = opts.minMatches ?? 3;
 
   if (!audio?.pcm || !cues?.length) return null;
 
@@ -215,7 +202,8 @@ export async function whisperEstimateOffset(
       const sBigram = containment(bigs, ci.bigrams);
       const sUnigram = containment(tokSet, new Set(ci.tokens));
       if (sBigram === 0 && sUnigram < 0.5) continue;
-      const score = sBigram + sUnigram * 0.5;
+      const lenWeight = Math.min(1, ci.tokens.length / 6);
+      const score = (sBigram * 1.5 + sUnigram * 0.5) * (0.5 + 0.5 * lenWeight);
       if (score < minScore) continue;
       const candidate = { offset: ci.midSec - chMid, score, bestCueText: (ci.cue.text || "").slice(0, 60) };
       if (!best || score > best.score) best = candidate;
@@ -235,18 +223,60 @@ export async function whisperEstimateOffset(
     };
   }
 
-  const offsets = matches.map((m) => m.offset);
-  const med = median(offsets);
-  const spread = mad(offsets, med);
-  const consistency = Math.exp(-spread / 1.5);
-  const avgScore = matches.reduce((a, b) => a + b.score, 0) / matches.length;
+  const BIN = 0.5;
+  const bins = new Map<number, { count: number; sumOffset: number; sumScore: number }>();
+  for (const m of matches) {
+    const key = Math.round(m.offset / BIN);
+    const cur = bins.get(key) ?? { count: 0, sumOffset: 0, sumScore: 0 };
+    cur.count += 1;
+    cur.sumOffset += m.offset;
+    cur.sumScore += m.score;
+    bins.set(key, cur);
+  }
+  let bestKey = 0;
+  let bestStrength = 0;
+  for (const [k, v] of bins) {
+    const left = bins.get(k - 1);
+    const right = bins.get(k + 1);
+    const strength = v.count + (left?.count ?? 0) * 0.5 + (right?.count ?? 0) * 0.5;
+    if (strength > bestStrength) {
+      bestStrength = strength;
+      bestKey = k;
+    }
+  }
+
+  let cCount = 0;
+  let cOff = 0;
+  let cScore = 0;
+  for (const k of [bestKey - 1, bestKey, bestKey + 1]) {
+    const v = bins.get(k);
+    if (!v) continue;
+    cCount += v.count;
+    cOff += v.sumOffset;
+    cScore += v.sumScore;
+  }
+  if (cCount < minMatches) {
+    return {
+      offset: 0,
+      confidence: 0,
+      matchedCount: matches.length,
+      totalSegments: chunks.length,
+      reason: "no-cluster",
+    };
+  }
+  const offsetSeconds = cOff / cCount;
+  const avgScore = cScore / cCount;
+  const inCluster = cCount / matches.length;
   const coverage = Math.min(1, matches.length / Math.max(3, chunks.length));
-  const confidence = Math.max(0, Math.min(1, 0.55 * consistency + 0.3 * avgScore + 0.15 * coverage));
+  const confidence = Math.max(
+    0,
+    Math.min(1, 0.5 * inCluster + 0.3 * Math.min(1, avgScore) + 0.2 * coverage),
+  );
 
   return {
-    offset: Math.round(med * 100) / 100,
+    offset: Math.round(offsetSeconds * 100) / 100,
     confidence,
-    matchedCount: matches.length,
+    matchedCount: cCount,
     totalSegments: chunks.length,
   };
 }
