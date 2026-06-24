@@ -56,6 +56,9 @@ export function canWebkitPictureInPicture(): boolean {
 }
 
 export function canPlayHlsNatively(video: HTMLVideoElement): boolean {
+  const isLinuxDesktop = typeof window !== "undefined" && window.__PSTREAM_DESKTOP__ && navigator.userAgent.includes("Linux");
+  if (isLinuxDesktop) return true;
+
   if (Hls.isSupported()) return false; // no need to play natively
   return !!video.canPlayType("application/vnd.apple.mpegurl");
 }
